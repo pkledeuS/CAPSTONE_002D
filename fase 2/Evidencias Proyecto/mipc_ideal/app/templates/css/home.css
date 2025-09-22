@@ -189,18 +189,19 @@ footer {
 .menu-options {
   display: none;
   position: absolute;
-  top: 45px;
-  left: 0;
+  top: 70px;
+  left: -10;
   background: white;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  width: 180px;
+  width: 170px;
+  height: 130px;
 }
 
 .menu-options a {
   display: block;
-  padding: 10px;
+  padding: 4px;
   text-decoration: none;
   color: #333;
 }
