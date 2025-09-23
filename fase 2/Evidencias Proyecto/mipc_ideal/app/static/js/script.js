@@ -15,8 +15,14 @@ window.addEventListener("click", (event) => {
 });
 
 // formulario de búsqueda
-
-
+document.getElementById("searchForm").addEventListener("submit", function(event) {
+event.preventDefault();
+const query = document.getElementById("searchInput").value.trim();
+if (query) {
+alert(`🔍 Buscando: ${query}`);
+// Aquí podrías redirigir a una página de resultados o hacer una búsqueda en el sitio
+}
+});
 
 // formulario de registro
 document.getElementById("registroForm").addEventListener("submit", function(event) {
@@ -43,3 +49,11 @@ alert(`✅ Registro exitoso\nBienvenido, ${nombre}`);
 // Aquí podrías enviar los datos al servidor con fetch()
 });
 
+// formulario de inicio de sesión
+document.getElementById("loginForm").addEventListener("submit", function(event) {
+event.preventDefault();
+const email = document.getElementById("loginEmail").value.trim();
+const password = document.getElementById("loginPassword").value;
+// Simulación de éxito
+alert(`✅ Inicio de sesión exitoso\nBienvenido de nuevo`);
+});
