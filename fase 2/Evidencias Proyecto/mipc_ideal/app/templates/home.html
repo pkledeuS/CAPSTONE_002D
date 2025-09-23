@@ -4,7 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotiza tu nuevo Dispositivo</title>
+<!-- Importaciones de Estilos -->
     <link rel="stylesheet" href="../static/css/home.css">
+    <!-- Importaciones de Scripts -->
+     <script src="../static/js/overlay-system.js"></script>
+    <script src="../static/js/theme-systems.js"></script>
+    <script src="../static/js/dropdown-menu.js"></script>
+    <script src="../static/js/carousel-system.js"></script>
+    <script src="../static/js/profile-handler.js"></script>
 
 </head>
 <body>
@@ -14,34 +21,280 @@
                 <a href="home.html"><h2>MiPc Ideal</h2></a>
             </div>
             <ul class="nav-links">
-                <li><a href="#">Categorias</a></li>
+                <li class="category-container" id="category-menu-container">
+                    <img src="../static/img/category_icon.png" alt="Categorias" class="header-icons">
+                    <span>Categorias</span>
+                    <!-- Menú de categorías -->
+                    <div class="dropdown-menu" id="category-dropdown">
+                        <ul>
+                            <li><a href="#"><span class="menu-icon">💻</span>Laptops</a></li>
+                            <li><a href="#"><span class="menu-icon">🖥️</span>PC de Escritorio</a></li>
+                            <li><a href="#"><span class="menu-icon">📱</span>Tablets</a></li>
+                            <li><a href="#"><span class="menu-icon">🎮</span>Gaming</a></li>
+                            <li class="menu-divider"></li>
+                            <li><a href="#"><span class="menu-icon">🏢</span>Empresas</a></li>
+                            <li><a href="#"><span class="menu-icon">🎓</span>Educación</a></li>
+                            <li><a href="#"><span class="menu-icon">🏠</span>Hogar</a></li>
+                        </ul>
+                    </div>
+                </li>
+
                 <li class="search-container">
                     <form class="search-form">
                         <input type="text" class="search-input" placeholder="Buscar productos...">
                         <button type="submit" class="search-button">🔍</button>
                     </form>
                 </li>
-                
-            </ul>
-            <div class="menu-container">
-                <button class="menu-btn" id="menuToggle">Perfil</button>
-                <div class="menu-options" id="menuOptions">
-                    <a href="login.html">Iniciar sesión</a>
-                    <a href="register.html">Registrarse</a>
+                <div class="menu-container">
+                  <li class="profile-container">
+                      <img src="../static/img/profile_icon.png" alt="Perfil" class="header-icons" >
+                      <button class="menu-btn" id="menuToggle">Perfil</button>
+                      <div class="menu-options" id="menuOptions">
+                        <a href="login.html">Iniciar sesión</a>
+                        <a href="register.html">Registrarse</a>
+                      </div>
+                  </li>
                 </div>
-            </div>
+                <li class="theme-container" id="theme-menu-container">
+                    <img src="../static/img/settings_icon.png" alt="Configurar" class="header-icons" id="theme-icon">
+                    <!-- Menú de temas -->
+                    <div class="dropdown-menu" id="theme-dropdown">
+                        <ul>
+                            <li>
+                                <a href="#" data-theme="light">
+                                    <span class="menu-icon">☀️</span>
+                                    <span>Modo Claro</span>
+                                    <span class="checkmark" id="light-check">✓</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-theme="dark">
+                                    <span class="menu-icon">🌙</span>
+                                    <span>Modo Oscuro</span>
+                                    <span class="checkmark" id="dark-check">✓</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-theme="auto">
+                                    <span class="menu-icon">⚙️</span>
+                                    <span>Automático</span>
+                                    <span class="checkmark" id="auto-check">✓</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
         </nav>
     </header>
-    <div>
-        <h1>MiPc Ideal</h1>
-    </div>
+
+    <!-- Overlay para bloquear contenido cuando los menús están abiertos -->
+    <div class="page-overlay" id="page-overlay"></div>
+
+    <div class="container">
+        <div class="main-wrapper">
+            <div class="banner">
+                <h1 class="banner-title">PRODUCTOS DESTACADOS</h1>
+            </div>
+            <div class="content">
+                <div class="banner-secondary">
+                    <div class="featured-products-container">
+                        <div class="featured-products">
+                            <a href="#estudiantes" class="featured-product">
+                                <div class="product-card">
+                                    <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Laptop para estudiantes">
+                                    <h3>Para Estudiantes</h3>
+                                    <p>Ideal para tareas académicas</p>
+                                </div>
+                            </a>
+                            <a href="#trabajadores" class="featured-product">
+                                <div class="product-card">
+                                    <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Laptop para trabajadores">
+                                    <h3>Para Trabajadores</h3>
+                                    <p>Alto rendimiento profesional</p>
+                                </div>
+                            </a>
+                            <a href="#gamers" class="featured-product">
+                                <div class="product-card">
+                                    <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Laptop para gamers">
+                                    <h3>Para Gamers</h3>
+                                    <p>Máxima potencia para gaming</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="estudiantes" class="banner-title-secondary-container">
+                    <h2 class="banner-title-secondary">PARA ESTUDIANTES✏️📖</h2>
+                </div>
+                <div class="banner-secondary">
+                    <div class="carousel-container">
+                        <div class="carousel students-carousel">
+                            <div class="carousel-inner">
+                                <div class="carousel-item multi-item">
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Laptop para estudiantes">
+                                        <h3>Laptop Básica</h3>
+                                        <p>Ideal para tareas académicas</p>
+                                    </div>
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Laptop avanzada para estudiantes">
+                                        <h3>Laptop Premium</h3>
+                                        <p>Mayor rendimiento y batería</p>
+                                    </div>
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Laptop ultraligera">
+                                        <h3>Laptop Ultraligera</h3>
+                                        <p>Perfecta para llevar a clases</p>
+                                    </div>
+                                </div>
+                                <div class="carousel-item multi-item">
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Tablet para estudiantes">
+                                        <h3>Tablet Básica</h3>
+                                        <p>Perfecta para tomar notas</p>
+                                    </div>
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Tablet avanzada">
+                                        <h3>Tablet con Stylus</h3>
+                                        <p>Ideal para dibujo y notas</p>
+                                    </div>
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Tablet premium">
+                                        <h3>Tablet Premium</h3>
+                                        <p>Potencia y versatilidad</p>
+                                    </div>
+                                </div>
+                                <div class="carousel-item multi-item">
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="PC para estudiantes">
+                                        <h3>PC Estudiantil</h3>
+                                        <p>Para proyectos y trabajos</p>
+                                    </div>
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="PC avanzado">
+                                        <h3>PC Multimedia</h3>
+                                        <p>Para edición y diseño</p>
+                                    </div>
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="PC compacto">
+                                        <h3>PC Compacto</h3>
+                                        <p>Ahorra espacio en tu habitación</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="carousel-control prev">❮</button>
+                            <button type="button" class="carousel-control next">❯</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="trabajadores" class="banner-title-secondary-container">
+                    <h2 class="banner-title-secondary">PARA TRABAJADORES💼📊</h2>
+                </div>
+                <div class="banner-secondary">
+                    <div class="carousel-container">
+                        <div class="carousel students-carousel">
+                            <div class="carousel-inner">
+                                <div class="carousel-item multi-item">
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Laptop profesional">
+                                        <h3>Laptop Ejecutiva</h3>
+                                        <p>Alto rendimiento para multitarea</p>
+                                    </div>
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="PC para oficina">
+                                        <h3>PC de Oficina</h3>
+                                        <p>Optimizada para productividad</p>
+                                    </div>
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Monitor profesional">
+                                        <h3>Monitor Profesional</h3>
+                                        <p>Mayor espacio de trabajo</p>
+                                    </div>
+                                </div>
+                                <div class="carousel-item multi-item">
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Dispositivos portátiles">
+                                        <h3>Dispositivos Portátiles</h3>
+                                        <p>Para trabajar desde cualquier lugar</p>
+                                    </div>
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Accesorios oficina">
+                                        <h3>Accesorios de Oficina</h3>
+                                        <p>Complementos para profesionales</p>
+                                    </div>
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Software profesional">
+                                        <h3>Software Profesional</h3>
+                                        <p>Herramientas para productividad</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="carousel-control prev">❮</button>
+                            <button type="button" class="carousel-control next">❯</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="gamers" class="banner-title-secondary-container">
+                    <h2 class="banner-title-secondary">PARA GAMERS🎮👾</h2>
+                </div>
+                <div class="banner-secondary">
+                    <div class="carousel-container">
+                        <div class="carousel students-carousel">
+                            <div class="carousel-inner">
+                                <div class="carousel-item multi-item">
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="PC Gamer">
+                                        <h3>PC Gaming</h3>
+                                        <p>Máxima potencia para juegos</p>
+                                    </div>
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Laptop Gaming">
+                                        <h3>Laptop Gaming</h3>
+                                        <p>Juegos en cualquier lugar</p>
+                                    </div>
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Periféricos Gaming">
+                                        <h3>Periféricos Gaming</h3>
+                                        <p>Completa tu setup</p>
+                                    </div>
+                                </div>
+                                <div class="carousel-item multi-item">
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Monitores Gaming">
+                                        <h3>Monitores Gaming</h3>
+                                        <p>Alta frecuencia y resolución</p>
+                                    </div>
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Tarjetas gráficas">
+                                        <h3>Tarjetas Gráficas</h3>
+                                        <p>Máximo rendimiento visual</p>
+                                    </div>
+                                    <div class="product-card">
+                                        <img src="https://http2.mlstatic.com/D_NQ_NP_806665-MLC41803103975_052020-O-notebook-gamer-hp-ryzen-5-8gb-ram-256ssd-gtx1050-156-fhd.webp" alt="Sillas gaming">
+                                        <h3>Sillas Gaming</h3>
+                                        <p>Comodidad para largas sesiones</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="carousel-control prev">❮</button>
+                            <button type="button" class="carousel-control next">❯</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div><!-- Cierre de main-wrapper -->
+    </div><!-- Cierre de container -->
+
     <footer>
         <ul>
-            <a href="../templates/info.html" style="color: white;">Nosotros</a>
+          <a href="../templates/info.html" style="color: white;">Nosotros</a>
         </ul>
         <p>&copy; 2024 MiPc Ideal. Todos los derechos reservados.</p>
     </footer>
 
 <script src="../static/js/script.js"></script>
+
 </body>
 </html>
