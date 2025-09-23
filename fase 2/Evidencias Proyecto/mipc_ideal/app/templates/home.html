@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotiza tu nuevo Dispositivo</title>
-    <!-- Importaciones de Estilos -->
+<!-- Importaciones de Estilos -->
     <link rel="stylesheet" href="../static/css/home.css">
     <!-- Importaciones de Scripts -->
      <script src="../static/js/overlay-system.js"></script>
@@ -12,6 +12,7 @@
     <script src="../static/js/dropdown-menu.js"></script>
     <script src="../static/js/carousel-system.js"></script>
     <script src="../static/js/profile-handler.js"></script>
+
 </head>
 <body>
     <header>
@@ -37,16 +38,23 @@
                         </ul>
                     </div>
                 </li>
+
                 <li class="search-container">
                     <form class="search-form">
                         <input type="text" class="search-input" placeholder="Buscar productos...">
                         <button type="submit" class="search-button">🔍</button>
                     </form>
                 </li>
-                <li class="profile-container">
-                    <img src="../static/img/profile_icon.png" alt="Perfil" class="header-icons">
-                    <a href="#">Perfil</a>
-                </li>
+                <div class="menu-container">
+                  <li class="profile-container">
+                      <img src="../static/img/profile_icon.png" alt="Perfil" class="header-icons" >
+                      <button class="menu-btn" id="menuToggle">Perfil</button>
+                      <div class="menu-options" id="menuOptions">
+                        <a href="login.html">Iniciar sesión</a>
+                        <a href="register.html">Registrarse</a>
+                      </div>
+                  </li>
+                </div>
                 <li class="theme-container" id="theme-menu-container">
                     <img src="../static/img/settings_icon.png" alt="Configurar" class="header-icons" id="theme-icon">
                     <!-- Menú de temas -->
@@ -280,7 +288,13 @@
     </div><!-- Cierre de container -->
 
     <footer>
+        <ul>
+          <a href="../templates/info.html" style="color: white;">Nosotros</a>
+        </ul>
         <p>&copy; 2024 MiPc Ideal. Todos los derechos reservados.</p>
     </footer>
+
+<script src="../static/js/script.js"></script>
+
 </body>
 </html>
