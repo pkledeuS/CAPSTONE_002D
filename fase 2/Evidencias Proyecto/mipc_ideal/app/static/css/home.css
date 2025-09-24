@@ -296,6 +296,7 @@ nav {
     gap: 2rem;
 }
 
+
 /* Estilos base para contenedores de navegación */
 .category-container,
 .profile-container,
@@ -404,6 +405,7 @@ nav {
     border-radius: 4px;
     transition: background-color 0.3s ease;
 }
+
 
 /* Efecto hover en los enlaces - EXCLUIR contenedores específicos */
 .nav-links li a:not(.profile-container a):not(.category-container a):hover {
@@ -763,4 +765,49 @@ footer {
         font-size: 1.3rem;
         margin-bottom: 0.5rem;
     }
+
+}
+
+
+/* style de inicio de sesion*/
+.menu-container {
+  position: relative;
+}
+
+.menu-btn {
+  padding: 10px 20px;
+  background: #007BFF;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.menu-btn:hover {
+  background: #0056b3;
+}
+
+.menu-options {
+  display: none;
+  position: absolute;
+  top: 70px;
+  left: -10;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  width: 170px;
+  height: 130px;
+}
+
+.menu-options a {
+  display: block;
+  padding: 4px;
+  text-decoration: none;
+  color: #333;
+}
+
+.menu-options a:hover {
+  background: #f0f0f0;
 }
