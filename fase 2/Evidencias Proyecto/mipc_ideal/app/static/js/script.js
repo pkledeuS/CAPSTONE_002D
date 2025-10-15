@@ -1,6 +1,10 @@
 // menú desplegable
 const menuToggle = document.getElementById("menuToggle");
 const menuOptions = document.getElementById("menuOptions");
+const pw = document.getElementById('pwBootstrap');
+const btn = document.getElementById('togglePassword');
+const icon = document.getElementById('iconToggle');
+const chk = document.getElementById('showChk');
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -52,10 +56,6 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleSections();
 });
 
-const pw = document.getElementById('pwBootstrap');
-const btn = document.getElementById('togglePassword');
-const icon = document.getElementById('iconToggle');
-const chk = document.getElementById('showChk');
 
 btn.addEventListener('click', () => {
   const showing = pw.type === 'text';
