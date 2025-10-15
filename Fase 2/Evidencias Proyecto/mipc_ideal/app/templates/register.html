@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotiza tu nuevo Dispositivo</title>
+    <link rel="stylesheet" href="../static/css/register.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="home.html"><h2>MiPc Ideal</h2></a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#">Categorias</a></li>
+                <li class="search-container">
+                    <form class="search-form">
+                        <input type="text" class="search-input" placeholder="Buscar productos...">
+                        <button type="submit" class="search-button">🔍</button>
+                    </form>
+                </li>
+            </ul>
+            <div class="menu-container">
+                <button class="menu-btn" id="menuToggle">Perfil</button>
+                <div class="menu-options" id="menuOptions">
+                    <a href="login.html" >Iniciar sesión</a>
+                    <a href="register.html">Registrarse</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="form-container">
+            <h2>Registro</h2>
+            <form id="registroForm">
+                <div class="form-group">
+                    <label for="nombre">Nombre completo</label>
+                    <input type="text" id="nombre" name="nombre" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Correo electrónico</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" minlength="6" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmar contraseña</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+                <button type="submit" class="btn">Registrarse</button>
+            </form>
+        </div>
+    </main>
+
+    <footer>
+        <ul>
+            <a href="../templates/info.html" style="color: white;">Nosotros</a>
+        </ul>
+        <p>&copy; 2025 MiPc Ideal. Todos los derechos reservados.</p>
+    </footer>
+
+<script src="../static/js/script.js"></script>
+
+</body>
+</html>

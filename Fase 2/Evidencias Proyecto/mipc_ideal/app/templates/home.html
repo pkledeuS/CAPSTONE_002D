@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- Slick CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="../static/css/home.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <nav class="nav-items">
+            <div class="logo">
+                <a href="home.html"><h2>MiPcIdeal</h2></a>
+            </div>
+            <div class="btn-group d-flex align-items-center">
+                <button class="btn btn-custom btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="../static/img/category_icon.png" alt="Categorias" class="button-header-icons">
+                    <span>Categorías</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="products-view.html">Laptops</a></li>
+                    <li><a class="dropdown-item" href="products-view.html">Escritorio</a></li>
+                    <li><a class="dropdown-item" href="products-view.html">Tablets</a></li>
+                    <li><a class="dropdown-item" href="products-view.html">Accesorios</a></li>
+                    <li class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="products-view.html">Educación</a></li>
+                    <li><a class="dropdown-item" href="products-view.html">Hogar</a></li>
+                    <li><a class="dropdown-item" href="products-view.html">Oficina</a></li>
+                </ul>
+            </div>
+            <div class="search-container">
+                <form class="search-form" role="search">
+                    <input class="search-input" type="search" placeholder="Buscar productos..." aria-label="Search">
+                    <button class="search-button" type="submit">Buscar</button>
+                </form>
+            </div>
+            <div class="btn-group d-flex align-items-center">
+                <button class="btn btn-custom btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="../static/img/profile_icon.png" alt="Perfil" class="button-header-icons">
+                    <span>Perfil</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="login.html">Iniciar sesión</a></li>
+                    <li><a class="dropdown-item" href="register.html">Registrarse</a></li>
+                    <li class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="edit-profile.html">Editar perfil</a></li>
+                    <li><a class="dropdown-item" href="edit-preferences.html">Preferencias</a></li>
+                    <li><a class="dropdown-item" href="edit-services.html">Servicios</a></li>
+                    <li class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#">Cerrar sesión</a></li>
+                </ul>
+            </div>
+            <div class="btn-group d-flex align-items-center">
+                <button class="btn btn-custom btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="../static/img/settings_icon.png" alt="Configurar" class="button-header-icons" id="theme-icon">
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#"><span class="menu-icon">☀️</span><span>Modo Claro</span></a></li>
+                    <li><a class="dropdown-item" href="#"><span class="menu-icon">🌙</span><span>Modo Oscuro</span></a></li>
+                    <li class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#"><span class="menu-icon">⚙️</span><span>Automático</span></a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="main-content">
+            <div class="title">
+                <h3>Tiendas asociadas</h3>
+            </div>
+            <div class="carousel-2">
+                <div class="card product-card h-100">
+                    <img src="../static/img/tienda.png" class="card-img-top" alt="Tienda 1">
+                    <div class="card-body">
+                        <h6 class="card-title">Tienda 1</h6>
+                        <p class="card-text">Descripción breve de la tienda.</p>
+                        <a href="#" class="btn btn-sm btn-primary">Ver más</a>
+                    </div>
+                </div>
+                <div class="card product-card h-100">
+                    <img src="../static/img/tienda.png" class="card-img-top" alt="Tienda 2">
+                    <div class="card-body">
+                        <h6 class="card-title">Tienda 2</h6>
+                        <p class="card-text">Descripción breve de la tienda.</p>
+                        <a href="#" class="btn btn-sm btn-primary">Ver más</a>
+                    </div>
+                </div>
+                <div class="card product-card h-100">
+                    <img src="../static/img/tienda.png" class="card-img-top" alt="Tienda 3">
+                    <div class="card-body">
+                        <h6 class="card-title">Tienda 3</h6>
+                        <p class="card-text">Descripción breve de la tienda.</p>
+                        <a href="#" class="btn btn-sm btn-primary">Ver más</a>
+                    </div>
+                </div>
+                <div class="card product-card h-100">
+                    <img src="../static/img/tienda.png" class="card-img-top" alt="Tienda 4">
+                    <div class="card-body">
+                        <h6 class="card-title">Tienda 4</h6>
+                        <p class="card-text">Descripción breve de la tienda.</p>
+                        <a href="#" class="btn btn-sm btn-primary">Ver más</a>
+                    </div>
+                </div>
+                <div class="card product-card h-100">
+                    <img src="../static/img/tienda.png" class="card-img-top" alt="Tienda 5">
+                    <div class="card-body">
+                        <h6 class="card-title">Tienda 5</h6>
+                        <p class="card-text">Descripción breve de la tienda.</p>
+                        <a href="#" class="btn btn-sm btn-primary">Ver más</a>
+                    </div>
+                </div>
+            </div>
+            <div class="title">
+                <h3>Categorias</h3>
+            </div>
+            <div class="cards-popular">
+                <!-- Card 1 -->
+                <div class="popular-card-horizontal">
+                    <div class="card-img-container">
+                        <img src="../static/img/pc1.png" alt="Popular 1">
+                    </div>
+                    <div class="card-body-horizontal">
+                        <h6 class="card-title">Gaming</h6>
+                        <p class="card-text">Descripción breve del producto popular.</p>
+                        <a href="#" class="btn-primary">Ver más</a>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="popular-card-horizontal">
+                    <div class="card-img-container">
+                        <img src="../static/img/pc2.png" alt="Popular 2">
+                    </div>
+                    <div class="card-body-horizontal">
+                        <h6 class="card-title">Trabajo</h6>
+                        <p class="card-text">Descripción breve del producto popular.</p>
+                        <a href="#" class="btn-primary">Ver más</a>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="popular-card-horizontal">
+                    <div class="card-img-container">
+                        <img src="../static/img/pc3.png" alt="Popular 3">
+                    </div>
+                    <div class="card-body-horizontal">
+                        <h6 class="card-title">Estudio</h6>
+                        <p class="card-text">Descripción breve del producto popular.</p>
+                        <a href="#" class="btn-primary">Ver más</a>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="popular-card-horizontal">
+                    <div class="card-img-container">
+                        <img src="../static/img/pc1.png" alt="Popular 4">
+                    </div>
+                    <div class="card-body-horizontal">
+                        <h6 class="card-title">Hogar</h6>
+                        <p class="card-text">Descripción breve del producto popular.</p>
+                        <a href="#" class="btn-primary">Ver más</a>
+                    </div>
+                </div>
+            </div>
+            <div class="title">
+                <h3>Lo más visto</h3>
+            </div>
+            <div class="carousel-2">
+                <div class="card product-card h-100">
+                    <img src="../static/img/pc1.png" class="card-img-top" alt="Producto 1">
+                    <div class="card-body">
+                        <h6 class="card-title">Producto 1</h6>
+                        <p class="card-text">Descripción breve del producto.</p>
+                        <a href="#" class="btn btn-sm btn-primary">Ver más</a>
+                    </div>
+                </div>
+                <div class="card product-card h-100">
+                    <img src="../static/img/pc2.png" class="card-img-top" alt="Producto 2">
+                    <div class="card-body">
+                        <h6 class="card-title">Producto 2</h6>
+                        <p class="card-text">Descripción breve del producto.</p>
+                        <a href="#" class="btn btn-sm btn-primary">Ver más</a>
+                    </div>
+                </div>
+                <div class="card product-card h-100">
+                    <img src="../static/img/pc3.png" class="card-img-top" alt="Producto 3">
+                    <div class="card-body">
+                        <h6 class="card-title">Producto 3</h6>
+                        <p class="card-text">Descripción breve del producto.</p>
+                        <a href="#" class="btn btn-sm btn-primary">Ver más</a>
+                    </div>
+                </div>
+                <div class="card product-card h-100">
+                    <img src="../static/img/pc1.png" class="card-img-top" alt="Producto 4">
+                    <div class="card-body">
+                        <h6 class="card-title">Producto 4</h6>
+                        <p class="card-text">Descripción breve del producto.</p>
+                        <a href="#" class="btn btn-sm btn-primary">Ver más</a>
+                    </div>
+                </div>
+                <div class="card product-card h-100">
+                    <img src="../static/img/pc2.png" class="card-img-top" alt="Producto 5">
+                    <div class="card-body">
+                        <h6 class="card-title">Producto 5</h6>
+                        <p class="card-text">Descripción breve del producto.</p>
+                        <a href="#" class="btn btn-sm btn-primary">Ver más</a>
+                    </div>
+                </div>
+                <div class="card product-card h-100">
+                    <img src="../static/img/pc3.png" class="card-img-top" alt="Producto 6">
+                    <div class="card-body">
+                        <h6 class="card-title">Producto 6</h6>
+                        <p class="card-text">Descripción breve del producto.</p>
+                        <a href="#" class="btn btn-sm btn-primary">Ver más</a>
+                    </div>
+                </div>
+                <div class="card product-card h-100">
+                    <img src="../static/img/pc1.png" class="card-img-top" alt="Producto 7">
+                    <div class="card-body">
+                        <h6 class="card-title">Producto 7</h6>
+                        <p class="card-text">Descripción breve del producto.</p>
+                        <a href="#" class="btn btn-sm btn-primary">Ver más</a>
+                    </div>
+                </div>
+                <div class="card product-card h-100">
+                    <img src="../static/img/pc2.png" class="card-img-top" alt="Producto 8">
+                    <div class="card-body">
+                        <h6 class="card-title">Producto 8</h6>
+                        <p class="card-text">Descripción breve del producto.</p>
+                        <a href="#" class="btn btn-sm btn-primary">Ver más</a>
+                    </div>
+                </div>
+                <div class="card product-card h-100">
+                    <img src="../static/img/pc3.png" class="card-img-top" alt="Producto 9">
+                    <div class="card-body">
+                        <h6 class="card-title">Producto 9</h6>
+                        <p class="card-text">Descripción breve del producto.</p>
+                        <a href="#" class="btn btn-sm btn-primary">Ver más</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <ul>
+            <a href="../templates/info.html" style="color: white;">Nosotros</a>
+        </ul>
+        <p>&copy; 2025 MiPc Ideal. Todos los derechos reservados.</p>
+    </footer>
+    <!-- MANTENER ORDEN DE LAS IMPORTACIONES -->
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous"></script>
+    <!-- Slick JS -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+    <!-- Carrusel -->
+    <script type="text/javascript" src="../static/js/carousel.js"></script>
+</body>
+</html>
