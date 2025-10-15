@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mostrar contraseña - Bootstrap 5</title>
+
+  <!-- Bootstrap 5 CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Bootstrap Icons (opcional, para el icono de ojo) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    body { padding:2rem; font-family: system-ui, Arial; }
+    .input-group .btn { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+  </style>
+</head>
+<body>
+  <div class="container" style="max-width:540px">
+    <h3 class="mb-3">Mostrar / Ocultar contraseña (Bootstrap)</h3>
+
+    <label for="pwBootstrap" class="form-label">Contraseña</label>
+    <div class="input-group">
+      <input id="pwBootstrap" type="password" class="form-control" placeholder="Escribe tu contraseña" aria-describedby="togglePassword" aria-label="Contraseña" />
+      <button id="togglePassword" class="btn btn-outline-secondary" type="button" aria-pressed="false" title="Mostrar contraseña">
+        <i id="iconToggle" class="bi bi-eye"></i>
+      </button>
+    </div>
+
+    <!-- ejemplo con checkbox (opcional) -->
+    <div class="form-check mt-2">
+      <input class="form-check-input" type="checkbox" value="" id="showChk">
+      <label class="form-check-label" for="showChk">
+        Mostrar contraseña (checkbox)
+      </label>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS (opcional para otros componentes) -->
+    <script src="../static/js/script.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -771,43 +771,56 @@ footer {
 
 /* style de inicio de sesion*/
 .menu-container {
-  position: relative;
+    position: relative;
 }
 
 .menu-btn {
-  padding: 10px 20px;
-  background: #007BFF;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
+    padding: 10px 20px;
+    background: #007BFF;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
 }
 
 .menu-btn:hover {
-  background: #0056b3;
+    background: #0056b3;
 }
 
 .menu-options {
-  display: none;
-  position: absolute;
-  top: 70px;
-  left: -10;
-  background: white;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  width: 170px;
-  height: 130px;
+    display: none;
+    position: absolute;
+    top: 70px;
+    left: -10;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    width: 170px;
+    height: 130px;
 }
 
 .menu-options a {
-  display: block;
-  padding: 4px;
-  text-decoration: none;
-  color: #333;
+    display: block;
+    padding: 4px;
+    text-decoration: none;
+    color: #333;
 }
 
 .menu-options a:hover {
-  background: #f0f0f0;
+    background: #f0f0f0;
+}
+
+.info-container {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: #f9f9f9;
+}
+.info-content {
+    text-align: justify;
+    max-width: 1000px;
+    margin: 0 auto;
 }

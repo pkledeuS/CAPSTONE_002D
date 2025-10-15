@@ -1,18 +1,50 @@
-/* Reset básico */
+/* =====================
+   1. ESTILOS BASE
+   ===================== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Estilos del header */
+html, body { 
+    height: 100%; 
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    line-height: 1.6;
+}
+
+/* =====================
+   2. LAYOUT PRINCIPAL
+   ===================== */
+header, footer { 
+    flex: 0 0 auto; 
+}
+
+main {
+    flex: 1 0 auto;
+    background: linear-gradient(135deg, #f78888 0%, #63aff7 100%);
+    padding: clamp(16px, 3vw, 32px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* =====================
+   3. HEADER Y NAVEGACIÓN
+   ===================== */
 header {
     background-color: #333;
     padding: 1rem 0;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-/* Navegación horizontal */
+/* Contenedor Nav */
 nav {
     display: flex;
     justify-content: center;
@@ -37,14 +69,13 @@ nav {
     color: inherit;
 }
 
-/* Lista de navegación horizontal */
+/* Enlaces de navegación */
 .nav-links {
     display: flex;
     list-style: none;
     gap: 2rem;
 }
 
-/* Enlaces del menú */
 .nav-links li a {
     color: #fff;
     text-decoration: none;
@@ -54,12 +85,11 @@ nav {
     transition: background-color 0.3s ease;
 }
 
-/* Efecto hover en los enlaces */
 .nav-links li a:hover {
     background-color: #555;
 }
 
-/* Estilos de la barra de búsqueda */
+/* Búsqueda */
 .search-container {
     display: flex;
     align-items: center;
@@ -81,7 +111,7 @@ nav {
     padding: 0.8rem 1rem;
     border-radius: 25px;
     font-size: 0.9rem;
-    width: 500px;
+    width: clamp(160px, 40vw, 500px);
     background: transparent;
     height: 100%;
 }
@@ -108,192 +138,376 @@ nav {
     background-color: #f0f0f0;
 }
 
-/* Estilos generales del body */
-body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-}
-
-/* Contenido principal */
-div:not(.form-container):not(.form-group) {
-    padding: 2rem;
-    text-align: center;
-}
-
-/* Footer */
-footer {
-    background-color: #333;
-    color: #fff;
-    text-align: center;
-    padding: 1rem;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-    nav {
-        flex-direction: column;
-        gap: 1rem;
-        justify-content: center;
-        text-align: center;
-    }
-    
-    .nav-links {
-        gap: 1rem;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    
-    .nav-links li a {
-        font-size: 0.9rem;
-        padding: 0.3rem 0.8rem;
-    }
-    
-    .search-input {
-        width: 150px;
-        font-size: 0.8rem;
-    }
-    
-    .search-form {
-        margin: 0 0.5rem;
-    }
-    
-    .logo h2 {
-        font-size: 1.3rem;
-        margin-bottom: 0.5rem;
-    }
-}
-
-
-/* style de boton-perfil*/
+/* Menú de perfil */
 .menu-container {
-  position: relative;
+    position: relative;
 }
 
 .menu-btn {
-  padding: 10px 20px;
-  background: #007BFF;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
+    padding: 10px 20px;
+    background: #007BFF;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
 }
 
 .menu-btn:hover {
-  background: #0056b3;
+    background: #0056b3;
 }
 
 .menu-options {
-  display: none;
-  position: absolute;
-  top: 70px;
-  left: -10;
-  background: white;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  width: 170px;
-  height: 130px;
+    display: none;
+    position: absolute;
+    top: 70px;
+    left: -10px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    width: 170px;
+    height: 130px;
 }
 
 .menu-options a {
-  display: block;
-  padding: 4px;
-  text-decoration: none;
-  color: #333;
+    display: block;
+    padding: 4px;
+    text-decoration: none;
+    color: #333;
 }
 
 .menu-options a:hover {
-  background: #f0f0f0;
+    background: #f0f0f0;
 }
 
-/* estilo de formilario de inicio sesion */
-main {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  height: 80vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* =====================
+  4. FORMULARIO LOGIN
+   ===================== */
+/* Contenedor del auth */
+.auth-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
 }
 
+/* Contenedor del formulario */
 .form-container {
-  background: rgba(255, 255, 255, 0.95);
-  padding: 40px;
-  border-radius: 20px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  width: 380px;
-  transform: translateY(0);
-  transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.95);
+    padding: clamp(24px, 4vw, 40px);
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    min-width: 600px !important;
+    width: 100% ;
+    max-width: clamp(520px, 90vw, 800px);
+    transition: all 0.3s ease;
 }
 
 .form-container:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.3);
 }
 
 .form-container h2 {
-  text-align: center;
-  margin-bottom: 30px;
-  color: #333;
-  font-size: 28px;
-  font-weight: 600;
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333;
+    font-size: 28px;
+    font-weight: 600;
 }
 
+/* Grupos del formulario */
 .form-group {
-  margin-bottom: 12px;
-  position: relative;
+    margin-bottom: 12px;
+    position: relative;
 }
 
+/* Labels */
 .form-group label {
-  display: block;
-  font-weight: 500;
-  margin-bottom: 4px;
-  color: #555;
-  font-size: 14px;
-  transition: all 0.3s ease;
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0px;
+    color: #555;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    line-height: 1.2;
 }
 
+/* Inputs */
 .form-group input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  border: 2px solid #e1e1e1;
-  font-size: 15px;
-  transition: all 0.3s ease;
-  background: rgba(255, 255, 255, 0.9);
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 2px solid #e1e1e1;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
 }
 
 .form-group input:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    outline: none;
 }
 
 .form-group input:hover {
-  border-color: #764ba2;
+    border-color: #764ba2;
 }
 
+/* Icono dentro del input */
+.form-group .input-with-icon {
+    position: relative;
+}
+
+.form-group .input-with-icon .icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.form-group .input-with-icon input {
+    padding-left: 44px;
+}
+
+/* Checkboxes */
+.form-group.form-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 0;
+    margin-bottom: 12px;
+}
+
+.form-group.form-check .form-check-input {
+    float: none;
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    align-self: center;
+}
+
+.form-group.form-check .form-check-label {
+    margin: 0;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+.form-group > input[type="checkbox"] + label {
+    margin-left: 8px;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+/* Botón de submit */
 .btn {
-  width: 100%;
-  padding: 14px;
-  border: none;
-  background: linear-gradient(to right, #667eea, #764ba2);
-  color: white;
-  font-size: 16px;
-  font-weight: 500;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+    width: 100%;
+    padding: 14px;
+    border: none;
+    background: linear-gradient(to right, #667eea, #764ba2);
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 12px;
 }
 
 .btn:hover {
-  background: linear-gradient(to right, #764ba2, #667eea);
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(to right, #764ba2, #667eea);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Enlaces adicionales */
+.passforg {
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+    font-size: 14px;
+    color: #333;
+}
+
+.register-container {
+    text-align: center;
+    font-size: 14px;
+}
+
+/* =====================
+    5. FOOTER
+   ===================== */
+footer {
+    background-color: #333;
+    color: #fff;
+    width: 100%;
+    position: static;
+    padding: 2rem 1rem;
+}
+
+footer nav {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem 2rem;
+    align-items: start;
+}
+
+footer nav .container {
+    padding: 0;
+    text-align: left;
+}
+
+footer nav h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    color: #fff;
+}
+
+footer nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+footer nav a {
+    color: #ddd;
+    text-decoration: none;
+}
+
+footer nav a:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+footer p {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: #bbb;
+}
+
+/* =====================
+   6. MEDIA QUERIES
+   ===================== */
+/* Desktop grande */
+@media (min-width: 1200px) {
+    .form-container { 
+        max-width: 880px;
+    }
+}
+
+/* Tablet */
+@media (max-width: 992px) {
+    nav { 
+        gap: 1.25rem; 
+    }
+    .search-form { 
+        max-width: 100%; 
+    }
+}
+
+/* Tablet pequeña y móvil */
+@media (max-width: 768px) {
+    nav {
+        flex-direction: column;
+        align-items: stretch;
+        gap: .75rem;
+        padding: 0 1rem;
+    }
+    .nav-links {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: .5rem .75rem;
+    }
+    .search-form {
+        order: 3;
+        width: 100%;
+        margin: .5rem 0 0;
+    }
+    .logo { 
+        order: 1; 
+        text-align: center; 
+    }
+    .menu-container { 
+        order: 2; 
+        align-self: center; 
+    }
+}
+
+/* Móvil */
+@media (max-width: 600px) {
+    header { 
+        padding: 0.75rem 0; 
+    }
+    nav { 
+        padding: 0 1rem; 
+    }
+    .nav-links { 
+        gap: 0.75rem; 
+    }
+    .form-container h2 { 
+        font-size: 22px; 
+        margin-bottom: 20px; 
+    }
+    .btn { 
+        padding: 12px; 
+        font-size: 15px; 
+    }
+    .form-group .input-with-icon input { 
+        padding-left: 40px;
+    }
+    .menu-options { 
+        left: auto; 
+        right: 0; 
+        width: auto; 
+        min-width: 170px; 
+    }
+    footer { 
+        padding: 1.25rem 1rem; 
+    }
+    footer nav { 
+        gap: 1rem; 
+    }
+    footer nav h2 { 
+        font-size: 1rem; 
+    }
+    footer nav a { 
+        font-size: 0.95rem; 
+    }
+    main { 
+        padding-bottom: 88px; 
+    }
+}
+
+/* Móvil pequeño */
+@media (max-width: 400px) {
+    .logo h2 { 
+        font-size: 1.1rem; 
+    }
+    .btn { 
+        font-size: 14px; 
+    }
+    .form-group input { 
+        font-size: 14px; 
+        padding: 10px 12px; 
+    }
+    .form-container { 
+        border-radius: 14px; 
+    }
 }

@@ -113,20 +113,11 @@ body {
     line-height: 1.6;
 }
 
+
 /* Contenido principal */
 div:not(.form-container):not(.form-group) {
-    padding: 2rem;
+    padding: 0,5rem;
     text-align: center;
-}
-/* Footer */
-footer {
-    background-color: #333;
-    color: #fff;
-    text-align: center;
-    padding: 1rem;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
 }
 
 /* Responsive design */
@@ -164,66 +155,68 @@ footer {
     }
 }
 
-/* style de inicio de sesion*/
-.menu-container {
-  position: relative;
-}
+    /* style de inicio de sesion*/
+    .menu-container {
+    position: relative;
+    }
 
-.menu-btn {
-  padding: 10px 20px;
-  background: #007BFF;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-}
+    .menu-btn {
+    padding: 10px 20px;
+    background: #007BFF;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    }
 
-.menu-btn:hover {
-  background: #0056b3;
-}
+    .menu-btn:hover {
+    background: #0056b3;
+    }
 
-.menu-options {
-  display: none;
-  position: absolute;
-  top: 70px;
-  left: -10;
-  background: white;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  width: 170px;
-  height: 130px;
-}
+    .menu-options {
+    display: none;
+    position: absolute;
+    top: 70px;
+    left: -10;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    width: 170px;
+    height: 130px;
+    }
 
-.menu-options a {
-  display: block;
-  padding: 4px;
-  text-decoration: none;
-  color: #333;
-}
+    .menu-options a {
+    display: block;
+    padding: 4px;
+    text-decoration: none;
+    color: #333;
+    }
 
-.menu-options a:hover {
-  background: #f0f0f0;
-}
+    .menu-options a:hover {
+    background: #f0f0f0;
+    }
 
 /* Estilos del formulario de registro */
 main {
     font-family: 'Segoe UI', Arial, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    height: 85vh;
+    background: linear-gradient(135deg, #f78888 0%, #63aff7 100%);
+    min-height: 100vh; /* se adapta a la altura completa */
     display: flex;
     justify-content: center;
     align-items: center;
+    padding-top: 40px; /* espacio para el header */
+    padding-bottom: 45px; /* espacio para el footer */
+    box-sizing: border-box; /* asegura que los paddings cuenten en el alto total */
 }
 
 .form-container {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 35px;
+    background: rgba(255, 255, 255, 0.96);
+    padding: 40px;
     border-radius: 20px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    width: 380px;
-    transform: translateY(0);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    width: 600px;
     transition: all 0.3s ease;
 }
 
@@ -246,7 +239,7 @@ main {
 }
 
 .form-group label {
-    display: block;
+    display: flex;
     font-weight: 500;
     margin-bottom: 2px;
     color: #555;
@@ -294,4 +287,123 @@ main {
     background: linear-gradient(to right, #764ba2, #667eea);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* =====================
+    5. FOOTER
+   ===================== */
+footer {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 1rem;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    position: static;
+}
+
+
+footer nav {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem 2rem;
+    align-items: start;
+}
+
+footer nav .container {
+    padding: 0;
+    text-align: left;
+}
+
+footer nav h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    color: #fff;
+}
+
+footer nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+footer nav a {
+    color: #ddd;
+    text-decoration: none;
+}
+
+footer nav a:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+footer p {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: #bbb;
+}
+
+/* Checkboxes */
+.form-group.form-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 0;
+    margin-bottom: 12px;
+    width: 100%;
+}
+
+.form-group.form-check .form-check-input {
+    float: none;
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    align-self: center;
+}
+
+.form-group.form-check .form-check-label {
+    margin: 0;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+/* Estilos para la lista de checkboxes en el registro */
+.container-check-list {
+    display: flex;
+    flex-direction: column;
+    justify-items: center;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    align-items: flex-start;  /* Cambiado de center a flex-start */
+    width: 100%;
+}
+
+.container-check-list .form-label {
+    align-self: flex-start;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.container-check-list .form-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 0;
+    margin-bottom: 12px;
+    width: 100%;
+}
+/* Contenedor del auth */
+.auth-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
 }
