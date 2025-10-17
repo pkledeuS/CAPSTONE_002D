@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const usuarioRadio = document.getElementById("usuario");
     const tiendaRadio = document.getElementById("tienda");
     const serviciosSection = document.getElementById("serviciosSection");
-    const interesesSection = document.querySelector(".container-check-list"); // tu sección de intereses
+    const interesesSection = document.querySelector(".container-check-list");
 
     // Función para alternar visibilidad
     function toggleSections() {

@@ -1,13 +1,12 @@
 from django.urls import path
-from django.shortcuts import redirect
-from . import views
-
-def redirect_to_home(request):
-    return redirect('/home/')
+from .views import home, login, register, edit_user, edit_store, products, info
 
 urlpatterns = [
-    path('', redirect_to_home, name='root'),
-    path('home/', views.app_view, name='home'),
-    path('login/', views.login_view, name='login'),
-    path('register/', views.register_view, name='register'),
+    path('', home, name='home'),
+    path('login/', login, name='login'),
+    path('register/', register, name='register'),
+    path('edit_user/', edit_user, name='edit_user'),
+    path('edit_store/', edit_store, name='edit_store'),
+    path('products/', products, name='products'),
+    path('info/', info, name='info'),
 ]

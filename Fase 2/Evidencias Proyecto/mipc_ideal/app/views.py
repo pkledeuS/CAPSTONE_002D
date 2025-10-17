@@ -3,14 +3,23 @@ from django.http import HttpResponse
 from django.template import loader
 
 # Create your views here.
-def app_view(request):
-    template = loader.get_template('home.html')
-    return HttpResponse(template.render())
+def home(request):
+    return render(request, 'home.html')
 
-def login_view(request):
-    template = loader.get_template('login.html')
-    return HttpResponse(template.render())
+def login(request):
+    return render(request, 'login.html')
 
-def register_view(request):
-    template = loader.get_template('register.html')
-    return HttpResponse(template.render())
+def register(request):
+    return render(request, 'register.html')
+
+def edit_user(request):
+    return render(request, 'edit-profile-user.html')
+
+def edit_store(request):
+    return render(request, 'edit-profile-store.html')
+
+def products(request):
+    return render(request, 'products-view.html')
+
+def info(request):
+    return render(request, 'info.html')

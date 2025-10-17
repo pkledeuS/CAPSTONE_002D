@@ -1,96 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MiPc Ideal - Inicio de sesión</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+{% extends "base.html" %}
 
-    <link rel="stylesheet" href="../static/css/login.css">
-</head>
-<body>  
-    <header>
-        <nav>
-        <div class="logo">
-            <a href="home.html"><h2>MiPc Ideal</h2></a>
-        </div>
-        <ul class="nav-links">
-            <li><a href="#">Categorias</a></li>
-            <li class="search-container">
-                <form class="search-form">
-                    <input type="text" class="search-input" placeholder="Buscar productos...">
-                    <button type="submit" class="search-button">🔍</button>
-                </form>
-            </li>
-        </ul>
-        <div class="menu-container">
-            <button class="menu-btn" id="menuToggle">Perfil</button>
-            <div class="menu-options" id="menuOptions">
-                <a href="login.html" >Iniciar sesión</a>
-                <a href="register.html">Registrarse</a>
-            </div>
-        </div>
-    </nav>
-    </header>
+{% load static %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+
+{% block content %}
     
-    <main>
-        <div class="auth-stack" >
-            <div class="form-container">
-                <h2>Iniciar Sesión</h2>
-                <form id="loginForm">
-                    <div class="form-group">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person" viewBox="0 0 16 16">
-                                <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
-                            </svg></span>
-                            <input type="email" id="email" name="email" required class="form-control" placeholder="Ingresa tu Correo Electrónico" aria-label="Username" aria-describedby="basic-addon1">
-                        </div>
-                    </div>  
-                    <div class="form-group">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lock" viewBox="0 0 16 16">
-                                <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2m-1 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
-                            </svg></span>
-                            <input id="pwBootstrap" type="password" class="form-control" placeholder="Escribe tu contraseña" aria-describedby="togglePassword" aria-label="Contraseña" />
-                        </div>
-                    </div>
-                    <div class="form-group form-check">
-                        <input class="form-check-input" type="checkbox" id="showChk">
-                        <label class="form-check-label" for="showChk">
-                            Mostrar contraseña 
-                        </label>
-                    </div>
-                    <div class="form-group form-check">
-                        <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
-                        <label class="form-check-label" for="rememberMe">Recuérdame</label>
-                    </div>
-
-                    
-                    <button type="submit" class="btn">Iniciar sesión</button>
-                </form>
-                <a class="passforg" href="forgot_password.html">¿Olvidaste tu contraseña?</a>
-            </div>
-            <div class="register-container">
-                <p>¿No tienes una cuenta?
-                    <br>
-                    <a href="register.html">Regístrate aquí</a>
-                </p>
-            </div>
-            
+    <div class="form-container">
+        <div class="form-title">
+            <h2 class="text-center my-4">Inicia Sesión</h2>
         </div>
+        <form id="loginForm">
+            <div class="form-group">
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="bi bi-person"></i></span></span>
+                    <input type="email" id="email" name="email" required class="form-control" placeholder="Ingresa tu Correo Electrónico" aria-label="Username" aria-describedby="basic-addon1">
+                </div>
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="bi bi-lock"></i></span>
+                    <input id="pwBootstrap" type="password" class="form-control" placeholder="Escribe tu contraseña" aria-describedby="togglePassword" aria-label="Contraseña" />
+                </div>
+            </div>
+            <div class="form-group form-check">
+                <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
+                <label class="form-check-label" for="rememberMe">Recuérdame</label>
+            </div>
+            <div class="btn-submit-container">
+                <button type="submit" class="btn-login">Iniciar sesión</button>
+            </div>
+        </form>
+        <a class="passforg" href="forgot_password.html">¿Olvidaste tu contraseña?</a>
+        <div class="register-container">
+            <p>¿No tienes una cuenta?
+                <br>
+                <a href="register.html">Regístrate aquí</a>
+            </p>
+        </div>
+    </div>
         
-    </main>
+    {% block scripts %}
+    <script src="{% static 'js/script.js' %}"></script>
+    {% endblock %}
 
-    <footer>
-        <ul>
-            <a href="../templates/info.html" style="color: white;">Nosotros</a>
-        </ul>
-        <p>&copy; 2025 MiPc Ideal. Todos los derechos reservados.</p>
-    </footer>
-<script src="../static/js/script.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous"></script>
+{% endblock %}
 
-</body>
-</html>
+
