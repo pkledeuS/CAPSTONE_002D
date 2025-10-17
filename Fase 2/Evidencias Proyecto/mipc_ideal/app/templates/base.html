@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- Slick CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
+    <!-- Main CSS -->
+    {% load static %}
+    {% block css %}
+    {% endblock %}
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <nav class="nav-items">
+            <div class="logo">
+                <a href="{% url 'home' %}"><h2>MiPcIdeal</h2></a>
+            </div>
+            <div class="btn-group d-flex align-items-center">
+                <button class="btn btn-custom btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="{% static 'img/category_icon.png' %}" alt="Categorias" class="button-header-icons">
+                    <span>Categorías</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{% url 'products' %}">Laptops</a></li>
+                    <li><a class="dropdown-item" href="{% url 'products' %}">Escritorio</a></li>
+                    <li><a class="dropdown-item" href="{% url 'products' %}">Tablets</a></li>
+                    <li><a class="dropdown-item" href="{% url 'products' %}">Accesorios</a></li>
+                    <li class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{% url 'products' %}">Educación</a></li>
+                    <li><a class="dropdown-item" href="{% url 'products' %}">Hogar</a></li>
+                    <li><a class="dropdown-item" href="{% url 'products' %}">Oficina</a></li>
+                </ul>
+            </div>
+            <div class="search-container">
+                <form class="search-form" role="search">
+                    <input class="search-input" type="search" placeholder="Buscar productos..." aria-label="Search">
+                    <button class="search-button" type="submit">Buscar</button>
+                </form>
+            </div>
+            <div class="btn-group d-flex align-items-center">
+                <button class="btn btn-custom btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="{% static 'img/profile_icon.png' %}" alt="Perfil" class="button-header-icons">
+                    <span>Perfil</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{% url 'login' %}">Iniciar sesión</a></li>
+                    <li><a class="dropdown-item" href="{% url 'register' %}">Registrarse</a></li>
+                    <li class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{% url 'edit_user' %}">Editar perfil</a></li>
+                    <li><a class="dropdown-item" href="{% url 'edit_store' %}">Servicios</a></li>
+                    <li class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#">Cerrar sesión</a></li>
+                </ul>
+            </div>
+            <div class="btn-group d-flex align-items-center">
+                <button class="btn btn-custom btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="{% static 'img/settings_icon.png' %}" alt="Configurar" class="button-header-icons" id="theme-icon">
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#"><span>Modo Claro</span></a></li>
+                    <li><a class="dropdown-item" href="#"><span>Modo Oscuro</span></a></li>
+                    <li class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#"><span>Automático</span></a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="main-content">
+            
+            {% block content %}
+            {% endblock %}
+
+        </div>
+    </main>
+
+    <footer>
+        <ul>
+            <a href="../templates/info.html" style="color: white;">Nosotros</a>
+        </ul>
+        <p>&copy; 2025 MiPc Ideal. Todos los derechos reservados.</p>
+    </footer>
+    <!-- MANTENER ORDEN DE LAS IMPORTACIONES -->
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous"></script>
+    <!-- Slick JS -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+    <!-- Carrusel -->
+    <script type="text/javascript" src="{% static 'js/carousel.js' %}"></script>
+
+    {% block scripts %}
+    {% endblock %}
+    
+</body>
+</html>

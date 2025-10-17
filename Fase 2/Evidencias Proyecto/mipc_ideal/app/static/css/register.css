@@ -1,252 +1,61 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-/* Estilos del header */
-header {
-    background-color: #333;
-    padding: 1rem 0;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-/* Navegación horizontal */
-nav {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 2rem;
-    flex-wrap: wrap;
-    gap: 2rem;
-}
-
-/* Logo */
-.logo h2 {
-    color: #fff;
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin: 0;
-}
-
-.logo a {
-    text-decoration: none;
-    color: inherit;
-}
-
-/* Lista de navegación horizontal */
-.nav-links {
-    display: flex;
-    list-style: none;
-    gap: 2rem;
-}
-
-/* Enlaces del menú */
-.nav-links li a {
-    color: #fff;
-    text-decoration: none;
-    font-size: 1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
-}
-
-/* Efecto hover en los enlaces */
-.nav-links li a:hover {
-    background-color: #555;
-}
-
-/* Estilos de la barra de búsqueda */
-.search-container {
-    display: flex;
-    align-items: center;
-}
-
-.search-form {
-    display: flex;
-    align-items: center;
-    background-color: #fff;
-    border-radius: 25px;
-    padding: 0.4rem;
-    margin: 0 1rem;
-    height: 35px;
-}
-
-.search-input {
-    border: none;
-    outline: none;
-    padding: 0.8rem 1rem;
-    border-radius: 25px;
-    font-size: 0.9rem;
-    width: 500px;
-    background: transparent;
-    height: 100%;
-}
-
-.search-input::placeholder {
-    color: #666;
-}
-
-.search-button {
-    background: none;
-    border: none;
-    padding: 0.8rem;
-    cursor: pointer;
-    font-size: 1.1rem;
-    border-radius: 50%;
-    transition: background-color 0.3s ease;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.search-button:hover {
-    background-color: #f0f0f0;
-}
-
-/* Estilos generales del body */
-body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-}
-
-
-/* Contenido principal */
-div:not(.form-container):not(.form-group) {
-    padding: 0,5rem;
-    text-align: center;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-    nav {
-        flex-direction: column;
-        gap: 1rem;
-        justify-content: center;
-        text-align: center;
-    }
-    
-    .nav-links {
-        gap: 1rem;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    
-    .nav-links li a {
-        font-size: 0.9rem;
-        padding: 0.3rem 0.8rem;
-    }
-    
-    .search-input {
-        width: 150px;
-        font-size: 0.8rem;
-    }
-    
-    .search-form {
-        margin: 0 0.5rem;
-    }
-    
-    .logo h2 {
-        font-size: 1.3rem;
-        margin-bottom: 0.5rem;
-    }
-}
-
-    /* style de inicio de sesion*/
-    .menu-container {
-    position: relative;
-    }
-
-    .menu-btn {
-    padding: 10px 20px;
-    background: #007BFF;
-    border: none;
-    border-radius: 5px;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    }
-
-    .menu-btn:hover {
-    background: #0056b3;
-    }
-
-    .menu-options {
-    display: none;
-    position: absolute;
-    top: 70px;
-    left: -10;
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    width: 170px;
-    height: 130px;
-    }
-
-    .menu-options a {
-    display: block;
-    padding: 4px;
-    text-decoration: none;
-    color: #333;
-    }
-
-    .menu-options a:hover {
-    background: #f0f0f0;
-    }
-
-/* Estilos del formulario de registro */
-main {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: linear-gradient(135deg, #f78888 0%, #63aff7 100%);
-    min-height: 100vh; /* se adapta a la altura completa */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding-top: 40px; /* espacio para el header */
-    padding-bottom: 45px; /* espacio para el footer */
-    box-sizing: border-box; /* asegura que los paddings cuenten en el alto total */
-}
-
+/* ===========================
+   CONTENEDOR DEL FORMULARIO
+   =========================== */
 .form-container {
-    background: rgba(255, 255, 255, 0.96);
-    padding: 40px;
+    max-width: 560px;
+    margin: 0 auto;
+    padding: clamp(24px, 4vw, 40px);
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    width: 600px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
     transition: all 0.3s ease;
 }
-
 .form-container:hover {
     transform: translateY(-5px);
     box-shadow: 0 15px 30px rgba(0,0,0,0.3);
 }
 
-.form-container h2 {
+/* ===========================
+   TÍTULO DEL FORMULARIO
+   =========================== */
+.form-title {
     text-align: center;
-    margin-bottom: 25px;
+    font-size: 24px;
+    margin-bottom: 30px;
     color: #333;
-    font-size: 28px;
-    font-weight: 600;
+    padding: 1px 0;
 }
-
+.form-subtitle {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 18px;
+    color: #333;
+    text-align: center;
+}
+/* ===========================
+   GRUPOS DEL FORMULARIO
+   =========================== */
 .form-group {
-    margin-bottom: 8px;
+    margin-bottom: 12px;
     position: relative;
 }
-
-.form-group label {
-    display: flex;
+.form-group label,
+.form-group .form-check-label {
+    display: block;
     font-weight: 500;
-    margin-bottom: 2px;
+    margin-bottom: 0;
     color: #555;
     font-size: 14px;
     transition: all 0.3s ease;
+    line-height: 1.2;
+    cursor: pointer;
 }
 
+/* ===========================
+   INPUTS
+   =========================== */
 .form-group input {
     width: 100%;
     padding: 10px;
@@ -256,18 +65,73 @@ main {
     transition: all 0.3s ease;
     background: rgba(255, 255, 255, 0.9);
 }
-
 .form-group input:focus {
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     outline: none;
 }
-
 .form-group input:hover {
     border-color: #764ba2;
 }
 
-.btn {
+/* ===========================
+   CHECKBOX INDIVIDUAL (Mostrar contraseña)
+   =========================== */
+.form-group.form-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 0;
+    margin-bottom: 12px;
+}
+.form-group.form-check .form-check-input {
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    align-self: center;
+}
+.form-group.form-check .form-check-label {
+    margin: 0;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+/* ===========================
+   CHECKBOXES EN GRID (Intereses y Servicios)
+   =========================== */
+.form-check-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 24px;
+    width: 100%;
+    margin-left: 16px;
+    margin-right: 16px;
+    margin-bottom: 16px;
+}
+.form-check-container label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: #555;
+    font-size: 14px;
+    cursor: pointer;
+}
+.form-check-container .form-check-input {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+}
+
+/* ===========================
+   BOTÓN DE SUBMIT
+   =========================== */
+.btn-submit-container {
+    display: flex;
+    justify-content: center;
+    padding-top: 10px;
+}
+.btn-register {
     width: 100%;
     padding: 14px;
     border: none;
@@ -280,130 +144,45 @@ main {
     transition: all 0.3s ease;
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-top: 10px;
+    margin-top: 12px;
 }
-
-.btn:hover {
+.btn-register:hover {
     background: linear-gradient(to right, #764ba2, #667eea);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 }
 
-/* =====================
-    5. FOOTER
-   ===================== */
-footer {
-    background-color: #333;
-    color: #fff;
+.login-container {
     text-align: center;
-    padding: 1rem;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    position: static;
+    font-size: 14px;
+    padding: 40px 0 0 0;
 }
 
-
-footer nav {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.5rem 2rem;
-    align-items: start;
-}
-
-footer nav .container {
-    padding: 0;
-    text-align: left;
-}
-
-footer nav h2 {
-    font-size: 1.1rem;
-    margin-bottom: 0.75rem;
-    color: #fff;
-}
-
-footer nav ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-footer nav a {
-    color: #ddd;
-    text-decoration: none;
-}
-
-footer nav a:hover {
-    color: #fff;
-    text-decoration: underline;
-}
-
-footer p {
-    text-align: center;
-    margin-top: 1.5rem;
-    font-size: 0.9rem;
-    color: #bbb;
-}
-
-/* Checkboxes */
-.form-group.form-check {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding-left: 0;
-    margin-bottom: 12px;
-    width: 100%;
-}
-
-.form-group.form-check .form-check-input {
-    float: none;
-    margin: 0;
-    width: 16px;
-    height: 16px;
-    display: inline-block;
-    align-self: center;
-}
-
-.form-group.form-check .form-check-label {
-    margin: 0;
-    line-height: 1.2;
-    cursor: pointer;
-}
-
-/* Estilos para la lista de checkboxes en el registro */
-.container-check-list {
-    display: flex;
-    flex-direction: column;
-    justify-items: center;
-    margin-top: 10px;
-    margin-bottom: 20px;
-    align-items: flex-start;  /* Cambiado de center a flex-start */
-    width: 100%;
-}
-
-.container-check-list .form-label {
-    align-self: flex-start;
-    margin-bottom: 10px;
-    width: 100%;
-}
-
-.container-check-list .form-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding-left: 0;
-    margin-bottom: 12px;
-    width: 100%;
-}
-/* Contenedor del auth */
-.auth-stack {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
+@media (max-width: 600px) {
+    .form-container {
+        max-width: 100%;
+        padding: 16px;
+    }
+    .form-title {
+        font-size: 18px;
+        padding: 0.5rem 0;
+    }
+    .form-subtitle {
+        font-size: 15px;
+        margin-bottom: 12px;
+    }
+    .form-check-container {
+        grid-template-columns: 1fr;
+        margin-left: 0;
+        margin-right: 0;
+        gap: 12px 0;
+    }
+    .btn-register {
+        font-size: 15px;
+        padding: 12px;
+    }
+    .form-group input {
+        font-size: 14px;
+        padding: 8px;
+    }
 }
