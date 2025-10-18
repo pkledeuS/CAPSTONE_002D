@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import Usuario, Preferencias, PreferenciasUsuario, ProductosFavoritos
 from .models import Tienda, TipoServicio, TiendaTipoServicio, TiendaProducto
-from .models import Producto, MarcaProducto, EspecificacionProducto, CategoriaProducto
+from .models import Producto, MarcaProducto, EspecificacionProducto, CategoriaProducto, TipoProducto
 
 # Register your models here.
 admin.site.register(Usuario)
@@ -16,3 +16,4 @@ admin.site.register(Producto)
 admin.site.register(MarcaProducto)
 admin.site.register(EspecificacionProducto)
 admin.site.register(CategoriaProducto)
+admin.site.register(TipoProducto)

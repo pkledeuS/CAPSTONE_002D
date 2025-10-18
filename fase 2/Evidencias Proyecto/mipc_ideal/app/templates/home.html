@@ -8,175 +8,63 @@
         <h3>Tiendas asociadas</h3>
     </div>
     <div class="carousel-2">
+        {% for tienda in tiendas %}
+        <!-- Carrusel de Tiendas -->
         <div class="card product-card h-100">
-            <img src="../static/img/tienda.png" class="card-img-top" alt="Tienda 1">
+            {% if tienda.imagen %}
+                <img src="{{ tienda.imagen.url }}" alt="{{ tienda.nombre_tienda }}">
+            {% else %}
+                <img src="{% static 'img/tienda.png' %}" class="card-img-top" alt="{{ tienda.nombre_tienda }}">
+            {% endif %}
             <div class="card-body">
-                <h6 class="card-title">Tienda 1</h6>
-                <p class="card-text">Descripción breve de la tienda.</p>
+                <h6 class="card-title">{{ tienda.nombre_tienda }}</h6>
+                <p class="card-text">{{ tienda.descripcion_tienda|default:"Sin descripción." }}</p>
                 <a href="#" class="btn btn-sm btn-primary">Ver más</a>
             </div>
         </div>
-        <div class="card product-card h-100">
-            <img src="../static/img/tienda.png" class="card-img-top" alt="Tienda 2">
-            <div class="card-body">
-                <h6 class="card-title">Tienda 2</h6>
-                <p class="card-text">Descripción breve de la tienda.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
-            </div>
-        </div>
-        <div class="card product-card h-100">
-            <img src="../static/img/tienda.png" class="card-img-top" alt="Tienda 3">
-            <div class="card-body">
-                <h6 class="card-title">Tienda 3</h6>
-                <p class="card-text">Descripción breve de la tienda.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
-            </div>
-        </div>
-        <div class="card product-card h-100">
-            <img src="../static/img/tienda.png" class="card-img-top" alt="Tienda 4">
-            <div class="card-body">
-                <h6 class="card-title">Tienda 4</h6>
-                <p class="card-text">Descripción breve de la tienda.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
-            </div>
-        </div>
-        <div class="card product-card h-100">
-            <img src="../static/img/tienda.png" class="card-img-top" alt="Tienda 5">
-            <div class="card-body">
-                <h6 class="card-title">Tienda 5</h6>
-                <p class="card-text">Descripción breve de la tienda.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
-            </div>
-        </div>
+        {% endfor %}
     </div>
     <div class="title">
         <h3>Categorias</h3>
     </div>
     <div class="cards-popular">
-        <!-- Card 1 -->
+        {% for categoria in categorias %}
+        <!-- Cards de Categorias -->
         <div class="popular-card-horizontal">
             <div class="card-img-container">
-                <img src="../static/img/pc1.png" alt="Popular 1">
+                {% if categoria.imagen_categoria %}
+                    <img src="{{ categoria.imagen_categoria.url }}" alt="{{ categoria.nombre_categoria }}">
+                {% else %}
+                    <img src="{% static 'img/default_categoria.png' %}" alt="{{ categoria.nombre_categoria }}">
+                {% endif %}
             </div>
             <div class="card-body-horizontal">
-                <h6 class="card-title">Gaming</h6>
-                <p class="card-text">Descripción breve del producto popular.</p>
-                <a href="#" class="btn-primary">Ver más</a>
+                <h6 class="card-title">{{ categoria.nombre_categoria }}</h6>
+                <p class="card-text">{{ categoria.descripcion_categoria|default:"Sin descripción." }}</p>
+                <a href="{% url 'products_by_category' categoria.id %}" class="btn-primary">Ver más</a>
             </div>
         </div>
-
-        <!-- Card 2 -->
-        <div class="popular-card-horizontal">
-            <div class="card-img-container">
-                <img src="../static/img/pc2.png" alt="Popular 2">
-            </div>
-            <div class="card-body-horizontal">
-                <h6 class="card-title">Trabajo</h6>
-                <p class="card-text">Descripción breve del producto popular.</p>
-                <a href="#" class="btn-primary">Ver más</a>
-            </div>
-        </div>
-
-        <!-- Card 3 -->
-        <div class="popular-card-horizontal">
-            <div class="card-img-container">
-                <img src="../static/img/pc3.png" alt="Popular 3">
-            </div>
-            <div class="card-body-horizontal">
-                <h6 class="card-title">Estudio</h6>
-                <p class="card-text">Descripción breve del producto popular.</p>
-                <a href="#" class="btn-primary">Ver más</a>
-            </div>
-        </div>
-
-        <!-- Card 4 -->
-        <div class="popular-card-horizontal">
-            <div class="card-img-container">
-                <img src="../static/img/pc1.png" alt="Popular 4">
-            </div>
-            <div class="card-body-horizontal">
-                <h6 class="card-title">Hogar</h6>
-                <p class="card-text">Descripción breve del producto popular.</p>
-                <a href="#" class="btn-primary">Ver más</a>
-            </div>
-        </div>
+        {% endfor %}
     </div>
     <div class="title">
         <h3>Lo más visto</h3>
     </div>
     <div class="carousel-2">
+        <!-- Carrusel de Productos Más Vistos -->
+        {% for producto in productos_vistos %}
         <div class="card product-card h-100">
-            <img src="../static/img/pc1.png" class="card-img-top" alt="Producto 1">
+            {% if producto.imagen_producto %}
+                <img src="{{ producto.imagen_producto.url }}" alt="{{ producto.nombre_producto }}">
+            {% else %}
+                <img src="{% static 'img/pc1.png' %}" class="card-img-top" alt="{{ producto.nombre_producto }}">
+            {% endif %}
             <div class="card-body">
-                <h6 class="card-title">Producto 1</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
+                <h6 class="card-title">{{ producto.nombre_producto }}</h6>
+                <p class="card-text">{{ producto.descripcion_producto|default:"Sin descripción." }}</p>
+                <a href="{% url 'products_by_category' categoria.id %}" class="btn-primary">Ver más</a>
             </div>
         </div>
-        <div class="card product-card h-100">
-            <img src="../static/img/pc2.png" class="card-img-top" alt="Producto 2">
-            <div class="card-body">
-                <h6 class="card-title">Producto 2</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
-            </div>
-        </div>
-        <div class="card product-card h-100">
-            <img src="../static/img/pc3.png" class="card-img-top" alt="Producto 3">
-            <div class="card-body">
-                <h6 class="card-title">Producto 3</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
-            </div>
-        </div>
-        <div class="card product-card h-100">
-            <img src="../static/img/pc1.png" class="card-img-top" alt="Producto 4">
-            <div class="card-body">
-                <h6 class="card-title">Producto 4</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
-            </div>
-        </div>
-        <div class="card product-card h-100">
-            <img src="../static/img/pc2.png" class="card-img-top" alt="Producto 5">
-            <div class="card-body">
-                <h6 class="card-title">Producto 5</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
-            </div>
-        </div>
-        <div class="card product-card h-100">
-            <img src="../static/img/pc3.png" class="card-img-top" alt="Producto 6">
-            <div class="card-body">
-                <h6 class="card-title">Producto 6</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
-            </div>
-        </div>
-        <div class="card product-card h-100">
-            <img src="../static/img/pc1.png" class="card-img-top" alt="Producto 7">
-            <div class="card-body">
-                <h6 class="card-title">Producto 7</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
-            </div>
-        </div>
-        <div class="card product-card h-100">
-            <img src="../static/img/pc2.png" class="card-img-top" alt="Producto 8">
-            <div class="card-body">
-                <h6 class="card-title">Producto 8</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
-            </div>
-        </div>
-        <div class="card product-card h-100">
-            <img src="../static/img/pc3.png" class="card-img-top" alt="Producto 9">
-            <div class="card-body">
-                <h6 class="card-title">Producto 9</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
-            </div>
-        </div>
+        {% endfor %}
     </div>
 
 {% endblock %}

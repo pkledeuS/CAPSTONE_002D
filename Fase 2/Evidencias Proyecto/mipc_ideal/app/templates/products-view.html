@@ -7,141 +7,41 @@
         <h3>Nuevos productos</h3>
     </div>
     <div class="carousel-2">
+        {% for producto in productos_recientes %}
         <div class="card product-card h-100">
-            <img src="{% static 'img/pc1.png' %}" class="card-img-top" alt="Producto 1">
+            {% if producto.imagen_producto %}
+                <img src="{{ producto.imagen_producto.url }}" class="card-img-top" alt="{{ producto.nombre_producto }}">
+            {% else %}
+                <img src="{% static 'img/default.png' %}" class="card-img-top" alt="Default Image">
+            {% endif %}
             <div class="card-body">
-                <h6 class="card-title">Producto 1</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
+                <h6 class="card-title">{{ producto.nombre_producto }}</h6>
+                <p class="card-text">{{ producto.descripcion_producto }}</p>
+                <a href="{% url 'product_detail' producto.id %}" class="btn btn-sm btn-primary">Ver más</a>
             </div>
         </div>
-        <div class="card product-card h-100">
-            <img src="{% static 'img/pc2.png' %}" class="card-img-top" alt="Producto 2">
-            <div class="card-body">
-                <h6 class="card-title">Producto 2</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
-            </div>
-        </div>
-        <div class="card product-card h-100">
-            <img src="{% static 'img/pc3.png' %}" class="card-img-top" alt="Producto 3">
-            <div class="card-body">
-                <h6 class="card-title">Producto 3</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
-            </div>
-        </div>
-        <div class="card product-card h-100">
-            <img src="{% static 'img/pc4.png' %}" class="card-img-top" alt="Producto 4">
-            <div class="card-body">
-                <h6 class="card-title">Producto 4</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
-            </div>
-        </div>
-        <div class="card product-card h-100">
-            <img src="{% static 'img/pc1.png' %}" class="card-img-top" alt="Producto 5">
-            <div class="card-body">
-                <h6 class="card-title">Producto 5</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn btn-sm btn-primary">Ver más</a>
-            </div>
-        </div>
+        {% endfor %}
     </div>
     <div class="title">
         <h3>Productos</h3>
     </div>
     <div class="cards-popular">
-        <!-- Card 1 -->
+        <!-- Cards para los productos -->
+        {% for producto in productos %}
         <div class="popular-card-horizontal">
             <div class="card-img-container">
-                <img src="{% static 'img/pc1.png' %}" alt="Popular 1">
+                {% if producto.imagen_producto %}
+                    <img src="{{ producto.imagen_producto.url }}" alt="{{ producto.nombre_producto }}">
+                {% else %}
+                    <img src="{% static 'img/default.png' %}" alt="Default Image">
+                {% endif %}
             </div>
             <div class="card-body-horizontal">
-                <h6 class="card-title">dispositivo 1</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn-primary">Ver más</a>
+                <h6 class="card-title">{{ producto.nombre_producto }}</h6>
+                <p class="card-text">{{ producto.descripcion_producto }}</p>
+                <a href="{% url 'product_detail' producto.id %}" class="btn-primary">Ver más</a>
             </div>
         </div>
-
-        <!-- Card 2 -->
-        <div class="popular-card-horizontal">
-            <div class="card-img-container">
-                <img src="{% static 'img/pc2.png' %}" alt="Popular 2">
-            </div>
-            <div class="card-body-horizontal">
-                <h6 class="card-title">dispositivo 2</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn-primary">Ver más</a>
-            </div>
-        </div>
-
-        <!-- Card 3 -->
-        <div class="popular-card-horizontal">
-            <div class="card-img-container">
-                <img src="{% static 'img/pc3.png' %}" alt="Popular 3">
-            </div>
-            <div class="card-body-horizontal">
-                <h6 class="card-title">dispositivo 3</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn-primary">Ver más</a>
-            </div>
-        </div>
-
-        <!-- Card 4 -->
-        <div class="popular-card-horizontal">
-            <div class="card-img-container">
-                <img src="{% static 'img/pc1.png' %}" alt="Popular 4">
-            </div>
-            <div class="card-body-horizontal">
-                <h6 class="card-title">dispositivo 4</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn-primary">Ver más</a>
-            </div>
-        </div>
-        <!-- Card 4 -->
-        <div class="popular-card-horizontal">
-            <div class="card-img-container">
-                <img src="{% static 'img/pc2.png' %}" alt="Popular 4">
-            </div>
-            <div class="card-body-horizontal">
-                <h6 class="card-title">dispositivo 5</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn-primary">Ver más</a>
-            </div>
-        </div>
-        <!-- Card 4 -->
-        <div class="popular-card-horizontal">
-            <div class="card-img-container">
-                <img src="{% static 'img/pc3.png' %}" alt="Popular 4">
-            </div>
-            <div class="card-body-horizontal">
-                <h6 class="card-title">dispositivo 6</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn-primary">Ver más</a>
-            </div>
-        </div>
-        <!-- Card 4 -->
-        <div class="popular-card-horizontal">
-            <div class="card-img-container">
-                <img src="{% static 'img/pc1.png' %}" alt="Popular 4">
-            </div>
-            <div class="card-body-horizontal">
-                <h6 class="card-title">dispositivo 7</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn-primary">Ver más</a>
-            </div>
-        </div>
-        <!-- Card 4 -->
-        <div class="popular-card-horizontal">
-            <div class="card-img-container">
-                <img src="{% static 'img/pc2.png' %}" alt="Popular 4">
-            </div>
-            <div class="card-body-horizontal">
-                <h6 class="card-title">dispositivo 8</h6>
-                <p class="card-text">Descripción breve del producto.</p>
-                <a href="#" class="btn-primary">Ver más</a>
-            </div>
-        </div>
+        {% endfor %}
     </div>
 {% endblock %}
