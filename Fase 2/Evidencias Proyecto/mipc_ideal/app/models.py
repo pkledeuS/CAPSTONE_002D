@@ -5,96 +5,144 @@ from django.db import models
 # Para migrar las nuevas tablas a la base de datos, se usa el comando: python manage.py makemigrations 'nombre_app'
 # Luego, para aplicar los cambios a la base de datos, se usa el comando: python manage.py migrate
 
-#USUARIO Y PREFERENCIAS
-class usuario(models.Model):
-    #id_usuario = models.AutoField(primary_key=True)
+# ==============================
+#     USUARIO Y PREFERENCIAS
+# ==============================
+class Usuario(models.Model):
+    """
+    Representa a un usuario del sistema.
+    Este puede tener preferencias y agregar productos favoritos.
+    """
     nombre_usuario = models.CharField(max_length=50, unique=True)
     email_usuario = models.EmailField(unique=True)
 
     def __str__(self):
-        return self.nombre_usuario
+        return f"{self.nombre_usuario} ({self.email_usuario})"
 
-class preferencias(models.Model):
+class Preferencias(models.Model):
+    """
+    Define las preferencias que un usuario puede tener(ej. Gamer, Trabajo, Estudio, Hogar).
+    """
     nombre_preferencia = models.CharField(max_length=100)
 
     def __str__(self):
         return self.nombre_preferencia
 
-class preferencias_usuario(models.Model):
-    usuario = models.ForeignKey('usuario', on_delete=models.CASCADE)
-    preferencia = models.ForeignKey('preferencias', on_delete=models.CASCADE)
+class PreferenciasUsuario(models.Model):
+    """
+    Relacion muchos a muchos entre Usuario y Preferencias.
+    Un usuario puede tener varias preferencias y una preferencia puede pertenecer a varios usuarios.
+    """
+    usuario = models.ForeignKey('Usuario', on_delete=models.CASCADE)
+    preferencia = models.ForeignKey('Preferencias', on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.usuario} - {self.preferencia}"
 
-class productos_favoritos(models.Model):
-    usuario = models.ForeignKey('usuario', on_delete=models.CASCADE)
-    producto = models.ForeignKey('producto', on_delete=models.CASCADE)
+class ProductosFavoritos(models.Model):
+    """
+    Lista de productos favoritos de un usuario.
+    Un usuario puede tener varios productos favoritos y un producto puede ser favorito de varios usuarios.
+    """
+    usuario = models.ForeignKey('Usuario', on_delete=models.CASCADE)
+    producto = models.ForeignKey('Producto', on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.usuario} - {self.producto}"
 #--------------------------------
 
-#TIENDA Y TIPO DE SERVICIO
-class tienda(models.Model):
+# ==============================
+#    TIENDA Y TIPO DE SERVICIO
+# ==============================
+class Tienda(models.Model):
+    """
+    Representa una tienda del sistema.
+    Esta puede ofrecer varios tipos de servicios.
+    """
     nombre_tienda = models.CharField(max_length=100)
     email_tienda = models.EmailField(unique=True)
     direccion_tienda = models.CharField(max_length=200)
 
     def __str__(self):
-        return self.nombre_tienda
+        return f"{self.nombre_tienda} ({self.email_tienda})"
 
-class tipo_servicio(models.Model):
+class TipoServicio(models.Model):
+    """
+    Define los tipos de servicios que una tienda puede ofrecer (ej. Mantención, Reparación, Instalación, Limpieza).
+    """
     nombre_tipo_servicio = models.CharField(max_length=100)
 
     def __str__(self):
         return self.nombre_tipo_servicio
 
-class tienda_tipo_servicio(models.Model):
-    tienda = models.ForeignKey('tienda', on_delete=models.CASCADE)
-    tipo_servicio = models.ForeignKey('tipo_servicio', on_delete=models.CASCADE)
+class TiendaTipoServicio(models.Model):
+    """
+    Relacion muchos a muchos entre Tienda y TipoServicio.
+    Una tienda puede ofrecer varios tipos de servicios y un tipo de servicio puede ser ofrecido por varias tiendas.
+    """
+    tienda = models.ForeignKey('Tienda', on_delete=models.CASCADE)
+    tipo_servicio = models.ForeignKey('TipoServicio', on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.tienda} - {self.tipo_servicio}"
 
-class tienda_producto(models.Model):
-    producto = models.ForeignKey('producto', on_delete=models.CASCADE)
-    tienda = models.ForeignKey('tienda', on_delete=models.CASCADE)
+class TiendaProducto(models.Model):
+    """
+    Relacion muchos a muchos entre Tienda y Producto.
+    Una tienda puede vender varios productos y un producto puede ser vendido en varias tiendas.
+    """
+    producto = models.ForeignKey('Producto', on_delete=models.CASCADE)
+    tienda = models.ForeignKey('Tienda', on_delete=models.CASCADE)
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return f"{self.producto} - {self.tienda}"
 #--------------------------------
 
-#PRODUCTO
-class producto(models.Model):
-    nombre_producto = models.CharField(max_length=100)
-    descripcion_producto = models.TextField()
-    modelo_producto = models.CharField(max_length=100)
-    imagen_producto = models.ImageField(upload_to='productos/')
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
-    marca_producto = models.ForeignKey('marca_producto', on_delete=models.PROTECT)
-    categoria_producto = models.ForeignKey('categoria_producto', on_delete=models.PROTECT)
-
-    def __str__(self):
-        return self.nombre_producto
-
-class marca_producto(models.Model):
+# ==============================
+#     PRODUCTOS Y CATEGORÍAS
+# ==============================
+class MarcaProducto(models.Model):
+    """
+    Define las marcas de los productos (ej. HP, ASUS, AMD).
+    """
     nombre_marca = models.CharField(max_length=100)
 
     def __str__(self):
         return self.nombre_marca
 
-class especificacion_producto(models.Model):
-    nombre_especificacion = models.CharField(max_length=100)
-    valor_especificacion = models.CharField(max_length=200)
-    producto = models.ForeignKey('producto', on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.nombre_especificacion
-
-class categoria_producto(models.Model):
+class CategoriaProducto(models.Model):
+    """
+    Define las categorías de los productos (ej. Gamer, Oficina, Hogar).
+    """
     nombre_categoria = models.CharField(max_length=100)
     descripcion_categoria = models.TextField()
 
     def __str__(self):
         return self.nombre_categoria
+
+class Producto(models.Model):
+    """
+    Representa un producto en el sistema.
+    Se asocia una marca y una categoría.
+    """
+    nombre_producto = models.CharField(max_length=100)
+    descripcion_producto = models.TextField()
+    modelo_producto = models.CharField(max_length=100)
+    imagen_producto = models.ImageField(upload_to='productos/')
+    marca_producto = models.ForeignKey('MarcaProducto', on_delete=models.PROTECT)
+    categoria_producto = models.ForeignKey('CategoriaProducto', on_delete=models.PROTECT)
+
+    def __str__(self):
+        return self.nombre_producto
+
+class EspecificacionProducto(models.Model):
+    """
+    Define las especificaciones técnicas de un producto (ej. RAM, Procesador, Almacenamiento).
+    """
+    nombre_especificacion = models.CharField(max_length=100)
+    valor_especificacion = models.CharField(max_length=200)
+    producto = models.ForeignKey('Producto', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.nombre_especificacion
