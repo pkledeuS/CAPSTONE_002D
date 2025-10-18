@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/product-detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="product-detail-container">
+    <div class="product-card-detail">
+        <div class="product-image">
+            {% if producto.imagen_producto %}
+                <img src="{{ producto.imagen_producto.url }}" alt="{{ producto.nombre_producto }}">
+            {% else %}
+                <img src="{% static 'img/default.png' %}" alt="Imagen no disponible">
+            {% endif %}
+        </div>
+        <div class="product-info">
+            <h2 class="product-title">{{ producto.nombre_producto }}</h2>
+            <p class="product-description">{{ producto.descripcion_producto|default:"Sin descripción." }}</p>
+            <p class="product-model"><strong>Modelo:</strong> {{ producto.modelo_producto }}</p>
+            <p class="product-brand"><strong>Marca:</strong> {{ producto.marca_producto }}</p>
+            <p class="product-stock"><strong>Categoria:</strong> {{ producto.categoria_producto }}</p>
+            <p class="product-stock"><strong>Tipo de producto:</strong> {{ producto.tipo_producto }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

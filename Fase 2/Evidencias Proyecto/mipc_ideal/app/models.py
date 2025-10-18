@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.db import models
 
 # Create your models here.
@@ -61,6 +62,8 @@ class Tienda(models.Model):
     """
     nombre_tienda = models.CharField(max_length=100)
     email_tienda = models.EmailField(unique=True)
+    descripcion_tienda = models.TextField()
+    image_tienda = models.ImageField(upload_to='tiendas/', null=True, blank=True)
     direccion_tienda = models.CharField(max_length=200)
 
     def __str__(self):
@@ -117,6 +120,8 @@ class CategoriaProducto(models.Model):
     """
     nombre_categoria = models.CharField(max_length=100)
     descripcion_categoria = models.TextField()
+    imagen_categoria = models.ImageField(upload_to='categorias/', null=True, blank=True)
+    banner_categoria = models.ImageField(upload_to='banners/', null=True, blank=True)
 
     def __str__(self):
         return self.nombre_categoria
@@ -130,8 +135,10 @@ class Producto(models.Model):
     descripcion_producto = models.TextField()
     modelo_producto = models.CharField(max_length=100)
     imagen_producto = models.ImageField(upload_to='productos/')
+    fecha_creacion = models.DateTimeField(default=timezone.now)
     marca_producto = models.ForeignKey('MarcaProducto', on_delete=models.PROTECT)
     categoria_producto = models.ForeignKey('CategoriaProducto', on_delete=models.PROTECT)
+    tipo_producto = models.ForeignKey('TipoProducto', on_delete=models.PROTECT)
 
     def __str__(self):
         return self.nombre_producto
@@ -146,3 +153,17 @@ class EspecificacionProducto(models.Model):
 
     def __str__(self):
         return self.nombre_especificacion
+
+class ProductoVisto(models.Model):
+    usuario = models.ForeignKey('Usuario', on_delete=models.SET_NULL, null=True, blank=True)
+    producto = models.ForeignKey('Producto', on_delete=models.CASCADE)
+    fecha_visto = models.DateTimeField(auto_now_add=True)
+
+class TipoProducto(models.Model):
+    """
+    Define los tipos de productos (ej. Laptop, Desktop, Monitor).
+    """
+    nombre_tipo = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.nombre_tipo
