@@ -33,9 +33,9 @@
                     <li><a class="dropdown-item" href="{% url 'products' %}">Tablets</a></li>
                     <li><a class="dropdown-item" href="{% url 'products' %}">Accesorios</a></li>
                     <li class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="{% url 'products' %}">Educación</a></li>
-                    <li><a class="dropdown-item" href="{% url 'products' %}">Hogar</a></li>
-                    <li><a class="dropdown-item" href="{% url 'products' %}">Oficina</a></li>
+                    {% for categoria in categorias %}
+                        <li><a class="dropdown-item" href="#">{{ categoria.nombre_categoria }}</a></li>
+                    {% endfor %}
                 </ul>
             </div>
             <div class="search-container">
