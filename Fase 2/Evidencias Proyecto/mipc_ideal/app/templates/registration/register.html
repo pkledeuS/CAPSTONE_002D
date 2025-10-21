@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/register.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-title">
+        <h2 class="text-center m-2">Registro</h2>
+    </div>
+
+    <form method="post" action="{% url 'register' %}" id="registroForm">
+        {% csrf_token %}
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info text-center">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Tipo de cuenta -->
+        <div class="mb-3 text-center">
+            <label class="form-label d-block fw-semibold">Tipo de cuenta</label>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="profile_type" id="usuario" value="usuario" checked>
+                <label class="form-check-label" for="usuario">Usuario</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="profile_type" id="tienda" value="tienda">
+                <label class="form-check-label" for="tienda">Tienda</label>
+            </div>
+        </div>
+
+        <!-- Campos de registro -->
+        <div class="form-group">
+            <div class="input-group mb-3">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <input type="text" name="username" class="form-control" required placeholder="Nombre de usuario">
+            </div>
+
+            <div class="input-group mb-3">
+                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                <input type="email" name="email" class="form-control" required placeholder="Correo electrónico">
+            </div>
+
+            <div class="input-group mb-3">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <input type="password" name="password" class="form-control" minlength="6" required placeholder="Contraseña">
+            </div>
+        </div>
+
+        <div class="btn-submit-container">
+            <button type="submit" class="btn-register">Registrarse</button>
+        </div>
+
+        <div class="login-container">
+            <p>¿Ya tienes cuenta?
+                <br>
+                <a href="{% url 'login' %}">Inicia sesión aquí</a>
+            </p>
+        </div>
+    </form>
+</div>
+{% endblock %}

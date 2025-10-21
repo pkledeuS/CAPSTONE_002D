@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Count
-from .models import CategoriaProducto, Tienda, Producto, TipoProducto, ProductoVisto
+from .models import CategoriaProducto, Tienda, Producto, TipoProducto, ProductoVisto, Profile
 
 def categorias_context(request):
     return {
@@ -37,5 +37,11 @@ def detalle_producto(request, producto_id):
 
     return render(request, 'product-detail.html', {'producto': producto})
 
-
-
+def perfil_context(request):
+    perfil = None
+    if request.user.is_authenticated:
+        try:
+            perfil = Profile.objects.get(user=request.user)
+        except Profile.DoesNotExist:
+            perfil = None
+    return {'perfil': perfil}
