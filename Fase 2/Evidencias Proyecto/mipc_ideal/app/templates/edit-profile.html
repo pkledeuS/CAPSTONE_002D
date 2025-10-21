@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/edit-form-profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-title">
+        <h2 class="text-center my-4">Editar Perfil</h2>
+    </div>
+
+    <form method="post" id="edit-form">
+        {% csrf_token %}
+        <div class="input-group mb-3">
+            <span class="input-group-text"><i class="bi bi-person"></i></span>
+            <input type="text" name="username" value="{{ user.username }}" class="form-control" placeholder="Nuevo nombre de usuario">
+        </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+            <input type="email" name="new_email" value="{{ user.email }}" class="form-control" placeholder="Nuevo correo electrónico">
+        </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+            <input type="password" name="new_password" class="form-control" placeholder="Nueva contraseña">
+        </div>
+
+        <div class="form-title mt-4">
+            {% if profile_type == 'usuario' %}
+                <h2 class="text-center my-4">Editar tus Preferencias</h2>
+            {% else %}
+                <h2 class="text-center my-4">Editar tus Servicios</h2>
+            {% endif %}
+        </div>
+
+        <fieldset class="form-section">
+            <div class="form-check-container">
+                {% for opcion in opciones %}
+                    <div class="form-group form-check">
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            name="opciones"
+                            id="opcion_{{ opcion.id }}"
+                            value="{{ opcion.id }}"
+                            {% for s in seleccionadas %}
+                                {% if profile_type == 'usuario' and s.preferencia.id == opcion.id %}
+                                    checked
+                                {% elif profile_type == 'tienda' and s.tipo_servicio.id == opcion.id %}
+                                    checked
+                                {% endif %}
+                            {% endfor %}
+                        >
+                        <label class="form-check-label" for="opcion_{{ opcion.id }}">
+                            {% if profile_type == 'usuario' %}
+                                {{ opcion.nombre_preferencia }}
+                            {% else %}
+                                {{ opcion.nombre_tipo_servicio }}
+                            {% endif %}
+                        </label>
+                    </div>
+                {% endfor %}
+            </div>
+        </fieldset>
+
+        <div class="btn-save-container mt-4">
+            <button type="submit" class="btn-form-save">Guardar cambios</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

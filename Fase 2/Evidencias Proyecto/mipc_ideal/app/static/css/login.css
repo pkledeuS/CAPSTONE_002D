@@ -169,6 +169,18 @@
     padding: 40px 0 0 0;
 }
 
+#showPassword,
+#rememberMe {
+  accent-color: #667eea;
+  cursor: pointer;
+}
+
+#showPassword + label,
+#rememberMe + label {
+  cursor: pointer;
+  user-select: none;
+}
+
 @media (max-width: 600px) {
     .form-container {
         max-width: 100%;

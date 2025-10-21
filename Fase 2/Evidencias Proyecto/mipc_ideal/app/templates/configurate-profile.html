@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/register.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-title">
+        {% if perfil == 'usuario' %}
+            <h2 class="text-center m-2">Selecciona tus preferencias</h2>
+        {% else %}
+            <h2 class="text-center m-2">Selecciona tus servicios</h2>
+        {% endif %}
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-check-container">
+            {% for opcion in opciones %}
+                <div class="form-group form-check">
+                    <input class="form-check-input" type="checkbox" id="opcion{{ opcion.id }}" 
+                        name="opciones" value="{{ opcion.id }}"
+                        {% if opcion.id in seleccionadas %}checked{% endif %}>
+                    <label class="form-check-label" for="opcion{{ opcion.id }}">{{ opcion }}</label>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="btn-submit-container">
+            <button type="submit" class="btn-register">Guardar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

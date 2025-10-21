@@ -18,6 +18,13 @@
 </head>
 <body>
     <header>
+        {% if messages %}
+            <div class="container mt-3">
+                {% for message in messages %}
+                <div class="alert alert-info text-center">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
         <nav class="nav-items">
             <div class="logo">
                 <a href="{% url 'home' %}"><h2>MiPcIdeal</h2></a>
@@ -53,13 +60,20 @@
                     <span>Perfil</span>
                 </button>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="{% url 'login' %}">Iniciar sesión</a></li>
-                    <li><a class="dropdown-item" href="{% url 'register' %}">Registrarse</a></li>
-                    <li class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="{% url 'edit_user' %}">Editar perfil</a></li>
-                    <li><a class="dropdown-item" href="{% url 'edit_store' %}">Servicios</a></li>
-                    <li class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#">Cerrar sesión</a></li>
+                    {% if user.is_authenticated %}
+                        {% if perfil and perfil.profile_type == 'usuario' %}
+                            <li><a class="dropdown-item" href="{% url 'edit_profile' %}">Editar perfil</a></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesión</a></li>
+                        {% elif perfil and perfil.profile_type == 'tienda' %}
+                            <li><a class="dropdown-item" href="{% url 'edit_profile' %}">Editar perfil</a></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesión</a></li>
+                        {% else %}
+                            <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesión</a></li>
+                        {% endif %}
+                    {% else %}
+                        <li><a class="dropdown-item" href="{% url 'login' %}">Iniciar sesión</a></li>
+                        <li><a class="dropdown-item" href="{% url 'register' %}">Registrarse</a></li>
+                    {% endif %}
                 </ul>
             </div>
             <div class="btn-group d-flex align-items-center">
@@ -97,7 +111,7 @@
 
     <footer>
         <ul>
-            <a href="../templates/info.html" style="color: white;">Nosotros</a>
+            <a href="{% url 'info' %}" style="color: white;">Nosotros</a>
         </ul>
         <p>&copy; 2025 MiPc Ideal. Todos los derechos reservados.</p>
     </footer>
