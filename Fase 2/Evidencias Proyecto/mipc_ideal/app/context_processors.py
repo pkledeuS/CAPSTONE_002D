@@ -11,7 +11,7 @@ def categorias_context(request):
 def home(request):
     categorias = CategoriaProducto.objects.all()
     tiendas = Tienda.objects.all()
-    productos_vistos = Producto.objects.annotate(total_visitas=Count('productovisto')).order_by('-total_visitas')[:10]
+    productos_vistos = Producto.objects.annotate(total_visitas=Count('productovisto')).order_by('-total_visitas')[:6]
 
     return render(request, 'home.html', {
         'categorias': categorias, 
@@ -20,7 +20,7 @@ def home(request):
         })
 
 def products_view(request):
-    productos_recientes = Producto.objects.all().order_by('-fecha_creacion')[:10]
+    productos_recientes = Producto.objects.all().order_by('-fecha_creacion')[:6]
 
     return render(request, 'products-view.html', {
         'productos_recientes': productos_recientes
@@ -45,3 +45,10 @@ def perfil_context(request):
         except Profile.DoesNotExist:
             perfil = None
     return {'perfil': perfil}
+
+def user_profile_type(request):
+    if request.user.is_authenticated:
+        profile = Profile.objects.filter(user=request.user).first()
+        if profile:
+            return {'profile_type': profile.profile_type}
+    return {}

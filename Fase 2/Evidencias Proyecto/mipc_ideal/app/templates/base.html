@@ -18,16 +18,9 @@
 </head>
 <body>
     <header>
-        {% if messages %}
-            <div class="container mt-3">
-                {% for message in messages %}
-                <div class="alert alert-info text-center">{{ message }}</div>
-                {% endfor %}
-            </div>
-        {% endif %}
         <nav class="nav-items">
             <div class="logo">
-                <a href="{% url 'home' %}"><h2>MiPcIdeal</h2></a>
+                <a href="{% url 'home' %}"><h2>MiPc Ideal</h2></a>
             </div>
             <div class="btn-group d-flex align-items-center">
                 <button class="btn btn-custom btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -35,6 +28,18 @@
                     <span>Categorías</span>
                 </button>
                 <ul class="dropdown-menu">
+                    {% if user.is_authenticated %}
+                        {% if profile_type == 'usuario' %}
+                            <li>
+                                <a class="dropdown-item fw-semibold text-primary" href="{% url 'preferences_products_view' %}">
+                                    <i class="bi bi-star-fill me-1"></i> Mis preferencias
+                                </a>
+                            </li>
+
+                            <li class="dropdown-divider"></li>
+                        {% endif %}
+                    {% endif %}
+
                     {% for tipoproducto in tiposproductos %}
                         <li>
                             <a class="dropdown-item" href="{% url 'products_by_type' tipoproducto.id %}">
@@ -42,9 +47,15 @@
                             </a>
                         </li>
                     {% endfor %}
+
                     <li class="dropdown-divider"></li>
+
                     {% for categoria in categorias %}
-                        <li><a class="dropdown-item" href="{% url 'products_by_category' categoria.id %}">{{ categoria.nombre_categoria }}</a></li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'products_by_category' categoria.id %}">
+                                {{ categoria.nombre_categoria }}
+                            </a>
+                        </li>
                     {% endfor %}
                 </ul>
             </div>
