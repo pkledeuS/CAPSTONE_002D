@@ -10,7 +10,7 @@
     <div class="carousel-2">
         {% for tienda in tiendas %}
         <!-- Carrusel de Tiendas -->
-        <div class="card product-card h-100">
+        <div class="product-item card product-card h-100">
             {% if tienda.imagen %}
                 <img src="{{ tienda.imagen.url }}" alt="{{ tienda.nombre_tienda }}">
             {% else %}
@@ -52,16 +52,16 @@
     <div class="carousel-2">
         <!-- Carrusel de Productos Más Vistos -->
         {% for producto in productos_vistos %}
-        <div class="card product-card h-100">
+        <div class="product-item card product-card h-100">
             {% if producto.imagen_producto %}
-                <img src="{{ producto.imagen_producto.url }}" alt="{{ producto.nombre_producto }}">
+                <img src="{{ producto.imagen_producto.url }}" class="card-img-top" alt="{{ producto.nombre_producto }}">
             {% else %}
                 <img src="{% static 'img/pc1.png' %}" class="card-img-top" alt="{{ producto.nombre_producto }}">
             {% endif %}
             <div class="card-body">
                 <h6 class="card-title">{{ producto.nombre_producto }}</h6>
                 <p class="card-text">{{ producto.descripcion_producto|default:"Sin descripción." }}</p>
-                <a href="{% url 'products_by_category' categoria.id %}" class="btn-primary">Ver más</a>
+                <a href="{% url 'product_detail' producto.id %}" class="btn btn-sm btn-primary">Ver más</a>
             </div>
         </div>
         {% endfor %}

@@ -10,6 +10,13 @@ from django.contrib.auth.models import User
 # ==============================
 #     PERFIL DE USUARIO
 # ==============================
+class PreferenciaUsuario(models.Model):
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    categoria = models.ForeignKey('CategoriaProducto', on_delete=models.CASCADE, null=True, blank=True)
+    tipo_producto = models.ForeignKey('TipoProducto', on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.usuario.username} - {self.categoria or self.tipo_producto}"
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_type = models.CharField(
@@ -24,19 +31,6 @@ class Profile(models.Model):
 # ==============================
 #     PREFERENCIAS DE USUARIO
 # ==============================
-class Preferencias(models.Model):
-    nombre_preferencia = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.nombre_preferencia
-
-class PreferenciasUsuario(models.Model):
-    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
-    preferencia = models.ForeignKey('Preferencias', on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f"{self.usuario.username} - {self.preferencia}"
-
 class ProductosFavoritos(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     producto = models.ForeignKey('Producto', on_delete=models.CASCADE)
@@ -64,12 +58,12 @@ class TipoServicio(models.Model):
     def __str__(self):
         return self.nombre_tipo_servicio
 
-class TiendaTipoServicio(models.Model):
+class TiendaCategoria(models.Model):
     tienda = models.ForeignKey('Tienda', on_delete=models.CASCADE)
-    tipo_servicio = models.ForeignKey('TipoServicio', on_delete=models.CASCADE)
+    categoria = models.ForeignKey('CategoriaProducto', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.tienda} - {self.tipo_servicio}"
+        return f"{self.tienda} - {self.categoria}"
 
 class TiendaProducto(models.Model):
     producto = models.ForeignKey('Producto', on_delete=models.CASCADE)
@@ -112,6 +106,7 @@ class Producto(models.Model):
     marca_producto = models.ForeignKey('MarcaProducto', on_delete=models.PROTECT)
     categoria_producto = models.ForeignKey('CategoriaProducto', on_delete=models.PROTECT)
     tipo_producto = models.ForeignKey('TipoProducto', on_delete=models.PROTECT)
+    vistas = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.nombre_producto

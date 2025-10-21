@@ -1,0 +1,206 @@
+/* ===========================
+   CONTENEDOR DEL FORMULARIO
+   =========================== */
+.form-container {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: clamp(24px, 4vw, 40px);
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+}
+.form-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+}
+
+/* ===========================
+   TÍTULO DEL FORMULARIO
+   =========================== */
+.form-title {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 30px;
+    color: #333;
+    padding: 1px 0;
+}
+
+/* ===========================
+   GRUPOS DEL FORMULARIO
+   =========================== */
+.form-group {
+    margin-bottom: 12px;
+    position: relative;
+}
+
+/* ===========================
+   LABELS
+   =========================== */
+.form-group label,
+.form-group .form-check-label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0;
+    color: #555;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+/* ===========================
+   INPUTS
+   =========================== */
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 2px solid #e1e1e1;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+}
+.form-group input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    outline: none;
+}
+.form-group input:hover {
+    border-color: #764ba2;
+}
+
+/* ===========================
+   INPUT CON ICONO
+   =========================== */
+.form-group .input-with-icon {
+    position: relative;
+}
+.form-group .input-with-icon .icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+.form-group .input-with-icon input {
+    padding-left: 44px;
+}
+
+/* ===========================
+   CHECKBOXES
+   =========================== */
+.form-group.form-check {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding-left: 0;
+    margin-bottom: 12px;
+}
+.form-group.form-check .form-check-input {
+    float: none;
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    align-self: center;
+}
+.form-group.form-check .form-check-label {
+    margin: 0;
+    line-height: 1.2;
+    cursor: pointer;
+}
+.form-group > input[type="checkbox"] + label {
+    margin-left: 8px;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+/* ===========================
+   BOTÓN DE SUBMIT
+   =========================== */
+.btn-submit-container {
+    display: flex;
+    justify-content: center;
+    padding-top: 10px;
+}
+.btn-login {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    background: linear-gradient(to right, #667eea, #764ba2);
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 12px;
+}
+.btn-login:hover {
+    background: linear-gradient(to right, #764ba2, #667eea);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* ===========================
+   ENLACES ADICIONALES
+   =========================== */
+.passforg {
+    display: block;
+    text-align: center;
+    margin-top: 15px;
+    font-size: 14px;
+}
+.register-container {
+    text-align: center;
+    font-size: 14px;
+    padding: 40px 0 0 0;
+}
+
+#showPassword,
+#rememberMe {
+  accent-color: #667eea;
+  cursor: pointer;
+}
+
+#showPassword + label,
+#rememberMe + label {
+  cursor: pointer;
+  user-select: none;
+}
+
+@media (max-width: 600px) {
+    .form-container {
+        max-width: 100%;
+        padding: 16px;
+    }
+    .form-title {
+        font-size: 18px;
+        margin-bottom: 20px;
+    }
+    .btn-login {
+        font-size: 15px;
+        padding: 12px;
+    }
+    .passforg,
+    .register-container {
+        font-size: 13px;
+        padding: 20px 0 0 0;
+    }
+    .form-group input {
+        font-size: 14px;
+        padding: 8px;
+    }
+}

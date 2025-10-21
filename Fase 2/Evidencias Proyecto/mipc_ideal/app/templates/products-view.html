@@ -8,7 +8,7 @@
     </div>
     <div class="carousel-2">
         {% for producto in productos_recientes %}
-        <div class="card product-card h-100">
+        <div class="product-item card product-card h-100">
             {% if producto.imagen_producto %}
                 <img src="{{ producto.imagen_producto.url }}" class="card-img-top" alt="{{ producto.nombre_producto }}">
             {% else %}

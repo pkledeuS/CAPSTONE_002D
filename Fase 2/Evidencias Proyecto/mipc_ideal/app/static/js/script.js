@@ -1,60 +1,126 @@
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("🔹 Login JS cargado correctamente");
+  console.log("✅ Script cargado correctamente");
 
-  // ==========================
-  // VARIABLES
-  // ==========================
-  const loginForm = document.getElementById("loginForm");
-  if (!loginForm) return; // 👈 evita errores si no estamos en login.html
-
-  const usernameInput = document.querySelector("input[name='username']");
-  const passwordInput = document.getElementById("password");
-  const rememberCheckbox = document.getElementById("rememberMe");
+  // --- Campos generales ---
   const showPasswordCheckbox = document.getElementById("showPassword");
+  const passwordInputs = document.querySelectorAll('input[type="password"]');
+
+  // --- FORMULARIOS ---
+  const registerForm = document.getElementById("registroForm");
+  const loginForm = document.getElementById("loginForm");
 
   // ==========================
-  // MOSTRAR / OCULTAR CONTRASEÑA
+  // Mostrar / ocultar contraseña
   // ==========================
-  if (showPasswordCheckbox && passwordInput) {
+  if (showPasswordCheckbox && passwordInputs.length > 0) {
     showPasswordCheckbox.addEventListener("change", (e) => {
-      passwordInput.type = e.target.checked ? "text" : "password";
+      const type = e.target.checked ? "text" : "password";
+      passwordInputs.forEach((input) => {
+        input.type = type;
+      });
     });
   }
 
   // ==========================
-  // RECORDAR USUARIO
+  // Registro: Validaciones en tiempo real
   // ==========================
-  if (rememberCheckbox && usernameInput) {
-    // Cargar usuario recordado si existe
-    const rememberedUser = localStorage.getItem("rememberedUser");
-    if (rememberedUser) {
-      usernameInput.value = rememberedUser;
-      rememberCheckbox.checked = true;
-      console.log("Usuario recordado:", rememberedUser);
-    }
+  if (registerForm) {
+    const usernameInput = document.getElementById("username");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const confirmPasswordInput = document.getElementById("confirmPassword");
 
-    // Guardar o eliminar usuario al enviar el formulario
-    loginForm.addEventListener("submit", () => {
-      if (rememberCheckbox.checked) {
-        localStorage.setItem("rememberedUser", usernameInput.value);
-        console.log("Usuario recordado:", usernameInput.value);
+    const usernameFeedback = document.getElementById("usernameFeedback");
+    const emailFeedback = document.getElementById("emailFeedback");
+    const passwordFeedback = document.getElementById("passwordFeedback");
+
+    // Validar contraseñas iguales
+    const validatePasswords = () => {
+      const pass = passwordInput.value.trim();
+      const confirm = confirmPasswordInput.value.trim();
+      if (!confirm) {
+        passwordFeedback.textContent = "";
+        return false;
+      }
+      if (pass !== confirm) {
+        passwordFeedback.textContent = "Las contraseñas no coinciden.";
+        passwordFeedback.className = "feedback error";
+        return false;
       } else {
-        localStorage.removeItem("rememberedUser");
-        console.log("Usuario eliminado de localStorage");
+        passwordFeedback.textContent = "Las contraseñas coinciden.";
+        passwordFeedback.className = "feedback success";
+        return true;
+      }
+    };
+
+    confirmPasswordInput.addEventListener("input", validatePasswords);
+    passwordInput.addEventListener("input", validatePasswords);
+
+    // Validar usuario
+    usernameInput.addEventListener("input", () => {
+      const username = usernameInput.value.trim();
+      if (username.length < 3) {
+        usernameFeedback.textContent = "";
+        return;
+      }
+
+      fetch(`/check_username/?username=${encodeURIComponent(username)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.exists) {
+            usernameFeedback.textContent = "Este nombre de usuario ya está en uso.";
+            usernameFeedback.className = "feedback error";
+          } else {
+            usernameFeedback.textContent = "Nombre de usuario disponible.";
+            usernameFeedback.className = "feedback success";
+          }
+        })
+        .catch(err => console.error("Error al verificar usuario:", err));
+    });
+
+    // Validar correo
+    emailInput.addEventListener("input", () => {
+      const email = emailInput.value.trim();
+      if (email.length < 5 || !email.includes("@")) {
+        emailFeedback.textContent = "";
+        return;
+      }
+
+      fetch(`/check_email/?email=${encodeURIComponent(email)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.exists) {
+            emailFeedback.textContent = "Este correo ya está registrado.";
+            emailFeedback.className = "feedback error";
+          } else {
+            emailFeedback.textContent = "Correo disponible.";
+            emailFeedback.className = "feedback success";
+          }
+        })
+        .catch(err => console.error("Error al verificar correo:", err));
+    });
+
+    // Validación final
+    registerForm.addEventListener("submit", (e) => {
+      if (!validatePasswords()) {
+        e.preventDefault();
+        alert("Las contraseñas no coinciden.");
       }
     });
   }
 
   // ==========================
-  // VALIDACIÓN SIMPLE
+  // Login: Validación simple
   // ==========================
-  loginForm.addEventListener("submit", (e) => {
-    const username = usernameInput?.value.trim();
-    const password = passwordInput?.value.trim();
+  if (loginForm) {
+    loginForm.addEventListener("submit", (e) => {
+      const username = loginForm.querySelector('input[name="username"]').value.trim();
+      const password = loginForm.querySelector('input[name="password"]').value.trim();
 
-    if (!username || !password) {
-      e.preventDefault();
-      alert("Debes ingresar usuario y contraseña");
-    }
-  });
+      if (!username || !password) {
+        e.preventDefault();
+        alert("Por favor, completa todos los campos.");
+      }
+    });
+  }
 });

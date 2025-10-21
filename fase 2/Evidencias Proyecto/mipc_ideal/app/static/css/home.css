@@ -421,6 +421,44 @@ footer {
 }
 
 /* ===========================
+    ALERTA DE MENSAJE
+   =========================== */
+.messages-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: fadeIn 0.3s ease;
+}
+
+.alert {
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14.5px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    opacity: 0.95;
+}
+
+.alert-success {
+    background: linear-gradient(to right, #67e6a0, #2ecc71);
+    color: white;
+}
+
+.alert-error {
+    background: linear-gradient(to right, #e74c3c, #c0392b);
+    color: white;
+}
+
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(-10px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+/* ===========================
     8. MEDIA QUERIES
    =========================== */
 @media (max-width: 768px) {

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'app.apps.AppConfig',
     'colorfield',
+    'django_extensions',
 ]
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
@@ -72,6 +73,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'app.context_processors.categorias_context',
                 'app.context_processors.perfil_context',
+                'app.context_processors.user_profile_type',
             ],
         },
     },
@@ -115,7 +117,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'es'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Santiago'
 
 USE_I18N = True
 
@@ -131,6 +133,8 @@ STATICFILES_DIRS = [
     BASE_DIR / 'app' / 'static',
 ]
 
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -144,3 +148,5 @@ LOGIN_URL = '/login/'
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"

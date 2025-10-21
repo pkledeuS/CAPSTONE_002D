@@ -35,20 +35,45 @@
 
         <!-- Campos de registro -->
         <div class="form-group">
-            <div class="input-group mb-3">
-                <span class="input-group-text"><i class="bi bi-person"></i></span>
-                <input type="text" name="username" class="form-control" required placeholder="Nombre de usuario">
-            </div>
+            <div class="form-group mb-3">
+                <label for="username" class="form-label fw-semibold">Nombre de usuario</label>
+                <div class="input-wrapper">
+                    <div class="input-group mb-2">
+                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                        <input id="username" type="text" name="username" required class="form-control" placeholder="Nombre de usuario">
+                    </div>
+                    <small id="usernameFeedback" class="feedback"></small>
+                </div>
 
-            <div class="input-group mb-3">
-                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                <input type="email" name="email" class="form-control" required placeholder="Correo electrónico">
-            </div>
+                <div class="input-wrapper">
+                    <div class="input-group mb-2">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input id="email" type="email" name="email" required class="form-control" placeholder="Correo electrónico">
+                    </div>
+                    <small id="emailFeedback" class="feedback"></small>
+                </div>
 
-            <div class="input-group mb-3">
-                <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                <input type="password" name="password" class="form-control" minlength="6" required placeholder="Contraseña">
+                <div class="input-wrapper">
+                    <div class="input-group mb-2">
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                        <input id="password" type="password" name="password" required class="form-control" placeholder="Contraseña">
+                    </div>
+                </div>
+
+                <div class="input-wrapper">
+                    <div class="input-group mb-2">
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                        <input id="confirmPassword" type="password" name="confirmPassword" required class="form-control" placeholder="Confirmar contraseña">
+                    </div>
+                    <small id="passwordFeedback" class="feedback"></small>
+                </div>
             </div>
+        </div>
+
+        <!-- Checkbox: mostrar contraseña -->
+        <div class="form-group form-check">
+            <input class="form-check-input" type="checkbox" id="showPassword">
+            <label class="form-check-label" for="showPassword">Mostrar contraseña</label>
         </div>
 
         <div class="btn-submit-container">
@@ -63,4 +88,8 @@
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/script.js' %}"></script>
 {% endblock %}
