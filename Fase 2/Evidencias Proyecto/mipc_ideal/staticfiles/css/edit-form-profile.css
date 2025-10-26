@@ -5,150 +5,149 @@
     width: 560px;
     margin: 0 auto;
     padding: clamp(24px, 4vw, 40px);
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.98);
     border-radius: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
     transition: all 0.3s ease;
 }
 .form-container:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
 
 /* ===========================
-   TÍTULO DEL FORMULARIO
+   TÍTULOS
    =========================== */
 .form-title {
     text-align: center;
-    font-size: 24px;
-    margin-bottom: 30px;
-    color: #333;
-    padding: 1px 0;
+    font-size: 26px;
+    font-weight: 700;
+    color: #2d2d2d;
+    margin-bottom: 20px;
 }
-.form-subtitle {
-    font-size: 20px;
-    font-weight: 400;
-    margin-bottom: 18px;
+
+.form-section h5 {
+    font-size: 18px;
     color: #333;
-    text-align: flex-start;
-}
-/* ===========================
-   GRUPOS DEL FORMULARIO
-   =========================== */
-.form-group {
+    font-weight: 600;
+    text-align: center;
     margin-bottom: 12px;
-    position: relative;
+    margin-top: 20px;
 }
 
 /* ===========================
-   LABELS
+   CAMPOS DE ENTRADA
    =========================== */
-.form-group label,
-.form-group .form-check-label {
-    display: block;
-    font-weight: 500;
-    margin-bottom: 0;
-    color: #555;
-    font-size: 14px;
-    transition: all 0.3s ease;
-    line-height: 1.2;
-    cursor: pointer;
-}
-
-/* ===========================
-   INPUTS
-   =========================== */
-.form-group input {
-    width: 100%;
-    padding: 10px;
+.input-group {
+    display: flex;
+    align-items: center;
+    border: 1.8px solid #e1e1e1;
     border-radius: 8px;
-    border: 2px solid #e1e1e1;
-    font-size: 15px;
-    transition: all 0.3s ease;
+    overflow: hidden;
+    margin-bottom: 15px;
     background: rgba(255, 255, 255, 0.9);
+    transition: all 0.2s ease;
 }
-.form-group input:focus {
+.input-group:focus-within {
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+.input-group-text {
+    background: #fff;
+    border: none;
+    color: #667eea;
+    padding: 10px 14px;
+    font-size: 18px;
+}
+.form-control {
+    border: none;
+    flex: 1;
+    padding: 10px;
+    font-size: 15px;
+    color: #333;
+}
+.form-control:focus {
     outline: none;
 }
-.form-group input:hover {
-    border-color: #764ba2;
-}
 
 /* ===========================
-   INPUT CON ICONO
+   BLOQUE DE PREFERENCIAS
    =========================== */
-.form-group .input-with-icon {
-    position: relative;
+.preferences-block {
+    background: #f9fafc;
+    border: 1.5px solid #e4e7ec;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin: 16px 0 24px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
 }
-.form-group .input-with-icon .icon {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #6b7280;
-    width: 20px;
-    height: 20px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-}
-.form-group .input-with-icon input {
-    padding-left: 44px;
+.preferences-block:hover {
+    border-color: #c9cce1;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
 }
 
 /* ===========================
-   CHECKBOXES EN GRID
+   TÍTULO DE BLOQUE
+   =========================== */
+.section-title {
+    text-align: left;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 14px;
+    letter-spacing: 0.3px;
+}
+
+/* ===========================
+   CHECKBOX GRID
    =========================== */
 .form-check-container {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px 1px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px 14px;
     width: 100%;
-    margin-left: 16px;
-    margin-right: 16px;
-    margin-bottom: 16px;
-}
-.form-check-container label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
 }
 
 /* ===========================
-   CHECKBOX INDIVIDUAL
+   CHECKBOX ESTILO "PILL"
    =========================== */
-.form-group.form-check {
+.form-check-label {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding-left: 0;
-    margin-bottom: 0;
+    background: #fff;
+    border: 1.5px solid #dcdfe6;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14.5px;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
-.form-group.form-check .form-check-input {
-    float: none;
-    margin: 0;
+.form-check-label:hover {
+    background: #f2f4ff;
+    border-color: #667eea;
+}
+.form-check-input {
     width: 16px;
     height: 16px;
-    display: inline-block;
-    align-self: center;
-}
-.form-group.form-check .form-check-label {
-    margin: 0;
-    line-height: 1.2;
+    accent-color: #667eea;
     cursor: pointer;
-    color: #555;
-    font-size: 14px;
-    font-weight: 500;
 }
-.form-group > input[type="checkbox"] + label {
-    margin-left: 8px;
-    line-height: 1.2;
-    cursor: pointer;
+
+/* ===========================
+   CHECKED STATE (resaltado)
+   =========================== */
+.form-check-input:checked + span,
+.form-check-label:has(input:checked) {
+    background: linear-gradient(to right, #667eea20, #764ba220);
+    border-color: #667eea;
+    color: #4b4fc4;
+    font-weight: 600;
 }
 
 /* ===========================
@@ -157,7 +156,6 @@
 .btn-save-container {
     display: flex;
     justify-content: center;
-    padding-top: 10px;
 }
 .btn-form-save {
     width: 100%;
@@ -166,39 +164,34 @@
     background: linear-gradient(to right, #667eea, #764ba2);
     color: white;
     font-size: 16px;
-    font-weight: 500;
-    border-radius: 8px;
+    font-weight: 600;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-top: 12px;
+    margin-top: 16px;
 }
 .btn-form-save:hover {
     background: linear-gradient(to right, #764ba2, #667eea);
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
+/* ===========================
+   RESPONSIVE
+   =========================== */
 @media (max-width: 600px) {
     .form-container {
-        width: 100%;
-        padding: 16px;
+        width: 95%;
+        padding: 20px;
     }
     .form-check-container {
         grid-template-columns: 1fr;
-        margin-left: 0;
-        margin-right: 0;
-        gap: 12px 0;
-    }
-    .btn-form-save {
-        font-size: 15px;
-        padding: 12px;
+        width: 100%;
+        gap: 10px 0;
     }
     .form-title {
-        font-size: 20px;
-    }
-    .form-subtitle {
-        font-size: 16px;
+        font-size: 22px;
     }
 }

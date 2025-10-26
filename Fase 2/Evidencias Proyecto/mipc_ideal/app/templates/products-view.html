@@ -1,47 +1,66 @@
 {% extends "base.html" %}
-
 {% load static %}
 
 {% block content %}
-    <div class="title">
-        <h3>Nuevos productos</h3>
-    </div>
-    <div class="carousel-2">
-        {% for producto in productos_recientes %}
-        <div class="product-item card product-card h-100">
-            {% if producto.imagen_producto %}
-                <img src="{{ producto.imagen_producto.url }}" class="card-img-top" alt="{{ producto.nombre_producto }}">
-            {% else %}
-                <img src="{% static 'img/default.png' %}" class="card-img-top" alt="Default Image">
-            {% endif %}
-            <div class="card-body">
-                <h6 class="card-title">{{ producto.nombre_producto }}</h6>
-                <p class="card-text">{{ producto.descripcion_producto }}</p>
-                <a href="{% url 'product_detail' producto.id %}" class="btn btn-sm btn-primary">Ver más</a>
-            </div>
+
+    {# Encabezado de búsqueda (solo si hay q) #}
+    {% if q %}
+        <h4 class="mb-3">Resultados para “{{ q }}” ({{ productos.count }})</h4>
+        {% if not productos %}
+            <div class="alert alert-light">No se encontraron resultados. Prueba con otro término.</div>
+        {% endif %}
+    {% endif %}
+
+    {# Ocultamos "Nuevos productos" si hay búsqueda #}
+    {% if not q %}
+        <div class="title">
+            <h3>Nuevos productos</h3>
         </div>
-        {% endfor %}
-    </div>
-    <div class="title">
-        <h3>Productos</h3>
-    </div>
-    <div class="cards-popular">
-        <!-- Cards para los productos -->
-        {% for producto in productos %}
-        <div class="popular-card-horizontal">
-            <div class="card-img-container">
+        <div class="carousel-2">
+            {% for producto in productos_recientes %}
+            <div class="product-item card product-card h-100">
                 {% if producto.imagen_producto %}
-                    <img src="{{ producto.imagen_producto.url }}" alt="{{ producto.nombre_producto }}">
+                    <img src="{{ producto.imagen_producto.url }}" class="card-img-top" alt="{{ producto.nombre_producto }}">
                 {% else %}
-                    <img src="{% static 'img/default.png' %}" alt="Default Image">
+                    <img src="{% static 'img/default.png' %}" class="card-img-top" alt="Default Image">
                 {% endif %}
+                <div class="card-body">
+                    <h6 class="card-title">{{ producto.nombre_producto }}</h6>
+                    <p class="card-text">{{ producto.descripcion_producto }}</p>
+                    <a href="{% url 'product_detail' producto.id %}" class="btn btn-sm btn-primary">Ver más</a>
+                </div>
             </div>
-            <div class="card-body-horizontal">
-                <h6 class="card-title">{{ producto.nombre_producto }}</h6>
-                <p class="card-text">{{ producto.descripcion_producto }}</p>
-                <a href="{% url 'product_detail' producto.id %}" class="btn-primary">Ver más</a>
-            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
+    {% endif %}
+
+    <div class="title">
+        <h3>{% if q %}Productos encontrados{% else %}Productos{% endif %}</h3>
     </div>
+
+    <div class="cards-popular">
+        {% for producto in productos %}
+    <div class="popular-card-horizontal">
+        <div class="card-img-container">
+            {% if producto.imagen_producto %}
+                <img src="{{ producto.imagen_producto.url }}" alt="{{ producto.nombre_producto }}">
+            {% else %}
+                <img src="{% static 'img/default.png' %}" alt="Default Image">
+            {% endif %}
+        </div>
+        <div class="card-body-horizontal">
+            <h6 class="card-title">{{ producto.nombre_producto }}</h6>
+            <p class="card-text">{{ producto.descripcion_producto }}</p>
+            <a href="{% url 'product_detail' producto.id %}" class="btn-primary">Ver más</a>
+        </div>
+    </div>
+        {% empty %}
+        {% if q %}
+            {# ya mostramos el alert arriba cuando not productos #}
+        {% else %}
+            <div class="alert alert-light">Aún no hay productos cargados.</div>
+        {% endif %}
+    {% endfor %}
+</div>
+
 {% endblock %}

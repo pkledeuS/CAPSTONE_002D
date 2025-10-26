@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<h3 class="mb-3">Agregar oferta</h3>
+
+<ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-existing" type="button">Seleccionar existente</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-new" type="button">Crear nuevo + oferta</button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="tab-existing">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="mode" value="existing">
+            <div class="col-md-6">{{ form_new.url_externa.label_tag }} {{ form_new.url_externa }}</div>
+            <div class="col-md-3">{{ form_new.stock.label_tag }} {{ form_new.stock }}</div>
+            <div class="col-md-9">{{ form_new.nota_tienda.label_tag }} {{ form_new.nota_tienda }}</div>
+            <button class="btn btn-primary" type="submit">Guardar</button>
+            <a href="{% url 'store_offers_list' %}" class="btn btn-light">Cancelar</a>
+        </form>
+    </div>
+
+    <div class="tab-pane fade" id="tab-new">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="mode" value="new">
+
+            <div class="row g-3">
+                <!-- SIN nombre_producto: se autogenera -->
+                <div class="col-md-6">{{ form_new.modelo_producto.label_tag }} {{ form_new.modelo_producto }}</div>
+                <div class="col-12">{{ form_new.descripcion_producto.label_tag }} {{ form_new.descripcion_producto }}</div>
+
+                <div class="col-md-4">{{ form_new.marca_producto.label_tag }} {{ form_new.marca_producto }}</div>
+                <div class="col-md-4">{{ form_new.categoria_producto.label_tag }} {{ form_new.categoria_producto }}</div>
+                <div class="col-md-4">{{ form_new.tipo_producto.label_tag }} {{ form_new.tipo_producto }}</div>
+
+                <div class="col-md-6">{{ form_new.imagen_producto.label_tag }} {{ form_new.imagen_producto }}</div>
+
+                <div class="col-md-3">{{ form_new.precio.label_tag }} {{ form_new.precio }}</div>
+                <div class="col-md-6">{{ form_new.url_externa.label_tag }} {{ form_new.url_externa }}</div>
+                <div class="col-md-3">{{ form_new.stock.label_tag }} {{ form_new.stock }}</div>
+                <div class="col-12">{{ form_new.nota_tienda.label_tag }} {{ form_new.nota_tienda }}</div>
+            </div>
+
+            <div class="mt-3">
+                <button class="btn btn-primary" type="submit">Guardar</button>
+                <a href="{% url 'store_offers_list' %}" class="btn btn-light">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

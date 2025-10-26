@@ -1,0 +1,971 @@
+[
+  {
+    "model": "app.producto",
+    "pk": 80000,
+    "fields": {
+      "nombre_producto": "AMD Ryzen 7 7800X3D",
+      "descripcion_producto": "CPU AM5 con 3D V-Cache optimizada para juegos. 8C/16T, 4.2–5.0 GHz, 104 MB cache total, TDP 120 W.",
+      "modelo_producto": "Ryzen 7 7800X3D",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 400,
+      "categoria_producto": 400,
+      "tipo_producto": 400
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80001,
+    "fields": {
+      "nombre_producto": "Intel Core i5-14600KF",
+      "descripcion_producto": "CPU LGA1700 de 14 núcleos (6P+8E) ideal para gaming y multitarea; sin iGPU.",
+      "modelo_producto": "BX8071514600KF",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 401,
+      "categoria_producto": 400,
+      "tipo_producto": 400
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80002,
+    "fields": {
+      "nombre_producto": "G.Skill Trident Z5 RGB DDR5 32GB (2x16) 6000 CL30",
+      "descripcion_producto": "Kit DDR5 de alto rendimiento para plataformas gaming, compatible con Intel XMP 3.0 / AMD EXPO (según SKU).",
+      "modelo_producto": "F5-6000J3038F16GX2-TZ5RK",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 405,
+      "categoria_producto": 400,
+      "tipo_producto": 401
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80003,
+    "fields": {
+      "nombre_producto": "Seasonic Focus GX-850 80+ Gold",
+      "descripcion_producto": "Fuente 850 W totalmente modular, 80 PLUS Gold, modo híbrido de ventilador.",
+      "modelo_producto": "FOCUS-GX-850",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 410,
+      "categoria_producto": 400,
+      "tipo_producto": 402
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80004,
+    "fields": {
+      "nombre_producto": "Lenovo LOQ 15IRH8 (RTX 4060)",
+      "descripcion_producto": "Notebook gamer 15.6\" con Intel Core i5-13420H y GeForce RTX 4060, panel 144 Hz.",
+      "modelo_producto": "82XV",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 412,
+      "categoria_producto": 400,
+      "tipo_producto": 403
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80005,
+    "fields": {
+      "nombre_producto": "Acer Nitro 5 AN515-58",
+      "descripcion_producto": "Notebook gamer con Intel Core i7-12700H y GeForce RTX 3060, 15.6\" 144 Hz.",
+      "modelo_producto": "AN515-58",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 415,
+      "categoria_producto": 400,
+      "tipo_producto": 403
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80006,
+    "fields": {
+      "nombre_producto": "AMD Ryzen 5 5600",
+      "descripcion_producto": "CPU AM4 6C/12T excelente para hogar y juegos ligeros. 3.5–4.4 GHz, 32 MB L3, TDP 65 W.",
+      "modelo_producto": "Ryzen 5 5600",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 400,
+      "categoria_producto": 401,
+      "tipo_producto": 400
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80007,
+    "fields": {
+      "nombre_producto": "Intel Core i3-12100F",
+      "descripcion_producto": "CPU 4C/8T para PCs de hogar/ofimática; sin iGPU.",
+      "modelo_producto": "BX8071512100F",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 401,
+      "categoria_producto": 401,
+      "tipo_producto": 400
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80008,
+    "fields": {
+      "nombre_producto": "Crucial DDR4 16GB (2x8) 3200 CL22",
+      "descripcion_producto": "Kit de memoria DDR4 económico y confiable para equipos de hogar.",
+      "modelo_producto": "CT2K8G4DFRA32A",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 404,
+      "categoria_producto": 401,
+      "tipo_producto": 401
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80009,
+    "fields": {
+      "nombre_producto": "Thermaltake Smart 600W 80+",
+      "descripcion_producto": "Fuente 600 W, 80 PLUS White, adecuada para PCs básicos de hogar.",
+      "modelo_producto": "PS-SPD-0600NPCW",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 411,
+      "categoria_producto": 401,
+      "tipo_producto": 402
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80010,
+    "fields": {
+      "nombre_producto": "Lenovo IdeaPad 1 15",
+      "descripcion_producto": "Notebook básico 15.6\" para tareas cotidianas; opciones Ryzen 3/5 o Intel i3.",
+      "modelo_producto": "IdeaPad 1 15",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 412,
+      "categoria_producto": 401,
+      "tipo_producto": 403
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80011,
+    "fields": {
+      "nombre_producto": "Acer Aspire 5 (A515-58)",
+      "descripcion_producto": "Notebook 15.6\" FHD para estudio con Intel Core i5-1335U, chasis ligero.",
+      "modelo_producto": "A515-58",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 415,
+      "categoria_producto": 402,
+      "tipo_producto": 403
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80012,
+    "fields": {
+      "nombre_producto": "Lenovo IdeaPad Slim 3 (15, Gen 8)",
+      "descripcion_producto": "Notebook 15\" para estudiantes con Ryzen 5 7530U o i5-1335U (según SKU).",
+      "modelo_producto": "IdeaPad Slim 3 15 Gen 8",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 412,
+      "categoria_producto": 402,
+      "tipo_producto": 403
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80013,
+    "fields": {
+      "nombre_producto": "HP Pavilion 14 (14-dv)",
+      "descripcion_producto": "Portátil 14\" equilibrado para estudio; opciones Intel Core U-Series.",
+      "modelo_producto": "14-dv",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 413,
+      "categoria_producto": 402,
+      "tipo_producto": 403
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80014,
+    "fields": {
+      "nombre_producto": "ASUS VivoBook Go 14 (E1404)",
+      "descripcion_producto": "Notebook delgado para estudiantes, Ryzen 5 7520U, buena autonomía.",
+      "modelo_producto": "E1404",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 414,
+      "categoria_producto": 402,
+      "tipo_producto": 403
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80015,
+    "fields": {
+      "nombre_producto": "Lenovo ThinkPad E14 Gen 5",
+      "descripcion_producto": "Notebook empresarial 14\" con Intel Core 13ª gen; teclado y seguridad ThinkPad.",
+      "modelo_producto": "ThinkPad E14 Gen 5",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 412,
+      "categoria_producto": 403,
+      "tipo_producto": 403
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80016,
+    "fields": {
+      "nombre_producto": "Dell Latitude 5440",
+      "descripcion_producto": "Notebook empresarial de 14\" con Intel Core 13ª gen, Thunderbolt 4.",
+      "modelo_producto": "Latitude 5440",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 416,
+      "categoria_producto": 403,
+      "tipo_producto": 403
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80017,
+    "fields": {
+      "nombre_producto": "HP ProDesk 400 G9 SFF",
+      "descripcion_producto": "Computador empresarial Small Form Factor con Intel Core i5 12ª gen.",
+      "modelo_producto": "ProDesk 400 G9 SFF",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 413,
+      "categoria_producto": 403,
+      "tipo_producto": 404
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80018,
+    "fields": {
+      "nombre_producto": "Lenovo ThinkCentre neo 50t Gen 4",
+      "descripcion_producto": "Torre empresarial con procesadores Intel de 13ª gen.",
+      "modelo_producto": "ThinkCentre neo 50t Gen 4",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 412,
+      "categoria_producto": 403,
+      "tipo_producto": 404
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80019,
+    "fields": {
+      "nombre_producto": "ASUS ProArt Studiobook 16 (H7604)",
+      "descripcion_producto": "Portátil para creadores con Intel Core i9 y pantalla OLED 16\" 3.2K.",
+      "modelo_producto": "H7604",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 414,
+      "categoria_producto": 404,
+      "tipo_producto": 403
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80020,
+    "fields": {
+      "nombre_producto": "MSI Creator Z16 HX",
+      "descripcion_producto": "Laptop para diseño con Intel Core i7/i9 HX y pantalla QHD+ 16:10.",
+      "modelo_producto": "Creator Z16 HX",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 417,
+      "categoria_producto": 404,
+      "tipo_producto": 403
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80021,
+    "fields": {
+      "nombre_producto": "Apple iPad Pro 11\" (M4)",
+      "descripcion_producto": "Tablet profesional con chip M4; compatibilidad con Apple Pencil Pro.",
+      "modelo_producto": "iPad Pro 11-inch (M4)",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 419,
+      "categoria_producto": 404,
+      "tipo_producto": 405
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80022,
+    "fields": {
+      "nombre_producto": "Samsung Galaxy Tab S9+",
+      "descripcion_producto": "Tablet AMOLED 12.4\" 120 Hz con S Pen; IP68.",
+      "modelo_producto": "SM-X810 (Tab S9+ Wi-Fi)",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 420,
+      "categoria_producto": 404,
+      "tipo_producto": 405
+    }
+  },
+  {
+    "model": "app.producto",
+    "pk": 80023,
+    "fields": {
+      "nombre_producto": "Huawei MatePad 11.5\" PaperMatte",
+      "descripcion_producto": "Tablet para notas/dibujo con pantalla PaperMatte y M-Pencil (según bundle).",
+      "modelo_producto": "MatePad 11.5 PaperMatte",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 422,
+      "categoria_producto": 404,
+      "tipo_producto": 405
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900000,
+    "fields": {
+      "nombre_especificacion": "Arquitectura",
+      "valor_especificacion": "Zen 4 + 3D V-Cache",
+      "producto": 80000
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900001,
+    "fields": {
+      "nombre_especificacion": "Núcleos/Hilos",
+      "valor_especificacion": "8/16",
+      "producto": 80000
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900002,
+    "fields": {
+      "nombre_especificacion": "Frecuencia",
+      "valor_especificacion": "4.2–5.0 GHz",
+      "producto": 80000
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900003,
+    "fields": {
+      "nombre_especificacion": "Socket",
+      "valor_especificacion": "AM5",
+      "producto": 80000
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900004,
+    "fields": {
+      "nombre_especificacion": "Arquitectura",
+      "valor_especificacion": "Raptor Lake Refresh",
+      "producto": 80001
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900005,
+    "fields": {
+      "nombre_especificacion": "Núcleos/Hilos",
+      "valor_especificacion": "14/20 (6P+8E)",
+      "producto": 80001
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900006,
+    "fields": {
+      "nombre_especificacion": "Frecuencia máx.",
+      "valor_especificacion": "5.3 GHz",
+      "producto": 80001
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900007,
+    "fields": {
+      "nombre_especificacion": "Socket",
+      "valor_especificacion": "LGA1700",
+      "producto": 80001
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900008,
+    "fields": {
+      "nombre_especificacion": "Capacidad",
+      "valor_especificacion": "32 GB (2×16 GB)",
+      "producto": 80002
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900009,
+    "fields": {
+      "nombre_especificacion": "Velocidad/Latencia",
+      "valor_especificacion": "6000 MT/s, CL30",
+      "producto": 80002
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900010,
+    "fields": {
+      "nombre_especificacion": "Perfil",
+      "valor_especificacion": "XMP 3.0 / EXPO (modelo según región)",
+      "producto": 80002
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900011,
+    "fields": {
+      "nombre_especificacion": "Potencia",
+      "valor_especificacion": "850 W",
+      "producto": 80003
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900012,
+    "fields": {
+      "nombre_especificacion": "Certificación",
+      "valor_especificacion": "80+ Gold",
+      "producto": 80003
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900013,
+    "fields": {
+      "nombre_especificacion": "Cableado",
+      "valor_especificacion": "Totalmente modular",
+      "producto": 80003
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900014,
+    "fields": {
+      "nombre_especificacion": "CPU",
+      "valor_especificacion": "Intel Core i5-13420H",
+      "producto": 80004
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900015,
+    "fields": {
+      "nombre_especificacion": "GPU",
+      "valor_especificacion": "GeForce RTX 4060 Laptop",
+      "producto": 80004
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900016,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "15.6\" FHD 144 Hz",
+      "producto": 80004
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900017,
+    "fields": {
+      "nombre_especificacion": "CPU",
+      "valor_especificacion": "Intel Core i7-12700H",
+      "producto": 80005
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900018,
+    "fields": {
+      "nombre_especificacion": "GPU",
+      "valor_especificacion": "GeForce RTX 3060 Laptop",
+      "producto": 80005
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900019,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "15.6\" FHD 144 Hz",
+      "producto": 80005
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900020,
+    "fields": {
+      "nombre_especificacion": "Núcleos/Hilos",
+      "valor_especificacion": "6/12",
+      "producto": 80006
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900021,
+    "fields": {
+      "nombre_especificacion": "Frecuencia",
+      "valor_especificacion": "3.5–4.4 GHz",
+      "producto": 80006
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900022,
+    "fields": {
+      "nombre_especificacion": "Socket",
+      "valor_especificacion": "AM4",
+      "producto": 80006
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900023,
+    "fields": {
+      "nombre_especificacion": "Núcleos/Hilos",
+      "valor_especificacion": "4/8",
+      "producto": 80007
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900024,
+    "fields": {
+      "nombre_especificacion": "Frecuencia máx.",
+      "valor_especificacion": "4.3 GHz",
+      "producto": 80007
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900025,
+    "fields": {
+      "nombre_especificacion": "Socket",
+      "valor_especificacion": "LGA1700",
+      "producto": 80007
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900026,
+    "fields": {
+      "nombre_especificacion": "Capacidad",
+      "valor_especificacion": "16 GB (2×8 GB)",
+      "producto": 80008
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900027,
+    "fields": {
+      "nombre_especificacion": "Velocidad/Latencia",
+      "valor_especificacion": "3200 MT/s, CL22",
+      "producto": 80008
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900028,
+    "fields": {
+      "nombre_especificacion": "Potencia",
+      "valor_especificacion": "600 W",
+      "producto": 80009
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900029,
+    "fields": {
+      "nombre_especificacion": "Certificación",
+      "valor_especificacion": "80 PLUS (White)",
+      "producto": 80009
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900030,
+    "fields": {
+      "nombre_especificacion": "Cableado",
+      "valor_especificacion": "No modular",
+      "producto": 80009
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900031,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "15.6\" FHD",
+      "producto": 80010
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900032,
+    "fields": {
+      "nombre_especificacion": "CPU (opciones)",
+      "valor_especificacion": "Ryzen 3/5 o Intel i3",
+      "producto": 80010
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900033,
+    "fields": {
+      "nombre_especificacion": "Almacenamiento",
+      "valor_especificacion": "SSD NVMe",
+      "producto": 80010
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900034,
+    "fields": {
+      "nombre_especificacion": "CPU",
+      "valor_especificacion": "Intel Core i5-1335U",
+      "producto": 80011
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900035,
+    "fields": {
+      "nombre_especificacion": "Memoria",
+      "valor_especificacion": "8–16 GB DDR4",
+      "producto": 80011
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900036,
+    "fields": {
+      "nombre_especificacion": "Almacenamiento",
+      "valor_especificacion": "512 GB–1 TB NVMe",
+      "producto": 80011
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900037,
+    "fields": {
+      "nombre_especificacion": "CPU (opciones)",
+      "valor_especificacion": "Ryzen 5 7530U / i5-1335U",
+      "producto": 80012
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900038,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "15.6\" FHD",
+      "producto": 80012
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900039,
+    "fields": {
+      "nombre_especificacion": "Peso",
+      "valor_especificacion": "~1.62 kg",
+      "producto": 80012
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900040,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "14\" FHD",
+      "producto": 80013
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900041,
+    "fields": {
+      "nombre_especificacion": "CPU",
+      "valor_especificacion": "Hasta i5-1235U",
+      "producto": 80013
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900042,
+    "fields": {
+      "nombre_especificacion": "Batería",
+      "valor_especificacion": "Aproximado 8–10 h",
+      "producto": 80013
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900043,
+    "fields": {
+      "nombre_especificacion": "CPU",
+      "valor_especificacion": "Ryzen 5 7520U",
+      "producto": 80014
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900044,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "14\" FHD",
+      "producto": 80014
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900045,
+    "fields": {
+      "nombre_especificacion": "Peso",
+      "valor_especificacion": "~1.38 kg",
+      "producto": 80014
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900046,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "14\" FHD/2.2K",
+      "producto": 80015
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900047,
+    "fields": {
+      "nombre_especificacion": "CPU (opciones)",
+      "valor_especificacion": "Hasta i7-1355U",
+      "producto": 80015
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900048,
+    "fields": {
+      "nombre_especificacion": "Seguridad",
+      "valor_especificacion": "TPM 2.0, lector huellas (según SKU)",
+      "producto": 80015
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900049,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "14\" FHD",
+      "producto": 80016
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900050,
+    "fields": {
+      "nombre_especificacion": "CPU",
+      "valor_especificacion": "Intel Core i5/i7 13ª gen",
+      "producto": 80016
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900051,
+    "fields": {
+      "nombre_especificacion": "Conectividad",
+      "valor_especificacion": "Thunderbolt 4",
+      "producto": 80016
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900052,
+    "fields": {
+      "nombre_especificacion": "CPU",
+      "valor_especificacion": "Intel Core i5-12500",
+      "producto": 80017
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900053,
+    "fields": {
+      "nombre_especificacion": "Formato",
+      "valor_especificacion": "SFF",
+      "producto": 80017
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900054,
+    "fields": {
+      "nombre_especificacion": "RAM",
+      "valor_especificacion": "8–32 GB DDR4",
+      "producto": 80017
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900055,
+    "fields": {
+      "nombre_especificacion": "CPU",
+      "valor_especificacion": "Intel Core i5/i7 13ª gen",
+      "producto": 80018
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900056,
+    "fields": {
+      "nombre_especificacion": "Formato",
+      "valor_especificacion": "Torre",
+      "producto": 80018
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900057,
+    "fields": {
+      "nombre_especificacion": "Gestión",
+      "valor_especificacion": "vPro (según modelo)",
+      "producto": 80018
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900058,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "16\" 3.2K OLED",
+      "producto": 80019
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900059,
+    "fields": {
+      "nombre_especificacion": "CPU",
+      "valor_especificacion": "Intel Core i9 (según SKU)",
+      "producto": 80019
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900060,
+    "fields": {
+      "nombre_especificacion": "GPU",
+      "valor_especificacion": "RTX 4060/4070 (según SKU)",
+      "producto": 80019
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900061,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "16\" QHD+ 165 Hz",
+      "producto": 80020
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900062,
+    "fields": {
+      "nombre_especificacion": "CPU",
+      "valor_especificacion": "Intel Core i7/i9 HX",
+      "producto": 80020
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900063,
+    "fields": {
+      "nombre_especificacion": "GPU",
+      "valor_especificacion": "RTX 4060/4070",
+      "producto": 80020
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900064,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "11\" OLED (Ultra Retina XDR)",
+      "producto": 80021
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900065,
+    "fields": {
+      "nombre_especificacion": "Chip",
+      "valor_especificacion": "Apple M4",
+      "producto": 80021
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900066,
+    "fields": {
+      "nombre_especificacion": "Stylus",
+      "valor_especificacion": "Apple Pencil Pro",
+      "producto": 80021
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900067,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "12.4\" Dynamic AMOLED 2X 120 Hz",
+      "producto": 80022
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900068,
+    "fields": {
+      "nombre_especificacion": "Stylus",
+      "valor_especificacion": "S Pen incluido",
+      "producto": 80022
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900069,
+    "fields": {
+      "nombre_especificacion": "Resistencia",
+      "valor_especificacion": "IP68",
+      "producto": 80022
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900070,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "11.5\" 120 Hz PaperMatte",
+      "producto": 80023
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900071,
+    "fields": {
+      "nombre_especificacion": "Stylus",
+      "valor_especificacion": "M-Pencil 2 (según bundle)",
+      "producto": 80023
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 900072,
+    "fields": {
+      "nombre_especificacion": "Peso",
+      "valor_especificacion": "~499 g",
+      "producto": 80023
+    }
+  }
+]

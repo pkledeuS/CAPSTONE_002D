@@ -158,6 +158,61 @@
     padding: 40px 0 0 0;
 }
 
+/* ===========================
+    FEEDBACK (mensajes debajo de inputs)
+   =========================== */
+small.feedback {
+    display: block;
+    min-height: 18px;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 4px;
+    opacity: 0.9;
+    transition: color 0.3s ease, opacity 0.3s ease;
+}
+small.feedback:empty {
+    opacity: 0;
+}
+small.feedback.error {
+    color: #d9534f;
+}
+small.feedback.success {
+    color: #28a745;
+}
+/* ===========================
+    Ajuste visual de feedbacks
+   =========================== */
+.input-wrapper {
+  margin-bottom: 10px; /* separación uniforme entre inputs */
+}
+
+/* Ajuste del espacio reservado para mensajes */
+small.feedback {
+    display: block;
+    min-height: 0; /* no reserva espacio innecesario */
+    font-size: 13px;
+    text-align: left;
+    margin-top: 2px;
+    margin-left: 6px;
+    opacity: 0;
+    transform: translateY(-3px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+/* Cuando hay texto visible */
+small.feedback:not(:empty) {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Colores según tipo */
+small.feedback.error {
+    color: #d9534f;
+}
+small.feedback.success {
+    color: #28a745;
+}
+
 @media (max-width: 600px) {
     .form-container {
         max-width: 100%;

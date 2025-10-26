@@ -1,0 +1,599 @@
+[
+  {
+    "model": "app.producto",
+    "pk": 60000,
+    "fields": {
+      "nombre_producto": "AMD Ryzen 7 5800X3D",
+      "descripcion_producto": "CPU AM4 con 3D V-Cache para gaming. 8 núcleos / 16 hilos, base 3.4 GHz, boost 4.5 GHz, 96 MB L3, TDP 105 W.",
+      "modelo_producto": "Ryzen 7 5800X3D",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 400,
+      "categoria_producto": 400,
+      "tipo_producto": 400
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700000,
+    "fields": {
+      "nombre_especificacion": "Arquitectura",
+      "valor_especificacion": "Zen 3 (Vermeer) + 3D V-Cache",
+      "producto": 60000
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700001,
+    "fields": {
+      "nombre_especificacion": "Núcleos/Hilos",
+      "valor_especificacion": "8/16",
+      "producto": 60000
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700002,
+    "fields": {
+      "nombre_especificacion": "Frecuencia",
+      "valor_especificacion": "3.4 GHz base / 4.5 GHz boost",
+      "producto": 60000
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700003,
+    "fields": {
+      "nombre_especificacion": "Socket",
+      "valor_especificacion": "AM4",
+      "producto": 60000
+    }
+  },
+
+  {
+    "model": "app.producto",
+    "pk": 60001,
+    "fields": {
+      "nombre_producto": "Intel Core i5-12400F",
+      "descripcion_producto": "CPU de 6 núcleos Performance (12 hilos) para gaming 1080p. Turbo hasta 4.4 GHz, LGA1700.",
+      "modelo_producto": "BX8071512400F",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 401,
+      "categoria_producto": 400,
+      "tipo_producto": 400
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700010,
+    "fields": {
+      "nombre_especificacion": "Arquitectura",
+      "valor_especificacion": "Intel 7 (Alder Lake, solo P-cores)",
+      "producto": 60001
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700011,
+    "fields": {
+      "nombre_especificacion": "Núcleos/Hilos",
+      "valor_especificacion": "6/12",
+      "producto": 60001
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700012,
+    "fields": {
+      "nombre_especificacion": "Frecuencia máx.",
+      "valor_especificacion": "4.4 GHz",
+      "producto": 60001
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700013,
+    "fields": {
+      "nombre_especificacion": "Socket",
+      "valor_especificacion": "LGA1700",
+      "producto": 60001
+    }
+  },
+
+  {
+    "model": "app.producto",
+    "pk": 60002,
+    "fields": {
+      "nombre_producto": "Kingston FURY Beast DDR5 32GB (2x16) 6000MT/s CL40",
+      "descripcion_producto": "Kit de memoria DDR5 para plataformas modernas; compatible con perfiles AMD EXPO / Intel XMP 3.0.",
+      "modelo_producto": "KF560C40BBK2-32",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 402,
+      "categoria_producto": 400,
+      "tipo_producto": 401
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700020,
+    "fields": {
+      "nombre_especificacion": "Capacidad",
+      "valor_especificacion": "32 GB (2×16 GB)",
+      "producto": 60002
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700021,
+    "fields": {
+      "nombre_especificacion": "Velocidad/Latencia",
+      "valor_especificacion": "6000 MT/s, CL40",
+      "producto": 60002
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700022,
+    "fields": {
+      "nombre_especificacion": "Perfil",
+      "valor_especificacion": "AMD EXPO / Intel XMP 3.0",
+      "producto": 60002
+    }
+  },
+
+  {
+    "model": "app.producto",
+    "pk": 60003,
+    "fields": {
+      "nombre_producto": "Corsair RM750x (2021) 80 PLUS Gold",
+      "descripcion_producto": "Fuente 750 W, totalmente modular, 80 PLUS Gold, ventilador 135 mm, 10 años de garantía.",
+      "modelo_producto": "RM750x (CP-9020199)",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 403,
+      "categoria_producto": 400,
+      "tipo_producto": 402
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700030,
+    "fields": {
+      "nombre_especificacion": "Potencia",
+      "valor_especificacion": "750 W",
+      "producto": 60003
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700031,
+    "fields": {
+      "nombre_especificacion": "Certificación",
+      "valor_especificacion": "80 PLUS Gold",
+      "producto": 60003
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700032,
+    "fields": {
+      "nombre_especificacion": "Cableado",
+      "valor_especificacion": "Totalmente modular",
+      "producto": 60003
+    }
+  },
+
+  {
+    "model": "app.producto",
+    "pk": 60004,
+    "fields": {
+      "nombre_producto": "ASUS TUF Gaming A15 (FA507NU)",
+      "descripcion_producto": "Notebook gamer 15.6\" con Ryzen 7 7735HS y GeForce RTX 4050 (opciones de 144/165 Hz).",
+      "modelo_producto": "FA507NU",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 414,
+      "categoria_producto": 400,
+      "tipo_producto": 403
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700040,
+    "fields": {
+      "nombre_especificacion": "CPU",
+      "valor_especificacion": "AMD Ryzen 7 7735HS",
+      "producto": 60004
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700041,
+    "fields": {
+      "nombre_especificacion": "GPU",
+      "valor_especificacion": "NVIDIA GeForce RTX 4050 Laptop",
+      "producto": 60004
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700042,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "15.6\" FHD, 144/165 Hz (según configuración)",
+      "producto": 60004
+    }
+  },
+
+  {
+    "model": "app.producto",
+    "pk": 60005,
+    "fields": {
+      "nombre_producto": "MSI Katana 15 (B13V)",
+      "descripcion_producto": "Notebook gamer con Intel Core i7-13620H y GeForce RTX 4060, 15.6\" 144 Hz.",
+      "modelo_producto": "Katana 15 B13V",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 417,
+      "categoria_producto": 400,
+      "tipo_producto": 403
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700050,
+    "fields": {
+      "nombre_especificacion": "CPU",
+      "valor_especificacion": "Intel Core i7-13620H",
+      "producto": 60005
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700051,
+    "fields": {
+      "nombre_especificacion": "GPU",
+      "valor_especificacion": "NVIDIA GeForce RTX 4060 Laptop",
+      "producto": 60005
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700052,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "15.6\" FHD 144 Hz",
+      "producto": 60005
+    }
+  },
+
+  {
+    "model": "app.producto",
+    "pk": 60006,
+    "fields": {
+      "nombre_producto": "AMD Ryzen 5 5600G",
+      "descripcion_producto": "APU AM4 con gráficos Radeon integrados; 6C/12T, 3.9–4.4 GHz, 16 MB L3, TDP 65 W.",
+      "modelo_producto": "Ryzen 5 5600G",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 400,
+      "categoria_producto": 401,
+      "tipo_producto": 400
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700060,
+    "fields": {
+      "nombre_especificacion": "Gráficos",
+      "valor_especificacion": "Radeon (7 CUs)",
+      "producto": 60006
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700061,
+    "fields": {
+      "nombre_especificacion": "Frecuencia",
+      "valor_especificacion": "3.9 GHz base / 4.4 GHz boost",
+      "producto": 60006
+    }
+  },
+
+  {
+    "model": "app.producto",
+    "pk": 60007,
+    "fields": {
+      "nombre_producto": "Intel Core i3-12100",
+      "descripcion_producto": "CPU de 4C/8T para escritorio/ofimática. Base 3.3 GHz, turbo 4.3 GHz, LGA1700.",
+      "modelo_producto": "BX8071512100",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 401,
+      "categoria_producto": 401,
+      "tipo_producto": 400
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700070,
+    "fields": {
+      "nombre_especificacion": "Núcleos/Hilos",
+      "valor_especificacion": "4/8",
+      "producto": 60007
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700071,
+    "fields": {
+      "nombre_especificacion": "Frecuencia máx.",
+      "valor_especificacion": "4.3 GHz",
+      "producto": 60007
+    }
+  },
+
+  {
+    "model": "app.producto",
+    "pk": 60008,
+    "fields": {
+      "nombre_producto": "EVGA 600 BR 80+ Bronze",
+      "descripcion_producto": "Fuente 600 W no modular, certificación 80+ Bronze, 120 mm fan.",
+      "modelo_producto": "100-BR-0600-K1",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 408,
+      "categoria_producto": 401,
+      "tipo_producto": 402
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700080,
+    "fields": {
+      "nombre_especificacion": "Potencia",
+      "valor_especificacion": "600 W",
+      "producto": 60008
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700081,
+    "fields": {
+      "nombre_especificacion": "Certificación",
+      "valor_especificacion": "80+ Bronze",
+      "producto": 60008
+    }
+  },
+
+  {
+    "model": "app.producto",
+    "pk": 60009,
+    "fields": {
+      "nombre_producto": "Corsair Vengeance LPX 16GB (2x8) DDR4-3200 CL16",
+      "descripcion_producto": "Kit DDR4 para PCs de hogar/oficina, XMP 2.0.",
+      "modelo_producto": "CMK16GX4M2B3200C16",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 403,
+      "categoria_producto": 401,
+      "tipo_producto": 401
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700090,
+    "fields": {
+      "nombre_especificacion": "Capacidad",
+      "valor_especificacion": "16 GB (2×8 GB)",
+      "producto": 60009
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700091,
+    "fields": {
+      "nombre_especificacion": "Velocidad/Latencia",
+      "valor_especificacion": "3200 MT/s, CL16",
+      "producto": 60009
+    }
+  },
+
+  {
+    "model": "app.producto",
+    "pk": 60010,
+    "fields": {
+      "nombre_producto": "ASUS Vivobook 15 (X1504)",
+      "descripcion_producto": "Portátil de 15.6\" para estudio; hasta Intel Core i5-1335U, DDR4, SSD NVMe.",
+      "modelo_producto": "X1504",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 414,
+      "categoria_producto": 402,
+      "tipo_producto": 403
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700100,
+    "fields": {
+      "nombre_especificacion": "CPU (opciones)",
+      "valor_especificacion": "Hasta Intel Core i5-1335U / i7-1355U",
+      "producto": 60010
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700101,
+    "fields": {
+      "nombre_especificacion": "Memoria",
+      "valor_especificacion": "Hasta 16 GB DDR4",
+      "producto": 60010
+    }
+  },
+
+  {
+    "model": "app.producto",
+    "pk": 60011,
+    "fields": {
+      "nombre_producto": "HP 15s (i5-1235U, 15.6\" FHD)",
+      "descripcion_producto": "Notebook 15.6\" FHD para estudio/ofimática con Intel Core i5-1235U, 8 GB RAM, 512 GB SSD (según SKU).",
+      "modelo_producto": "15s-fq5xxx",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 413,
+      "categoria_producto": 402,
+      "tipo_producto": 403
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700110,
+    "fields": {
+      "nombre_especificacion": "CPU",
+      "valor_especificacion": "Intel Core i5-1235U (10C/12T)",
+      "producto": 60011
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700111,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "15.6\" FHD (1920×1080)",
+      "producto": 60011
+    }
+  },
+
+  {
+    "model": "app.producto",
+    "pk": 60012,
+    "fields": {
+      "nombre_producto": "Dell XPS 13 (9315)",
+      "descripcion_producto": "Ultrabook premium para trabajo, chasis de aluminio, hasta Core i7, pantalla FHD+ o 4K (según modelo).",
+      "modelo_producto": "XPS 13 9315",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 416,
+      "categoria_producto": 403,
+      "tipo_producto": 403
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700120,
+    "fields": {
+      "nombre_especificacion": "Peso aprox.",
+      "valor_especificacion": "~1.17 kg (según configuración)",
+      "producto": 60012
+    }
+  },
+
+  {
+    "model": "app.producto",
+    "pk": 60013,
+    "fields": {
+      "nombre_producto": "Lenovo ThinkPad T14 Gen 4",
+      "descripcion_producto": "Portátil empresarial 14\" con opciones Intel/AMD, chasis MIL-STD, teclado ThinkPad.",
+      "modelo_producto": "ThinkPad T14 Gen 4",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 412,
+      "categoria_producto": 403,
+      "tipo_producto": 403
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700130,
+    "fields": {
+      "nombre_especificacion": "Pantalla (opciones)",
+      "valor_especificacion": "14\" hasta 2.8K OLED (según SKU)",
+      "producto": 60013
+    }
+  },
+
+  {
+    "model": "app.producto",
+    "pk": 60014,
+    "fields": {
+      "nombre_producto": "Apple iPad Air (M2) 11\"",
+      "descripcion_producto": "Tablet para diseño/creatividad con chip Apple M2; compatibilidad Apple Pencil (según generación).",
+      "modelo_producto": "iPad Air (M2) 11-inch",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 419,
+      "categoria_producto": 404,
+      "tipo_producto": 405
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700140,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "11\" Liquid Retina",
+      "producto": 60014
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700141,
+    "fields": {
+      "nombre_especificacion": "Chip",
+      "valor_especificacion": "Apple M2",
+      "producto": 60014
+    }
+  },
+
+  {
+    "model": "app.producto",
+    "pk": 60015,
+    "fields": {
+      "nombre_producto": "Samsung Galaxy Tab S9 (11\")",
+      "descripcion_producto": "Tablet AMOLED 120 Hz con S Pen incluido; resistencia IP68.",
+      "modelo_producto": "SM-X710 (Tab S9 Wi-Fi)",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 420,
+      "categoria_producto": 404,
+      "tipo_producto": 405
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700150,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "11\" Dynamic AMOLED 2X, 120 Hz",
+      "producto": 60015
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700151,
+    "fields": {
+      "nombre_especificacion": "Stylus",
+      "valor_especificacion": "S Pen incluido",
+      "producto": 60015
+    }
+  },
+
+  {
+    "model": "app.producto",
+    "pk": 60016,
+    "fields": {
+      "nombre_producto": "Xiaomi Pad 6 (11\")",
+      "descripcion_producto": "Tablet 11\" 120 Hz con Snapdragon 870 y hasta 8 GB RAM.",
+      "modelo_producto": "23043RP34G",
+      "imagen_producto": "productos/placeholder.png",
+      "marca_producto": 421,
+      "categoria_producto": 404,
+      "tipo_producto": 405
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700160,
+    "fields": {
+      "nombre_especificacion": "Pantalla",
+      "valor_especificacion": "11\" 2880×1800, 120 Hz",
+      "producto": 60016
+    }
+  },
+  {
+    "model": "app.especificacionproducto",
+    "pk": 700161,
+    "fields": {
+      "nombre_especificacion": "SoC",
+      "valor_especificacion": "Snapdragon 870",
+      "producto": 60016
+    }
+  }
+]
