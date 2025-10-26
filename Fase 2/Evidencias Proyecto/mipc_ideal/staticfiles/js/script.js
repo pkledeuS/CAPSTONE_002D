@@ -1,123 +1,125 @@
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("✅ JS cargado correctamente");
+  console.log("✅ Script cargado correctamente");
 
-  const loginForm = document.getElementById("loginForm");
-  const registerForm = document.getElementById("registroForm");
-  const passwordInput = document.getElementById("password");
+  // --- Campos generales ---
   const showPasswordCheckbox = document.getElementById("showPassword");
+  const passwordInputs = document.querySelectorAll('input[type="password"]');
+
+  // --- FORMULARIOS ---
+  const registerForm = document.getElementById("registroForm");
+  const loginForm = document.getElementById("loginForm");
 
   // ==========================
-  // MOSTRAR / OCULTAR CONTRASEÑA
+  // Mostrar / ocultar contraseña
   // ==========================
-  if (showPasswordCheckbox && passwordInput) {
+  if (showPasswordCheckbox && passwordInputs.length > 0) {
     showPasswordCheckbox.addEventListener("change", (e) => {
-      passwordInput.type = e.target.checked ? "text" : "password";
-      console.log("🔁 Alternando visibilidad contraseña");
+      const type = e.target.checked ? "text" : "password";
+      passwordInputs.forEach((input) => {
+        input.type = type;
+      });
     });
   }
 
   // ==========================
-  // VERIFICAR USUARIO EN TIEMPO REAL (solo registro)
+  // Registro: Validaciones en tiempo real
   // ==========================
   if (registerForm) {
-    const usernameInput = document.querySelector("input[name='username']");
-    const feedback = document.getElementById("usernameFeedback");
+    const usernameInput = document.getElementById("username");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const confirmPasswordInput = document.getElementById("confirmPassword");
 
-    if (usernameInput && feedback) {
-      usernameInput.addEventListener("input", () => {
-        const username = usernameInput.value.trim();
-        if (username.length < 3) {
-          feedback.textContent = "";
-          return;
-        }
+    const usernameFeedback = document.getElementById("usernameFeedback");
+    const emailFeedback = document.getElementById("emailFeedback");
+    const passwordFeedback = document.getElementById("passwordFeedback");
 
-        fetch(`/check_username/?username=${encodeURIComponent(username)}`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.exists) {
-              feedback.textContent = "Este nombre de usuario ya está en uso.";
-              feedback.style.color = "red";
-            } else {
-              feedback.textContent = "Nombre de usuario disponible.";
-              feedback.style.color = "green";
-            }
-          })
-          .catch((err) => console.error("Error al verificar usuario:", err));
-      });
-    }
+    // Validar contraseñas iguales
+    const validatePasswords = () => {
+      const pass = passwordInput.value.trim();
+      const confirm = confirmPasswordInput.value.trim();
+      if (!confirm) {
+        passwordFeedback.textContent = "";
+        return false;
+      }
+      if (pass !== confirm) {
+        passwordFeedback.textContent = "Las contraseñas no coinciden.";
+        passwordFeedback.className = "feedback error";
+        return false;
+      } else {
+        passwordFeedback.textContent = "Las contraseñas coinciden.";
+        passwordFeedback.className = "feedback success";
+        return true;
+      }
+    };
 
+    confirmPasswordInput.addEventListener("input", validatePasswords);
+    passwordInput.addEventListener("input", validatePasswords);
+
+    // Validar usuario
+    usernameInput.addEventListener("input", () => {
+      const username = usernameInput.value.trim();
+      if (username.length < 3) {
+        usernameFeedback.textContent = "";
+        return;
+      }
+
+      fetch(`/check_username/?username=${encodeURIComponent(username)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.exists) {
+            usernameFeedback.textContent = "Este nombre de usuario ya está en uso.";
+            usernameFeedback.className = "feedback error";
+          } else {
+            usernameFeedback.textContent = "Nombre de usuario disponible.";
+            usernameFeedback.className = "feedback success";
+          }
+        })
+        .catch(err => console.error("Error al verificar usuario:", err));
+    });
+
+    // Validar correo
+    emailInput.addEventListener("input", () => {
+      const email = emailInput.value.trim();
+      if (email.length < 5 || !email.includes("@")) {
+        emailFeedback.textContent = "";
+        return;
+      }
+
+      fetch(`/check_email/?email=${encodeURIComponent(email)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.exists) {
+            emailFeedback.textContent = "Este correo ya está registrado.";
+            emailFeedback.className = "feedback error";
+          } else {
+            emailFeedback.textContent = "Correo disponible.";
+            emailFeedback.className = "feedback success";
+          }
+        })
+        .catch(err => console.error("Error al verificar correo:", err));
+    });
+
+    // Validación final
     registerForm.addEventListener("submit", (e) => {
-      const email = document.querySelector("input[name='email']").value.trim();
-      const password = document.querySelector("input[name='password']").value.trim();
-      const username = document.querySelector("input[name='username']").value.trim();
-
-      if (!username || !email || !password) {
+      if (!validatePasswords()) {
         e.preventDefault();
-        alert("Por favor completa todos los campos.");
+        alert("Las contraseñas no coinciden.");
       }
     });
   }
 
   // ==========================
-  // VERIFICAR CORREO EN TIEMPO REAL (solo registro)
-  // ==========================
-  if (registerForm) {
-    const emailInput = document.getElementById("email");
-    const emailFeedback = document.getElementById("emailFeedback");
-
-    if (emailInput && emailFeedback) {
-      emailInput.addEventListener("input", () => {
-        const email = emailInput.value.trim();
-        if (email.length < 5 || !email.includes("@")) {
-          emailFeedback.textContent = "";
-          return;
-        }
-
-        fetch(`/check_email/?email=${encodeURIComponent(email)}`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.exists) {
-              emailFeedback.textContent = "Este correo ya está registrado.";
-              emailFeedback.style.color = "red";
-            } else {
-              emailFeedback.textContent = "Correo disponible.";
-              emailFeedback.style.color = "green";
-            }
-          })
-          .catch((err) => console.error("Error al verificar correo:", err));
-      });
-    }
-  }
-
-  // ==========================
-  // RECORDAR USUARIO Y VALIDAR LOGIN (solo login)
+  // Login: Validación simple
   // ==========================
   if (loginForm) {
-    const rememberCheckbox = document.getElementById("rememberMe");
-    const usernameInput = document.querySelector("input[name='username']");
-
-    if (rememberCheckbox && usernameInput) {
-      const rememberedUser = localStorage.getItem("rememberedUser");
-      if (rememberedUser) {
-        usernameInput.value = rememberedUser;
-        rememberCheckbox.checked = true;
-      }
-
-      loginForm.addEventListener("submit", () => {
-        if (rememberCheckbox.checked) {
-          localStorage.setItem("rememberedUser", usernameInput.value);
-        } else {
-          localStorage.removeItem("rememberedUser");
-        }
-      });
-    }
-
     loginForm.addEventListener("submit", (e) => {
-      const username = usernameInput?.value.trim();
-      const password = passwordInput?.value.trim();
+      const username = loginForm.querySelector('input[name="username"]').value.trim();
+      const password = loginForm.querySelector('input[name="password"]').value.trim();
+
       if (!username || !password) {
         e.preventDefault();
-        alert("Debes ingresar usuario y contraseña");
+        alert("Por favor, completa todos los campos.");
       }
     });
   }

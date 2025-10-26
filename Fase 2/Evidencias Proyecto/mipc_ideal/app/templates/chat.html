@@ -1,0 +1,350 @@
+{% load static %}
+
+<!-- CHAT WIDGET -->
+<div id="chat-bubble" class="chat-bubble" title="Asistente">
+  <i class="bi bi-robot"></i>
+</div>
+
+<div id="chat-panel" class="chat-panel" data-authenticated="{{ request.user.is_authenticated|yesno:'1,0' }}">
+  <div class="chat-header">
+    <div class="left">
+      <i class="bi bi-robot me-2"></i> Asistente de compras
+    </div>
+    <button id="chat-close" class="chat-close" aria-label="Cerrar">&times;</button>
+  </div>
+
+  <div id="chat-messages" class="chat-messages">
+    <div class="msg msg-assistant">
+      <div class="bubble">
+        ¡Hola! Puedo ayudarte a elegir componentes y dispositivos. Dime tu presupuesto y qué uso le darás (juegos, trabajo, estudio).
+      </div>
+    </div>
+  </div>
+
+  <form id="chat-form" class="chat-form" autocomplete="off">
+    {% csrf_token %}
+    <input id="chat-input" type="text" class="chat-input" placeholder="Escribe tu mensaje..." maxlength="500">
+    <button id="chat-send" type="submit" class="chat-send">
+      <i class="bi bi-send"></i>
+    </button>
+  </form>
+
+  <div id="chat-login-cta" class="chat-login-cta" style="display:none;">
+    Debes <a href="{% url 'login' %}">iniciar sesión</a> para usar el asistente sin límites.
+  </div>
+</div>
+
+<!-- Styles mínimos del widget -->
+<style>
+.chat-bubble{
+  position:fixed; right:18px; bottom:18px; width:56px; height:56px; border-radius:50%;
+  background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; display:flex; align-items:center; justify-content:center;
+  box-shadow:0 8px 24px rgba(0,0,0,.2); cursor:pointer; z-index:9999; font-size:24px;
+}
+.chat-panel{
+  position:fixed; right:18px; bottom:86px; width:360px; max-width:92vw; height:480px; max-height:76vh;
+  background:#fff; border-radius:16px; box-shadow:0 16px 40px rgba(0,0,0,.2); overflow:hidden; display:none; z-index:10000;
+  border:1px solid #e9e9f3;
+}
+.chat-header{
+  display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:#f7f8ff; border-bottom:1px solid #eceffe;
+  font-weight:600; color:#3b3f7a;
+}
+.chat-close{
+  border:none; background:transparent; font-size:22px; line-height:1; cursor:pointer; color:#666;
+}
+.chat-messages{
+  padding:12px; height:calc(100% - 110px); overflow:auto; background:#fafbff;
+}
+.msg{ display:flex; margin:8px 0; }
+.msg-user{ justify-content:flex-end; }
+.msg-assistant{ justify-content:flex-start; }
+.bubble{
+  max-width:78%; padding:10px 12px; border-radius:12px; font-size:14px; line-height:1.35; box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+.msg-user .bubble{ background:#667eea; color:#fff; border-top-right-radius:4px; }
+.msg-assistant .bubble{ background:#fff; color:#222; border:1px solid #e9eaf3; border-top-left-radius:4px; }
+.typing{ display:inline-block; min-width:36px; }
+.typing span{ display:inline-block; width:6px; height:6px; margin:0 2px; border-radius:50%; background:#c3c7ef; animation:blink 1.2s infinite; }
+.typing span:nth-child(2){ animation-delay:.2s; } .typing span:nth-child(3){ animation-delay:.4s; }
+@keyframes blink{ 0%,80%,100%{ opacity:.2 } 40%{ opacity:1 } }
+
+.chat-form{
+  display:flex; gap:8px; padding:10px; background:#fff; border-top:1px solid #eceffe;
+}
+.chat-input{
+  flex:1; border:1px solid #e1e3f2; border-radius:10px; padding:10px 12px; outline:none;
+}
+.chat-input:focus{ border-color:#667eea; box-shadow:0 0 0 3px rgba(102,126,234,.12); }
+.chat-send{
+  width:42px; border:none; border-radius:10px; background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; cursor:pointer;
+}
+.chat-login-cta{
+  padding:10px 12px; font-size:14px; color:#444; background:#fff; border-top:1px solid #eceffe;
+}
+/* Grid productos + chips */
+.chips { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0 0; }
+.chip { background:#eef0ff; color:#3b3f7a; border:1px solid #e0e3ff; padding:4px 8px; border-radius:999px; font-size:12px; }
+
+.prod-grid { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:10px; margin-top:8px; }
+.prod-card { border:1px solid #eceffe; border-radius:10px; overflow:hidden; background:#fff; }
+.prod-card a { text-decoration:none; color:inherit; display:block; }
+.prod-thumb { width:100%; aspect-ratio: 1/1; object-fit:cover; background:#f7f8ff; }
+.prod-body { padding:8px; }
+.prod-title { font-weight:600; font-size:.92rem; margin:0 0 4px; }
+.prod-meta { font-size:.8rem; color:#666; }
+/* Aparición suave */
+@keyframes fadeUp { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform: none; } }
+.bubble.appear { animation: fadeUp .28s ease-out both; }
+.bubble{
+  white-space: pre-wrap;
+}
+
+.prod-card { animation: fadeUp .24s ease-out both; }
+</style>
+
+<!-- Lógica del widget -->
+<script>
+(function(){
+  // --- Elementos base ---
+  const panel = document.getElementById('chat-panel');
+  const bubble = document.getElementById('chat-bubble');
+  const closeBtn = document.getElementById('chat-close');
+  const form = document.getElementById('chat-form');
+  const input = document.getElementById('chat-input');
+  const messages = document.getElementById('chat-messages');
+  const firstBubble = messages.querySelector('.msg-assistant .bubble');
+  if (firstBubble) firstBubble.textContent = firstBubble.textContent.trim();
+  const loginCta = document.getElementById('chat-login-cta');
+  const isAuth = panel.getAttribute('data-authenticated') === '1';
+
+  // --- Constantes UX ---
+  const MIN_TYPING_MS = 500;   // mantener el "escribiendo..." un mínimo tiempo
+  const CARD_STAGGER_MS = 50;  // retardo incremental entre cards
+
+  // --- CSS inyectado: formato, compactación y overrides de pre-wrap ---
+  const injectedCSS = `
+    /* El mensaje principal respeta \\n y viñetas */
+    .bubble{ white-space: pre-wrap; }
+
+    /* PERO dentro de chips y grid de productos anulamos pre-wrap para evitar estirones */
+    .bubble .chips,
+    .bubble .prod-grid{ white-space: normal; }
+
+    .appear{ animation: fadeUp .18s ease-out both; }
+    @keyframes fadeUp{ from{opacity:.0; transform:translateY(4px)} to{opacity:1; transform:none} }
+
+    /* Chips (filtros) */
+    .chips{ display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+    .chip{ background:#eef1ff; border:1px solid #dfe3ff; color:#3b3f7a; padding:4px 8px; border-radius:999px; font-size:12px; }
+
+    /* Grid de productos compacto */
+    .prod-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:8px; }
+    @media (max-width:420px){ .prod-grid{ grid-template-columns:1fr; } }
+
+    .prod-card{ border:1px solid #eceffe; border-radius:10px; overflow:hidden; background:#fff;
+                transition:transform .15s ease, box-shadow .15s ease; display:flex; flex-direction:column; }
+    .prod-card:hover{ transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,.08); }
+    .prod-card a{ text-decoration:none; color:inherit; display:flex; flex-direction:column; height:100%; }
+
+    /* Imagen más baja para evitar “cartas largas” */
+    .prod-thumb{ width:100%; height:100px; object-fit:contain; background:#f5f6ff; display:block; }
+    @media (min-width:480px){ .prod-thumb{ height:110px; } }
+
+    .prod-body{ padding:6px 8px 8px; display:flex; flex-direction:column; gap:2px; }
+
+    /* Título a 2 líneas máximo */
+    .prod-title{
+      font-weight:600; font-size:13px; color:#222;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+      line-height:1.25; min-height:calc(1.25em * 2);
+    }
+    /* Meta a 1 línea */
+    .prod-meta{
+      font-size:12px; color:#666;
+      display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden;
+      line-height:1.25; min-height:1.25em;
+    }
+
+    /* "typing" dots */
+    .typing{ display:inline-block; min-width:36px; }
+    .typing span{ display:inline-block; width:6px; height:6px; margin:0 2px; border-radius:50%; background:#c3c7ef; animation:blink 1.2s infinite; }
+    .typing span:nth-child(2){ animation-delay:.2s; } .typing span:nth-child(3){ animation-delay:.4s; }
+    @keyframes blink{ 0%,80%,100%{ opacity:.2 } 40%{ opacity:1 } }
+  `;
+  const style = document.createElement('style');
+  style.textContent = injectedCSS;
+  document.head.appendChild(style);
+
+  // --- Utils ---
+  function getCookie(name){
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  function openPanel(){ panel.style.display='block'; setTimeout(()=>input.focus(), 50); }
+  function closePanel(){ panel.style.display='none'; }
+
+  bubble.addEventListener('click', () => {
+    if(panel.style.display==='block'){ closePanel(); } else { openPanel(); }
+  });
+  closeBtn.addEventListener('click', closePanel);
+
+  // --- Render helpers ---
+  function appendMsg(role, text){
+    const wrap = document.createElement('div');
+    wrap.className = 'msg ' + (role === 'user' ? 'msg-user' : 'msg-assistant');
+    const b = document.createElement('div');
+    b.className = 'bubble appear';
+    b.textContent = text || '';
+    wrap.appendChild(b);
+    messages.appendChild(wrap);
+    messages.scrollTop = messages.scrollHeight;
+    return wrap;
+  }
+
+  function appendTyping(){
+    const wrap = document.createElement('div');
+    wrap.className = 'msg msg-assistant';
+    const b = document.createElement('div');
+    b.className = 'bubble typing';
+    b.innerHTML = '<span></span><span></span><span></span>';
+    wrap.appendChild(b);
+    messages.appendChild(wrap);
+    messages.scrollTop = messages.scrollHeight;
+    return wrap;
+  }
+
+  function appendChips(chips){
+    if(!Array.isArray(chips) || chips.length === 0) return;
+    const row = document.createElement('div');
+    row.className = 'msg msg-assistant';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble appear';
+    const wrap = document.createElement('div');
+    wrap.className = 'chips';
+    chips.forEach(t => {
+      const c = document.createElement('span');
+      c.className = 'chip';
+      c.textContent = t;
+      wrap.appendChild(c);
+    });
+    bubble.appendChild(wrap);
+    row.appendChild(bubble);
+    messages.appendChild(row);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function appendProducts(items){
+    if(!Array.isArray(items) || items.length === 0) return;
+    const row = document.createElement('div');
+    row.className = 'msg msg-assistant';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble appear';
+
+    const grid = document.createElement('div');
+    grid.className = 'prod-grid';
+
+    items.forEach((p, idx) => {
+      const id = p.id;
+      const url = p.url || (`/producto/${id}/`);
+      const img = p.imagen || "";
+      const nombre = p.nombre || 'Producto';
+      const metaParts = [p.marca, p.categoria, p.tipo].filter(Boolean);
+      const meta = metaParts.join(' • ');
+
+      const card = document.createElement('div');
+      card.className = 'prod-card appear';
+      card.style.animationDelay = (idx * CARD_STAGGER_MS) + 'ms';
+      card.innerHTML = `
+        <a href="${url}">
+          <img class="prod-thumb" src="${img}" alt="">
+          <div class="prod-body">
+            <div class="prod-title">${nombre}</div>
+            <div class="prod-meta">${meta}</div>
+          </div>
+        </a>`;
+      // Fallback si imagen falla
+      const imgEl = card.querySelector('.prod-thumb');
+      imgEl.addEventListener('error', () => {
+        imgEl.src = "{% static 'img/default.png' %}";
+      });
+
+      grid.appendChild(card);
+    });
+
+    bubble.appendChild(grid);
+    row.appendChild(bubble);
+    messages.appendChild(row);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  // --- CTA si no autenticado ---
+  if(!isAuth){ loginCta.style.display = 'block'; }
+
+  // --- Submit del chat ---
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = (input.value || '').trim();
+    if(!text) return;
+
+    if(!isAuth){
+      appendMsg('assistant', 'Para continuar, por favor inicia sesión.');
+      return;
+    }
+
+    appendMsg('user', text);
+    input.value = '';
+
+    const typing = appendTyping();
+    const t0 = Date.now();
+
+    try{
+      const res = await fetch("{% url 'chat_api' %}", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrftoken,
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        body: new URLSearchParams({ message: text })
+      });
+
+      const data = await res.json();
+
+      // Mantener "typing" visible al menos MIN_TYPING_MS
+      const elapsed = Date.now() - t0;
+      if(elapsed < MIN_TYPING_MS){
+        await new Promise(r => setTimeout(r, MIN_TYPING_MS - elapsed));
+      }
+
+      try { messages.removeChild(typing); } catch(_){}
+
+      if(!res.ok || data.error){
+        appendMsg('assistant', data.error || 'Error del asistente.');
+        return;
+      }
+
+      // 1) Texto (formateado con \\n y viñetas)
+      appendMsg('assistant', data.reply || '…');
+
+      // 2) Chips (si hay)
+      if (Array.isArray(data.filtros_aplicados) && data.filtros_aplicados.length){
+        appendChips(data.filtros_aplicados);
+      }
+
+      // 3) Cards (si hay)
+      if (Array.isArray(data.productos) && data.productos.length){
+        appendProducts(data.productos);
+      }
+
+    }catch(err){
+      try{ messages.removeChild(typing); }catch(_){}
+      appendMsg('assistant', 'No pude conectar con el asistente.');
+    }
+  });
+})();
+</script>
+

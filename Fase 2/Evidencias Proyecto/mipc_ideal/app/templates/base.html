@@ -60,8 +60,8 @@
                 </ul>
             </div>
             <div class="search-container">
-                <form class="search-form" role="search">
-                    <input class="search-input" type="search" placeholder="Buscar productos..." aria-label="Search">
+                <form class="search-form" role="search" action="{% url 'products' %}" method="get">
+                    <input class="search-input" type="search" name="q" placeholder="Buscar productos, marcas, categorías..." aria-label="Search" value="{{ request.GET.q }}">
                     <button class="search-button" type="submit">Buscar</button>
                 </form>
             </div>
@@ -76,6 +76,7 @@
                             <li><a class="dropdown-item" href="{% url 'edit_profile' %}">Editar perfil</a></li>
                             <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesión</a></li>
                         {% elif perfil and perfil.profile_type == 'tienda' %}
+                            <li><a class="dropdown-item" href="{% url 'store_offers_list' %}">Mis productos</a></li>
                             <li><a class="dropdown-item" href="{% url 'edit_profile' %}">Editar perfil</a></li>
                             <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesión</a></li>
                         {% else %}
@@ -139,6 +140,6 @@
 
     {% block scripts %}
     {% endblock %}
-    
+    {% include "chat.html" %}
 </body>
 </html>

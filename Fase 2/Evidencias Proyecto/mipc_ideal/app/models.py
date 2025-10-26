@@ -69,6 +69,10 @@ class TiendaProducto(models.Model):
     producto = models.ForeignKey('Producto', on_delete=models.CASCADE)
     tienda = models.ForeignKey('Tienda', on_delete=models.CASCADE)
     precio = models.DecimalField(max_digits=10, decimal_places=2)
+    url_externa = models.URLField(blank=True, null=True)
+    stock = models.PositiveIntegerField(default=0)
+    nota_tienda = models.CharField(max_length=200, blank=True)
+    class Meta: unique_together = ('tienda','producto')
 
     def __str__(self):
         return f"{self.producto} - {self.tienda}"
@@ -126,3 +130,29 @@ class ProductoVisto(models.Model):
 
     def __str__(self):
         return f"{self.usuario} vio {self.producto}"
+    
+# MODELO PARA EL CHATBOT
+class ChatSession(models.Model):
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    started_at = models.DateTimeField(auto_now_add=True)
+    ended_at = models.DateTimeField(null=True, blank=True)
+    last_activity = models.DateTimeField(auto_now=True)
+    metadata = models.JSONField(null=True, blank=True)
+
+    def __str__(self):
+        return f"ChatSession #{self.id} ({self.user or 'anon'})"
+    
+class ChatTurn(models.Model):
+    ROLE_CHOICES = (('user', 'User'), ('assistant', 'Assistant'), ('system', 'System'))
+    session = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name='turns')
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    text = models.TextField()
+    filtros_aplicados = models.JSONField(default=dict, blank=True)
+    productos_sugeridos = models.ManyToManyField(Producto, blank=True)
+    tokens_in = models.IntegerField(default=0)
+    tokens_out = models.IntegerField(default=0)
+    latency_ms = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"[{self.role}] {self.created_at:%Y-%m-%d %H:%M:%S}"
