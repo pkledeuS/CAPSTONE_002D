@@ -35,11 +35,9 @@
                                     <i class="bi bi-star-fill me-1"></i> Mis preferencias
                                 </a>
                             </li>
-
                             <li class="dropdown-divider"></li>
                         {% endif %}
                     {% endif %}
-
                     {% for tipoproducto in tiposproductos %}
                         <li>
                             <a class="dropdown-item" href="{% url 'products_by_type' tipoproducto.id %}">
@@ -47,9 +45,7 @@
                             </a>
                         </li>
                     {% endfor %}
-
-                    <li class="dropdown-divider"></li>
-
+                    <li class="dropdown-divider">Categorias</li>
                     {% for categoria in categorias %}
                         <li>
                             <a class="dropdown-item" href="{% url 'products_by_category' categoria.id %}">
@@ -76,8 +72,8 @@
                             <li><a class="dropdown-item" href="{% url 'edit_profile' %}">Editar perfil</a></li>
                             <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesión</a></li>
                         {% elif perfil and perfil.profile_type == 'tienda' %}
-                            <li><a class="dropdown-item" href="{% url 'store_offers_list' %}">Mis productos</a></li>
                             <li><a class="dropdown-item" href="{% url 'edit_profile' %}">Editar perfil</a></li>
+                            <li><a class="dropdown-item" href="{% url 'store_offers_list' %}">Mis productos</a></li>
                             <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesión</a></li>
                         {% else %}
                             <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesión</a></li>

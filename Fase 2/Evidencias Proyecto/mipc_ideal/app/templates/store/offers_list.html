@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
-<h3 class="mb-3">Mis productos (ofertas)</h3>
+<h3 class="mb-3">Mis productos</h3>
 
 <div class="mb-3">
-  <a href="{% url 'store_offer_new' %}" class="btn btn-primary btn-sm">
-    <i class="bi bi-plus-circle me-1"></i> Agregar oferta
-  </a>
+    <a href="{% url 'store_offer_new' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-circle me-1"></i> Agregar producto
+    </a>
 </div>
 
 {% if ofertas %}
@@ -22,22 +22,26 @@
             <tbody>
                 {% for o in ofertas %}
                     <tr>
-                        <td>{{ o.producto.nombre_producto }}</td>
-                        <td>{{ o.producto.modelo_producto }}</td>
-                        <td>${{ o.precio|floatformat:0 }}</td>
-                        <td>
-                            <a class="btn btn-sm btn-outline-secondary" href="{% url 'store_offer_edit' o.id %}">Editar</a>
-                            <form method="post" action="{% url 'store_offer_delete' o.id %}" style="display:inline;">
-                                {% csrf_token %}
-                                <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
-                            </form>
-                        </td>
+                    <td class="position-relative">
+                        <a href="{% url 'product_detail' o.producto.id %}" class="text-decoration-none">
+                        {{ o.producto.nombre_producto }}
+                        </a>
+                    </td>
+                    <td>{{ o.producto.modelo_producto }}</td>
+                    <td>${{ o.precio|floatformat:0 }}</td>
+                    <td>
+                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'store_offer_edit' o.id %}">Editar</a>
+                        <form method="post" action="{% url 'store_offer_delete' o.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
+                        </form>
+                    </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 {% else %}
-    <div class="alert alert-light">Aún no tienes ofertas. Crea la primera.</div>
+    <div class="alert alert-light">Aún no tienes productos. Crea el primero.</div>
 {% endif %}
 {% endblock %}

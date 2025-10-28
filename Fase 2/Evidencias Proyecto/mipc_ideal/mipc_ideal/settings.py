@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'app.apps.AppConfig',
     'colorfield',
     'django_extensions',
+    'django.contrib.humanize',
 ]
 
 X_FRAME_OPTIONS = "SAMEORIGIN"

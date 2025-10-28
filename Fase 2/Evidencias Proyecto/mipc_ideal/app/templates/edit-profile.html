@@ -14,21 +14,6 @@
 
 {% block content %}
 <div class="form-container">
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-success" id="flash-message" style="
-                margin-bottom: 20px;
-                background: linear-gradient(to right, #67e6a0, #2ecc71);
-                color: white;
-                padding: 12px;
-                border-radius: 8px;
-                text-align: center;
-                font-weight: 500;">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
-
     <div class="form-title">
         <h2 class="text-center my-4">Editar Perfil</h2>
     </div>
