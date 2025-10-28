@@ -2,65 +2,110 @@
 {% load static %}
 
 {% block css %}
-    <link rel="stylesheet" href="{% static 'css/product-detail.css' %}">
+<link rel="stylesheet" href="{% static 'css/product-detail.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="product-detail-container">
-    <div class="product-card-detail">
-        <div class="product-image">
+<div class="pd2-wrap">
+    <!-- Columna izquierda -->
+    <section class="pd2-left card">
+        <div class="pd2-hero">
+        <div class="pd2-imgbox">
             {% if producto.imagen_producto %}
-                <img src="{{ producto.imagen_producto.url }}" alt="{{ producto.nombre_producto }}">
+            <img src="{{ producto.imagen_producto.url }}" alt="{{ producto.nombre_producto }}">
             {% else %}
-                <img src="{% static 'img/default.png' %}" alt="Imagen no disponible">
+            <img src="{% static 'img/default.png' %}" alt="Imagen no disponible">
             {% endif %}
         </div>
-        <div class="product-info">
-            <h2 class="product-title">{{ producto.nombre_producto }}</h2>
-            <p class="product-description">{{ producto.descripcion_producto|default:"Sin descripción." }}</p>
-            <p class="product-model"><strong>Modelo:</strong> {{ producto.modelo_producto }}</p>
-            <p class="product-brand"><strong>Marca:</strong> {{ producto.marca_producto }}</p>
-            <p class="product-stock"><strong>Categoria:</strong> {{ producto.categoria_producto }}</p>
-            <p class="product-stock"><strong>Tipo de producto:</strong> {{ producto.tipo_producto }}</p>
-        </div>
-        {% if ofertas %}
-            <hr>
-            <h4 class="mt-3">Disponibilidad en tiendas</h4>
-            <div class="table-responsive">
-                <table class="table align-middle">
-                <thead>
-                    <tr>
-                    <th>Tienda</th>
-                    <th style="width:140px">Precio</th>
-                    <th style="width:120px">Stock</th>
-                    <th style="width:160px"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for o in ofertas %}
-                    <tr>
-                    <td>{{ o.tienda.nombre_tienda }}</td>
-                    <td>${{ o.precio|floatformat:0 }}</td>
-                    <td>{{ o.stock }}</td>
-                    <td>
-                        {% if o.url_externa %}
-                        <a class="btn btn-sm btn-primary" href="{{ o.url_externa }}" target="_blank" rel="nofollow noopener">
-                            Ver en tienda
-                        </a>
-                        {% else %}
-                        <button class="btn btn-sm btn-outline-secondary" disabled>Sin enlace</button>
-                        {% endif %}
-                    </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-                </table>
+
+        <div class="pd2-head">
+            <h1 class="pd2-title">{{ producto.nombre_producto }}</h1>
+
+            <!-- Chips opcionales (modelo / capacidad, etc.) -->
+            <div class="pd2-chips">
+            {% if producto.modelo_producto %}<span class="chip">{{ producto.modelo_producto }}</span>{% endif %}
+            <span class="chip">{{ producto.marca_producto }}</span>
+            <span class="chip">{{ producto.categoria_producto }}</span>
+            <span class="chip">{{ producto.tipo_producto }}</span>
             </div>
+        </div>
+        </div>
+
+        <!-- Características / Especificaciones -->
+        <div class="pd2-sections">
+        <section class="pd2-block">
+            <h2>Características</h2>
+            <dl class="specs-grid">
+            <dt>Modelo</dt><dd>{{ producto.modelo_producto|default:"—" }}</dd>
+            <dt>Marca</dt><dd>{{ producto.marca_producto|default:"—" }}</dd>
+            <dt>Categoría</dt><dd>{{ producto.categoria_producto|default:"—" }}</dd>
+            <dt>Tipo</dt><dd>{{ producto.tipo_producto|default:"—" }}</dd>
+            </dl>
+            {% if producto.descripcion_producto %}
+            <p class="pd2-desc">{{ producto.descripcion_producto }}</p>
+            {% endif %}
+        </section>
+
+        <section class="pd2-block">
+            <h2>Especificaciones</h2>
+            {% with specs=producto.especificacionproducto_set.all %}
+            {% if specs %}
+                <dl class="specs-grid">
+                {% for s in specs %}
+                    <dt>{{ s.nombre_especificacion }}</dt>
+                    <dd>{{ s.valor_especificacion }}</dd>
+                {% endfor %}
+                </dl>
+            {% else %}
+                <div class="pd2-empty">Sin especificaciones cargadas.</div>
+            {% endif %}
+            {% endwith %}
+        </section>
+        </div>
+    </section>
+
+    <!-- Sidebar derecha -->
+    <aside class="pd2-right">
+        <div class="card pd2-side-header">
+        <div class="side-title">Elige tu tienda</div>
+        <div class="side-sort">
+            <label>Ordenar por</label>
+            <select class="form-select form-select-sm">
+            <option>Precio oferta</option>
+            <option>Precio normal</option>
+            <option>Stock</option>
+            </select>
+        </div>
+        </div>
+
+        {% if ofertas %}
+        <div class="pd2-shops">
+            {% for o in ofertas %}
+            <div class="shop-card card">
+                <div class="shop-name">{{ o.tienda.nombre_tienda }}</div>
+                <div class="shop-prices">
+                <div>
+                    <div class="price-label">Precio</div>
+                    <div class="price-value">${{ o.precio|floatformat:0 }}</div>
+                </div>
+                <div class="shop-stock">
+                    <div class="price-label">Stock</div>
+                    <div class="stock-value">{{ o.stock }}</div>
+                </div>
+                </div>
+                <div class="shop-cta">
+                {% if o.url_externa %}
+                    <a class="btn-pill" href="{{ o.url_externa }}" target="_blank" rel="nofollow noopener">Ver en tienda</a>
+                {% else %}
+                    <span class="muted">Sin enlace</span>
+                {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
         {% else %}
-            <div class="alert alert-light mt-3">Aún no hay tiendas con este producto.</div>
+        <div class="card pd2-empty">Aún no hay tiendas con este producto.</div>
         {% endif %}
-    </div>
+    </aside>
 </div>
 {% endblock %}
-
-

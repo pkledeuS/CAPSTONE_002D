@@ -34,4 +34,8 @@ urlpatterns = [
     path('chat/', views.chat_page, name='chat_page'),
     path('chat/api/', views.chat_api, name='chat_api'),
     path('chat/reset/', views.chat_reset, name='chat_reset'),
+
+    # API auxiliares
+    path('api/brands-by-type/', views.api_brands_by_type, name='api_brands_by_type'),
+    path('api/products-by-type-brand/', views.api_products_by_type_brand, name='api_products_by_type_brand'),
 ]

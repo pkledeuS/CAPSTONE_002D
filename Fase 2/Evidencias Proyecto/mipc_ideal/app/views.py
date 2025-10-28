@@ -14,7 +14,8 @@ from django.http import JsonResponse
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.utils.text import slugify
-from django.db.models import Q
+from django.db.models import Q, Min, Sum
+from django import forms
 
 from .forms import RegisterForm, ExistingProductOfferForm, NewProductAndOfferForm, model_key
 from .models import (
@@ -25,6 +26,9 @@ from .models import (
 from .services.llm_provider import LLMClient
 from .services.recommender import recommend_products, parse_requirements
 
+from django.views.decorators.http import require_GET
+from django.forms.models import model_to_dict
+
 # =========================
 #   CONSTANTES DE CHAT
 # =========================
@@ -32,7 +36,7 @@ OLLAMA_BASE = "http://127.0.0.1:11434"
 SYSTEM_PROMPT = (
     "Eres un asesor de compras de PC con estilo claro y conciso. "
     "Nunca inventes modelos ni precios; si no hay catálogo, no recomiendes marcas/modelos concretos. "
-    "Cuando el usuario pida 'el mejor' o 'recomiéndame uno', explica tus criterios y pide 1 dato clave que falte. "
+    "Cuando el usuario pida 'el mejor' o 'recomiéndame uno' o 'sugiere algo' o 'dame una opción', explica tus criterios y pide 1 dato clave que falte. "
     "Responde en español, breve y directo."
 )
 
@@ -169,11 +173,11 @@ def _set_sticky_filters(session_obj, filtros_ids):
 
 def _id_categoria(nombre: str):
     return CategoriaProducto.objects.filter(nombre_categoria__iexact=nombre)\
-           .values_list("id", flat=True).first()
+        .values_list("id", flat=True).first()
 
 def _id_tipo(nombre: str):
     return TipoProducto.objects.filter(nombre_tipo__iexact=nombre)\
-           .values_list("id", flat=True).first()
+        .values_list("id", flat=True).first()
 
 def _texto_contiene_gamer(text: str) -> bool:
     t = text.lower()
@@ -685,9 +689,12 @@ def store_offer_new(request):
 
     if request.method == 'POST':
         mode = request.POST.get('mode', 'existing')  # 'existing' | 'new'
+
+        # ---- EXISTENTE ------------------------------------------------------
         if mode == 'existing':
             form_existing = ExistingProductOfferForm(request.POST)
-            form_new = NewProductAndOfferForm()
+            form_new = NewProductAndOfferForm()  # vacío para el template
+
             if form_existing.is_valid():
                 producto = form_existing.cleaned_data['producto']
                 precio = form_existing.cleaned_data['precio']
@@ -714,39 +721,75 @@ def store_offer_new(request):
                 messages.success(request, "Oferta guardada correctamente.")
                 return redirect('store_offers_list')
 
+        # ---- NUEVO + OFERTA -------------------------------------------------
         else:
-            form_existing = ExistingProductOfferForm()
+            form_existing = ExistingProductOfferForm()  # vacío para el template
             form_new = NewProductAndOfferForm(request.POST, request.FILES)
+
             if form_new.is_valid():
-                nombre = form_new.cleaned_data['nombre_producto'].strip()
-                modelo = form_new.cleaned_data['modelo_producto'].strip()
-                descripcion = form_new.cleaned_data['descripcion_producto']
-                imagen = form_new.cleaned_data.get('imagen_producto')
+                # Campos del producto
                 marca = form_new.cleaned_data['marca_producto']
                 categoria = form_new.cleaned_data['categoria_producto']
                 tipo = form_new.cleaned_data['tipo_producto']
 
+                # Estos pueden no venir si autogeneras desde el form
+                modelo_disp = (form_new.cleaned_data.get('modelo_producto') or "").strip()
+                nombre_manual = (form_new.cleaned_data.get('nombre_producto') or "").strip()
+                descripcion = form_new.cleaned_data.get('descripcion_producto') or ""
+                imagen = form_new.cleaned_data.get('imagen_producto')
+
+                # Si tu form define helpers internos, úsalos cuando falten
+                modelo_key = getattr(form_new, "_modelo_key", None)
+                modelo_display = getattr(form_new, "_modelo_display", None)
+                nombre_autogen = getattr(form_new, "_nombre_autogen", None)
+
+                if not modelo_disp and modelo_display:
+                    modelo_disp = modelo_display
+
+                # Nombre preferencia: manual > autogen > "Marca + Modelo"
+                if nombre_manual:
+                    nombre_final = nombre_manual
+                elif nombre_autogen:
+                    nombre_final = nombre_autogen
+                else:
+                    nombre_final = f"{marca.nombre_marca} {modelo_disp}".strip()
+
+                # Oferta
                 precio = form_new.cleaned_data['precio']
                 url_externa = form_new.cleaned_data.get('url_externa') or None
                 stock = form_new.cleaned_data.get('stock') or 0
                 nota = form_new.cleaned_data.get('nota_tienda') or ""
 
-                # Anti-duplicado: marca + modelo (case-insensitive)
-                producto = Producto.objects.filter(
-                    marca_producto=marca,
-                    modelo_producto__iexact=modelo
-                ).first()
+                # Anti-duplicado: buscar por marca + modelo normalizado si está disponible
+                candidatos = Producto.objects.filter(marca_producto=marca)
+                producto = None
+                if modelo_key:
+                    from .forms import model_key as _model_key  # por si lo necesitas aquí
+                    for p in candidatos:
+                        try:
+                            if _model_key(p.modelo_producto) == modelo_key:
+                                producto = p
+                                break
+                        except Exception:
+                            continue
+
+                # fallback: coincidencia exacta (case-insensitive) por modelo dentro de la misma marca
+                if not producto and modelo_disp:
+                    producto = candidatos.filter(modelo_producto__iexact=modelo_disp).first()
+
+                # si no existe, crear
                 if not producto:
                     producto = Producto.objects.create(
-                        nombre_producto=nombre,
-                        modelo_producto=modelo,
-                        descripcion_producto=descripcion or "",
+                        nombre_producto=nombre_final,
+                        modelo_producto=modelo_disp,
+                        descripcion_producto=descripcion,
                         imagen_producto=imagen,
                         marca_producto=marca,
                         categoria_producto=categoria,
                         tipo_producto=tipo
                     )
 
+                # crear/actualizar oferta
                 oferta, created = TiendaProducto.objects.get_or_create(
                     tienda=tienda, producto=producto,
                     defaults={
@@ -763,70 +806,40 @@ def store_offer_new(request):
                     oferta.nota_tienda = nota
                     oferta.save()
 
+                # 2) Guardar especificaciones (si vinieron)
+                names = request.POST.getlist('spec_name[]')
+                vals  = request.POST.getlist('spec_value[]')
+                if names and vals:
+                    from .models import EspecificacionProducto
+                    # Opcional: borra previas si estás editando; aquí no, porque es "nuevo".
+                    for n, v in zip(names, vals):
+                        n = (n or '').strip()
+                        v = (v or '').strip()
+                        if n and v:
+                            EspecificacionProducto.objects.create(
+                                producto=producto,
+                                nombre_especificacion=n,
+                                valor_especificacion=v
+                            )
+
                 messages.success(request, "Producto y oferta guardados correctamente.")
                 return redirect('store_offers_list')
-    else:
-        form_existing = ExistingProductOfferForm()
-    form_new = NewProductAndOfferForm(request.POST, request.FILES)
-    if form_new.is_valid():
-        modelo_disp = form_new._modelo_display          # p.ej. "Ryzen 5 5500"
-        modelo_key  = form_new._modelo_key              # p.ej. "ryzen55500" -> (con regla, quedará "ryzen5500")
-        nombre_auto = form_new._nombre_autogen          # p.ej. "AMD Ryzen 5 5500"
 
-        descripcion = form_new.cleaned_data['descripcion_producto']
-        imagen = form_new.cleaned_data.get('imagen_producto')
-        marca = form_new.cleaned_data['marca_producto']
-        categoria = form_new.cleaned_data['categoria_producto']
-        tipo = form_new.cleaned_data['tipo_producto']
+        # Si llegamos aquí, el form no es válido: deja que se rendericen errores
+        return render(request, 'store/offer_form.html', {
+            'form_existing': form_existing,
+            'form_new': form_new,
+            'tienda': tienda,
+        })
 
-        precio = form_new.cleaned_data['precio']
-        url_externa = form_new.cleaned_data.get('url_externa') or None
-        stock = form_new.cleaned_data.get('stock') or 0
-        nota = form_new.cleaned_data.get('nota_tienda') or ""
-
-        # Buscar candidatos por marca, luego comparar con llave canónica
-        candidatos = Producto.objects.filter(marca_producto=marca)
-        producto = None
-        for p in candidatos:
-            if model_key(p.modelo_producto) == modelo_key:
-                producto = p
-                break
-
-        if not producto:
-            # crear producto nuevo con nombre autogenerado y modelo normalizado
-            producto = Producto.objects.create(
-                nombre_producto=nombre_auto,
-                modelo_producto=modelo_disp,
-                descripcion_producto=descripcion or "",
-                imagen_producto=imagen,
-                marca_producto=marca,
-                categoria_producto=categoria,
-                tipo_producto=tipo
-            )
-
-        oferta, created = TiendaProducto.objects.get_or_create(
-            tienda=tienda, producto=producto,
-            defaults={
-                'precio': precio,
-                'url_externa': url_externa,
-                'stock': stock,
-                'nota_tienda': nota,
-            }
-        )
-        if not created:
-            oferta.precio = precio
-            oferta.url_externa = url_externa
-            oferta.stock = stock
-            oferta.nota_tienda = nota
-            oferta.save()
-
-        messages.success(request, "Producto y oferta guardados correctamente.")
-        return redirect('store_offers_list')
-
+    # GET
+    form_existing = ExistingProductOfferForm()
+    form_new = NewProductAndOfferForm()
     return render(request, 'store/offer_form.html', {
         'form_existing': form_existing,
         'form_new': form_new,
         'tienda': tienda,
+        'tiposproductos': TipoProducto.objects.all(),
     })
 
 @login_required
@@ -866,6 +879,70 @@ def store_offer_delete(request, oferta_id):
 
     return render(request, 'store/offer_delete_confirm.html', {'oferta': oferta})
 
+class NewProductAndOfferForm(forms.ModelForm):
+    # Campos de oferta
+    precio = forms.DecimalField(
+        max_digits=10, decimal_places=2,
+        widget=forms.NumberInput(attrs={
+            "class": "form-control",
+            "placeholder": "749990",  # CLP sin puntos
+            "inputmode": "numeric",
+            "step": "1"
+        })
+    )
+    url_externa = forms.URLField(
+        required=False,
+        widget=forms.URLInput(attrs={
+            "class": "form-control",
+            "placeholder": "https://tu-tienda.cl/producto/...",
+        })
+    )
+    stock = forms.IntegerField(
+        min_value=0,
+        widget=forms.NumberInput(attrs={
+            "class": "form-control",
+            "placeholder": "10",
+            "inputmode": "numeric"
+        })
+    )
+    nota_tienda = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "placeholder": "Ej. Entrega 24h | Garantía 12m",
+        })
+    )
+
+    # Campos del producto
+    modelo_producto = forms.CharField(
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "placeholder": "Ej. Lenovo LOQ 15IRH8"
+        })
+    )
+    descripcion_producto = forms.CharField(
+        widget=forms.Textarea(attrs={
+            "class": "form-control",
+            "rows": 3,
+            "placeholder": 'Ej. Laptop gamer 15.6" 144 Hz, i5-13420H + RTX 4060, 16 GB RAM, 512 GB SSD'
+        })
+    )
+    imagen_producto = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={"class": "form-control"})
+    )
+
+    class Meta:
+        model = Producto
+        fields = (
+            "modelo_producto", "descripcion_producto", "imagen_producto",
+            "marca_producto", "tipo_producto", "categoria_producto",
+        )
+        widgets = {
+            "marca_producto":    forms.Select(attrs={"class": "form-select"}),
+            "tipo_producto":     forms.Select(attrs={"class": "form-select"}),
+            "categoria_producto":forms.Select(attrs={"class": "form-select"}),
+        }
 
 def check_username(request):
     username = request.GET.get('username', None)
@@ -1138,3 +1215,149 @@ def chat_reset(request):
     request.session["chat_history"] = [{"role": "system", "content": SYSTEM_PROMPT}]
     request.session.modified = True
     return JsonResponse({"ok": True})
+
+
+
+# --- Plantillas de especificaciones por tipo (en memoria) ---
+@login_required
+def api_brands_by_type(request):
+    tipo_id = request.GET.get('tipo_id')
+    qs = MarcaProducto.objects.filter(producto__tipo_producto_id=tipo_id)\
+                            .distinct().values('id', 'nombre_marca')
+    brands = [{'id': b['id'], 'nombre': b['nombre_marca']} for b in qs]
+    return JsonResponse({'brands': brands})
+
+@login_required
+def api_products_by_type_brand(request):
+    tipo_id = request.GET.get('tipo_id')
+    marca_id = request.GET.get('marca_id')
+    qs = Producto.objects.filter(tipo_producto_id=tipo_id,
+                                marca_producto_id=marca_id)\
+                            .order_by('nombre_producto')\
+                            .values('id', 'nombre_producto', 'modelo_producto')
+    products = []
+    for p in qs:
+        name = p['nombre_producto']
+        if p['modelo_producto']:
+            name = f"{name} ({p['modelo_producto']})"
+        products.append({'id': p['id'], 'name': name})
+    return JsonResponse({'products': products})
+
+def products(request):
+    q       = (request.GET.get('q') or '').strip()
+    tipo_id = request.GET.get('tipo') or ''
+    marca_id= request.GET.get('marca') or ''
+    pmin    = request.GET.get('pmin') or ''
+    pmax    = request.GET.get('pmax') or ''
+    order   = request.GET.get('order') or 'recientes'
+
+    productos = (Producto.objects
+                 .select_related('marca_producto','categoria_producto','tipo_producto'))
+
+    if q:
+        productos = productos.filter(
+            Q(nombre_producto__icontains=q) |
+            Q(modelo_producto__icontains=q) |
+            Q(descripcion_producto__icontains=q) |
+            Q(marca_producto__nombre_marca__icontains=q)
+        )
+
+    # Anotar precio mínimo y stock total (desde ofertas/tiendas)
+    productos = productos.annotate(
+        min_price=Min('tiendaproducto__precio'),
+        total_stock=Sum('tiendaproducto__stock'),
+    )
+
+    if tipo_id:
+        productos = productos.filter(tipo_producto_id=tipo_id)
+    if marca_id:
+        productos = productos.filter(marca_producto_id=marca_id)
+    if pmin:
+        productos = productos.filter(min_price__gte=pmin)
+    if pmax:
+        productos = productos.filter(min_price__lte=pmax)
+
+    # Orden
+    if order == 'precio':
+        productos = productos.order_by('min_price', 'nombre_producto')
+    elif order == 'stock':
+        productos = productos.order_by('-total_stock', 'nombre_producto')
+    else:  # 'recientes'
+        productos = productos.order_by('-fecha_creacion')
+
+    # Para los selects (solo marcas/tipos presentes en el conjunto actual)
+    tipos_disponibles = (TipoProducto.objects
+                         .filter(id__in=productos.values_list('tipo_producto_id', flat=True))
+                         .order_by('nombre_tipo')
+                         .distinct())
+    marcas_disponibles = (MarcaProducto.objects
+                          .filter(id__in=productos.values_list('marca_producto_id', flat=True))
+                          .order_by('nombre_marca')
+                          .distinct())
+
+    # Para que {% regroup %} agrupe correctamente por tipo
+    productos = productos.order_by('tipo_producto__nombre_tipo', 'nombre_producto')
+
+    productos_recientes = Producto.objects.order_by('-fecha_creacion')[:6]
+
+    return render(request, 'products-view.html', {
+        'productos': productos,
+        'productos_recientes': productos_recientes,
+        'q': q,
+        'tipos_disponibles': tipos_disponibles,
+        'marcas_disponibles': marcas_disponibles,
+        'f': {  # para reflotar selección actual en el template
+            'tipo': tipo_id, 'marca': marca_id, 'pmin': pmin, 'pmax': pmax, 'order': order
+        }
+    })
+
+
+def products_by_category(request, categoria_id):
+    categoria = get_object_or_404(CategoriaProducto, id=categoria_id)
+
+    tipo_id = request.GET.get('tipo') or ''
+    marca_id= request.GET.get('marca') or ''
+    pmin    = request.GET.get('pmin') or ''
+    pmax    = request.GET.get('pmax') or ''
+    order   = request.GET.get('order') or 'recientes'
+
+    productos = (Producto.objects
+                 .filter(categoria_producto=categoria)
+                 .select_related('marca_producto','categoria_producto','tipo_producto')
+                 .annotate(min_price=Min('tiendaproducto__precio'),
+                           total_stock=Sum('tiendaproducto__stock')))
+
+    if tipo_id:
+        productos = productos.filter(tipo_producto_id=tipo_id)
+    if marca_id:
+        productos = productos.filter(marca_producto_id=marca_id)
+    if pmin:
+        productos = productos.filter(min_price__gte=pmin)
+    if pmax:
+        productos = productos.filter(min_price__lte=pmax)
+
+    if order == 'precio':
+        productos = productos.order_by('min_price', 'nombre_producto')
+    elif order == 'stock':
+        productos = productos.order_by('-total_stock', 'nombre_producto')
+    else:
+        productos = productos.order_by('-fecha_creacion')
+
+    tipos_disponibles = (TipoProducto.objects
+                         .filter(id__in=productos.values_list('tipo_producto_id', flat=True))
+                         .order_by('nombre_tipo').distinct())
+    marcas_disponibles = (MarcaProducto.objects
+                          .filter(id__in=productos.values_list('marca_producto_id', flat=True))
+                          .order_by('nombre_marca').distinct())
+
+    productos = productos.order_by('tipo_producto__nombre_tipo', 'nombre_producto')
+
+    productos_recientes = Producto.objects.order_by('-fecha_creacion')[:6]
+    return render(request, 'products-view.html', {
+        'categoria': categoria,
+        'productos': productos,
+        'productos_recientes': productos_recientes,
+        'tipos_disponibles': tipos_disponibles,
+        'marcas_disponibles': marcas_disponibles,
+        'f': {'tipo': tipo_id, 'marca': marca_id, 'pmin': pmin, 'pmax': pmax, 'order': order}
+    })
