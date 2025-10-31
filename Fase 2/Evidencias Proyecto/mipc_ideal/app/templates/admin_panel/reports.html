@@ -1,0 +1,87 @@
+{% extends "admin_panel/admin_base.html" %}
+
+{% block admin_title %}
+<h1 class="h3 mb-3">Reportes (Moderación)</h1>
+{% endblock %}
+
+{% block admin_content %}
+<div class="card">
+  <div class="card-body">
+    <form class="row g-2 align-items-end mb-3" method="get">
+      <div class="col-12 col-md-3">
+        <label class="form-label">Objetivo</label>
+        <select name="target" class="form-select">
+          <option value="todos"     {% if request.GET.target == 'todos' or not request.GET.target %}selected{% endif %}>Todos</option>
+          <option value="productos" {% if request.GET.target == 'productos' %}selected{% endif %}>Productos</option>
+          <option value="tiendas"   {% if request.GET.target == 'tiendas' %}selected{% endif %}>Tiendas</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="form-label">Estado</label>
+        <select name="estado" class="form-select">
+          <option value="abiertos"  {% if request.GET.estado == 'abiertos' or not request.GET.estado %}selected{% endif %}>Abiertos</option>
+          <option value="resueltos" {% if request.GET.estado == 'resueltos' %}selected{% endif %}>Resueltos</option>
+          <option value="todos"     {% if request.GET.estado == 'todos' %}selected{% endif %}>Todos</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-3">
+        <button class="btn btn-primary w-100" type="submit">Filtrar</button>
+      </div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr>
+            {% for col in report_columns %}
+              <th>{{ col }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in report_rows %}
+          {# row = [Tipo, Objetivo, Motivo, Detalle, Usuario, Fecha, Estado, PK] #}
+          <tr>
+            <td>{{ row.0 }}</td>
+            <td>{{ row.1 }}</td>
+            <td>{{ row.2 }}</td>
+            <td class="text-truncate" style="max-width: 28rem">{{ row.3 }}</td>
+            <td>{{ row.4 }}</td>
+            <td>{{ row.5 }}</td>
+            <td>
+              {% if row.6 == 'Resuelto' %}
+                <span class="badge bg-success">Resuelto</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Abierto</span>
+              {% endif %}
+            </td>
+            <td class="text-nowrap">
+              {% if row.6 == 'Resuelto' %}
+                <a class="btn btn-outline-secondary btn-sm"
+                   href="{% url 'admin_reports_mark' row.7 'open' %}?next={{ request.get_full_path|urlencode }}">
+                   Reabrir
+                </a>
+              {% else %}
+                <a class="btn btn-outline-success btn-sm"
+                   href="{% url 'admin_reports_mark' row.7 'resolve' %}?next={{ request.get_full_path|urlencode }}">
+                   Marcar resuelto
+                </a>
+              {% endif %}
+              <a class="btn btn-outline-danger btn-sm"
+                 href="{% url 'admin_reports_mark' row.7 'delete' %}?next={{ request.get_full_path|urlencode }}"
+                 onclick="return confirm('¿Eliminar este reporte?');">
+                 Eliminar
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="text-center text-muted">Sin reportes</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {# No hay descarga aquí; se puede agregar luego si lo necesitas #}
+  </div>
+</div>
+{% endblock %}

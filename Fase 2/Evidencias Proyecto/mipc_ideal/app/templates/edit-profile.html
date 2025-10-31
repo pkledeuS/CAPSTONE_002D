@@ -4,184 +4,254 @@
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/edit-form-profile.css' %}">
 <style>
-    .field-feedback {
-        font-size: 13px;
-        margin-top: 4px;
-        color: #e74c3c;
-    }
+  .field-feedback {
+    font-size: 13px;
+    margin-top: 4px;
+    color: #e74c3c;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="form-container">
-    <div class="form-title">
-        <h2 class="text-center my-4">Editar Perfil</h2>
+  <div class="form-title">
+    <h2 class="text-center my-4">Editar Perfil</h2>
+  </div>
+
+  <!-- IMPORTANTE: multipart para subir imagen -->
+  <form method="post" id="edit-form" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- Nombre de usuario -->
+    <div class="input-group mb-1">
+      <span class="input-group-text"><i class="bi bi-person"></i></span>
+      <input type="text" name="username" id="username" value="{{ user.username }}" class="form-control" placeholder="Nuevo nombre de usuario">
+    </div>
+    <small id="usernameFeedback" class="field-feedback"></small>
+
+    <!-- Correo -->
+    <div class="input-group mb-1">
+      <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+      <input type="email" name="new_email" id="email" value="{{ user.email }}" class="form-control" placeholder="Nuevo correo electrónico">
+    </div>
+    <small id="emailFeedback" class="field-feedback"></small>
+
+    <!-- Contraseña -->
+    <div class="input-group mb-1">
+      <span class="input-group-text"><i class="bi bi-lock"></i></span>
+      <input type="password" name="new_password" id="password" class="form-control" placeholder="Nueva contraseña">
     </div>
 
-    <form method="post" id="edit-form">
-        {% csrf_token %}
-        <!-- Nombre de usuario -->
-        <div class="input-group mb-1">
-            <span class="input-group-text"><i class="bi bi-person"></i></span>
-            <input type="text" name="username" id="username" value="{{ user.username }}" class="form-control" placeholder="Nuevo nombre de usuario">
+    <!-- Confirmar contraseña -->
+    <div class="input-group mb-1">
+      <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+      <input type="password" id="confirm_password" class="form-control" placeholder="Confirmar nueva contraseña">
+    </div>
+    <small id="passwordFeedback" class="field-feedback"></small>
+
+    {% if profile_type == 'tienda' %}
+    <!-- =========================
+         DATOS DE LA TIENDA
+         ========================= -->
+    <div class="form-title mt-4">
+      <h2 class="text-center my-4">Datos de la tienda</h2>
+    </div>
+
+    <!-- Nombre de tienda -->
+    <div class="input-group mb-2">
+      <span class="input-group-text"><i class="bi bi-shop"></i></span>
+      <input type="text"
+             class="form-control"
+             name="nombre_tienda"
+             placeholder="Nombre de tu tienda"
+             value="{{ tienda.nombre_tienda|default_if_none:'' }}">
+    </div>
+
+    <!-- Descripción de tienda -->
+    <div class="input-group mb-2">
+      <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+      <textarea class="form-control"
+                name="descripcion_tienda"
+                rows="3"
+                placeholder="Describe tu tienda...">{{ tienda.descripcion_tienda|default_if_none:'' }}</textarea>
+    </div>
+
+    <!-- Dirección de tienda -->
+    <div class="input-group mb-2">
+      <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+      <input type="text"
+             class="form-control"
+             name="direccion_tienda"
+             placeholder="Dirección"
+             value="{{ tienda.direccion_tienda|default_if_none:'' }}">
+    </div>
+
+    <!-- Imagen / logo de tienda -->
+    <div class="mb-2">
+      <label class="form-label fw-semibold d-block">Logo / imagen de la tienda</label>
+
+      {% if tienda.image_tienda %}
+        <img id="preview_tienda"
+             src="{{ tienda.image_tienda.url }}"
+             alt="Logo actual"
+             style="max-width:160px; border-radius:8px; display:block; margin-bottom:8px;">
+      {% else %}
+        <img id="preview_tienda"
+             src=""
+             alt=""
+             style="max-width:160px; border-radius:8px; display:none; margin-bottom:8px;">
+      {% endif %}
+
+      <input type="file" class="form-control" name="image_tienda" id="image_tienda" accept="image/*">
+    </div>
+    {% endif %}
+
+    <!-- =========================
+         PREFERENCIAS / SERVICIOS
+         ========================= -->
+    <div class="form-title mt-4">
+      {% if profile_type == 'usuario' %}
+        <h2 class="text-center my-4">Editar tus Preferencias</h2>
+      {% elif profile_type == 'tienda' %}
+        <h2 class="text-center my-4">Editar tus Servicios</h2>
+      {% endif %}
+    </div>
+
+    <fieldset class="form-section">
+      {% if profile_type == 'usuario' %}
+        <!-- Preferencias para usuarios -->
+        <div class="preferences-block">
+          <h5 class="section-title">Categorías</h5>
+          <div class="form-check-container">
+            {% for cat in categorias %}
+              <label class="form-check-label">
+                <input type="checkbox" name="categorias" value="{{ cat.id }}" {% if cat.id in seleccionadas_categorias %}checked{% endif %}>
+                {{ cat.nombre_categoria }}
+              </label>
+            {% endfor %}
+          </div>
         </div>
-        <small id="usernameFeedback" class="field-feedback"></small>
 
-        <!-- Correo -->
-        <div class="input-group mb-1">
-            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-            <input type="email" name="new_email" id="email" value="{{ user.email }}" class="form-control" placeholder="Nuevo correo electrónico">
-        </div>
-        <small id="emailFeedback" class="field-feedback"></small>
-
-        <!-- Contraseña -->
-        <div class="input-group mb-1">
-            <span class="input-group-text"><i class="bi bi-lock"></i></span>
-            <input type="password" name="new_password" id="password" class="form-control" placeholder="Nueva contraseña">
+        <div class="preferences-block">
+          <h5 class="section-title">Tipos de producto</h5>
+          <div class="form-check-container">
+            {% for tipo in tipos %}
+              <label class="form-check-label">
+                <input type="checkbox" name="tipos" value="{{ tipo.id }}" {% if tipo.id in seleccionadas_tipos %}checked{% endif %}>
+                {{ tipo.nombre_tipo }}
+              </label>
+            {% endfor %}
+          </div>
         </div>
 
-        <!-- Confirmar contraseña -->
-        <div class="input-group mb-1">
-            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
-            <input type="password" id="confirm_password" class="form-control" placeholder="Confirmar nueva contraseña">
+      {% elif profile_type == 'tienda' %}
+        <!-- Servicios para tiendas -->
+        <div class="preferences-block">
+          <h5 class="section-title">Servicios ofrecidos</h5>
+          <div class="form-check-container">
+            {% for servicio in servicios %}
+              <label class="form-check-label">
+                <input type="checkbox" name="servicios" value="{{ servicio.id }}" {% if servicio.id in seleccionados_servicios %}checked{% endif %}>
+                {{ servicio.nombre_tipo_servicio }}
+              </label>
+            {% endfor %}
+          </div>
         </div>
-        <small id="passwordFeedback" class="field-feedback"></small>
+      {% endif %}
+    </fieldset>
 
-        <!-- Preferencias o servicios -->
-        <div class="form-title mt-4">
-            {% if profile_type == 'usuario' %}
-                <h2 class="text-center my-4">Editar tus Preferencias</h2>
-            {% elif profile_type == 'tienda' %}
-                <h2 class="text-center my-4">Editar tus Servicios</h2>
-            {% endif %}
-        </div>
-
-        <fieldset class="form-section">
-            {% if profile_type == 'usuario' %}
-                <!-- Preferencias para usuarios -->
-                <div class="preferences-block">
-                    <h5 class="section-title">Categorías</h5>
-                    <div class="form-check-container">
-                        {% for cat in categorias %}
-                            <label class="form-check-label">
-                                <input type="checkbox" name="categorias" value="{{ cat.id }}" {% if cat.id in seleccionadas_categorias %}checked{% endif %}>
-                                {{ cat.nombre_categoria }}
-                            </label>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <div class="preferences-block">
-                    <h5 class="section-title">Tipos de producto</h5>
-                    <div class="form-check-container">
-                        {% for tipo in tipos %}
-                            <label class="form-check-label">
-                                <input type="checkbox" name="tipos" value="{{ tipo.id }}" {% if tipo.id in seleccionadas_tipos %}checked{% endif %}>
-                                {{ tipo.nombre_tipo }}
-                            </label>
-                        {% endfor %}
-                    </div>
-                </div>
-
-            {% elif profile_type == 'tienda' %}
-                <!-- Preferencias para tiendas -->
-                <div class="preferences-block">
-                    <h5 class="section-title">Servicios ofrecidos</h5>
-                    <div class="form-check-container">
-                        {% for servicio in servicios %}
-                            <label class="form-check-label">
-                                <input type="checkbox" name="servicios" value="{{ servicio.id }}" {% if servicio.id in seleccionados_servicios %}checked{% endif %}>
-                                {{ servicio.nombre_tipo_servicio }}
-                            </label>
-                        {% endfor %}
-                    </div>
-                </div>
-
-            {% endif %}
-        </fieldset>
-
-        <div class="btn-save-container mt-4">
-            <button type="submit" class="btn-form-save">Guardar cambios</button>
-        </div>
-    </form>
+    <div class="btn-save-container mt-4">
+      <button type="submit" class="btn-form-save">Guardar cambios</button>
+    </div>
+  </form>
 </div>
+{% endblock %}
 
+{% block scripts %}
+<script src="{% static 'js/script.js' %}"></script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    const usernameInput = document.getElementById("username");
-    const emailInput = document.getElementById("email");
-    const passInput = document.getElementById("password");
-    const confirmInput = document.getElementById("confirm_password");
+  const usernameInput = document.getElementById("username");
+  const emailInput = document.getElementById("email");
+  const passInput = document.getElementById("password");
+  const confirmInput = document.getElementById("confirm_password");
 
-    const usernameFb = document.getElementById("usernameFeedback");
-    const emailFb = document.getElementById("emailFeedback");
-    const pwFb = document.getElementById("passwordFeedback");
+  const usernameFb = document.getElementById("usernameFeedback");
+  const emailFb = document.getElementById("emailFeedback");
+  const pwFb = document.getElementById("passwordFeedback");
 
-    const currentUsername = "{{ user.username }}".trim();
-    const currentEmail = "{{ user.email }}".trim().toLowerCase();
+  const currentUsername = "{{ user.username }}".trim();
+  const currentEmail = "{{ user.email }}".trim().toLowerCase();
 
-    // 🔹 Validación simple: username
+  // Validación simple: username
+  if (usernameInput) {
     usernameInput.addEventListener("blur", async () => {
-        const val = usernameInput.value.trim();
-        if (!val || val === currentUsername) {
-            usernameFb.textContent = "";
-            return;
-        }
-        const res = await fetch(`/check_username/?username=${val}`);
-        const data = await res.json();
-        usernameFb.textContent = data.exists
-            ? "Este nombre de usuario ya está en uso."
-            : "";
+      const val = usernameInput.value.trim();
+      if (!val || val === currentUsername) {
+        usernameFb.textContent = "";
+        return;
+      }
+      const res = await fetch(`/check_username/?username=${encodeURIComponent(val)}`);
+      const data = await res.json();
+      usernameFb.textContent = data.exists ? "Este nombre de usuario ya está en uso." : "";
     });
+  }
 
-    // 🔹 Validación simple: email
+  // Validación simple: email
+  if (emailInput) {
     emailInput.addEventListener("blur", async () => {
-        const val = emailInput.value.trim().toLowerCase();
-        if (!val || val === currentEmail) {
-            emailFb.textContent = "";
-            return;
-        }
-        const res = await fetch(`/check_email/?email=${val}`);
-        const data = await res.json();
-        emailFb.textContent = data.exists
-            ? "Este correo ya está registrado."
-            : "";
+      const val = emailInput.value.trim().toLowerCase();
+      if (!val || val === currentEmail) {
+        emailFb.textContent = "";
+        return;
+      }
+      const res = await fetch(`/check_email/?email=${encodeURIComponent(val)}`);
+      const data = await res.json();
+      emailFb.textContent = data.exists ? "Este correo ya está registrado." : "";
     });
+  }
 
-    // 🔹 Validación contraseñas iguales
-    function validatePasswords() {
-        const pass = passInput.value;
-        const confirm = confirmInput.value;
-        if (!pass && !confirm) {
-            pwFb.textContent = "";
-            return true;
-        }
-        if (pass !== confirm) {
-            pwFb.textContent = "Las contraseñas no coinciden.";
-            return false;
-        }
-        pwFb.textContent = "";
-        return true;
+  // Validación contraseñas iguales
+  function validatePasswords() {
+    const pass = passInput.value;
+    const confirm = confirmInput.value;
+    if (!pass && !confirm) {
+      pwFb.textContent = "";
+      return true;
     }
+    if (pass !== confirm) {
+      pwFb.textContent = "Las contraseñas no coinciden.";
+      return false;
+    }
+    pwFb.textContent = "";
+    return true;
+  }
+  if (passInput && confirmInput) {
     passInput.addEventListener("input", validatePasswords);
     confirmInput.addEventListener("input", validatePasswords);
+  }
 
-    // 🔹 Mensaje de éxito con fade
-    const flash = document.getElementById("flash-message");
-    if (flash) {
-        setTimeout(() => {
-            flash.style.transition = "opacity 0.5s ease";
-            flash.style.opacity = "0";
-            setTimeout(() => flash.remove(), 600);
-        }, 2500);
-    }
-
-    // 🔹 Validación final antes de enviar
-    const form = document.getElementById("edit-form");
-    form.addEventListener("submit", (e) => {
-        if (!validatePasswords()) e.preventDefault();
-        if (usernameFb.textContent || emailFb.textContent) e.preventDefault();
+  // Preview de imagen para tienda
+  const inputImg = document.getElementById("image_tienda");
+  const preview  = document.getElementById("preview_tienda");
+  if (inputImg) {
+    inputImg.addEventListener("change", (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) { if (preview) { preview.style.display='none'; preview.src=''; } return; }
+      const url = URL.createObjectURL(f);
+      if (preview) {
+        preview.src = url;
+        preview.style.display = 'block';
+      }
     });
+  }
+
+  // Validación final antes de enviar
+  const form = document.getElementById("edit-form");
+  form.addEventListener("submit", (e) => {
+    if (!validatePasswords()) e.preventDefault();
+    if (usernameFb.textContent || emailFb.textContent) e.preventDefault();
+  });
 });
 </script>
 {% endblock %}

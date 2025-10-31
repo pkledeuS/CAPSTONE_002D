@@ -25,7 +25,7 @@
             <div class="btn-group d-flex align-items-center">
                 <button class="btn btn-custom btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <img src="{% static 'img/category_icon.png' %}" alt="Categorias" class="button-header-icons">
-                    <span>Categorías</span>
+                    <span>Catálogo</span>
                 </button>
                 <ul class="dropdown-menu">
                     {% if user.is_authenticated %}
@@ -68,13 +68,30 @@
                 </button>
                 <ul class="dropdown-menu">
                     {% if user.is_authenticated %}
+                        {# ---- ADMIN / STAFF ---- #}
+                        {% if user.is_staff or user.is_superuser %}
+                            <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}">Panel de administración</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                        {% elif perfil %}
+                            {% if perfil.profile_type == 'admin' %}
+                                <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}">Panel de administración</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+                        {% endif %}
+
+
+                        {# ---- USUARIO ---- #}
                         {% if perfil and perfil.profile_type == 'usuario' %}
                             <li><a class="dropdown-item" href="{% url 'edit_profile' %}">Editar perfil</a></li>
                             <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesión</a></li>
+
+                        {# ---- TIENDA ---- #}
                         {% elif perfil and perfil.profile_type == 'tienda' %}
                             <li><a class="dropdown-item" href="{% url 'edit_profile' %}">Editar perfil</a></li>
                             <li><a class="dropdown-item" href="{% url 'store_offers_list' %}">Mis productos</a></li>
                             <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesión</a></li>
+
+                        {# ---- SIN PERFIL TIPO (fallback autenticado) ---- #}
                         {% else %}
                             <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesión</a></li>
                         {% endif %}

@@ -2,7 +2,8 @@ import re
 from django import forms
 from django.contrib.auth.models import User
 from .models import (
-    Profile, Producto, MarcaProducto, CategoriaProducto, TipoProducto
+    Profile, Producto, MarcaProducto, CategoriaProducto, TipoProducto,
+    ProductReview,
 )
 
 class RegisterForm(forms.ModelForm):
@@ -142,3 +143,30 @@ class NewProductAndOfferForm(forms.Form):
         if marca and self._modelo_display:
             self._nombre_autogen = f"{marca.nombre_marca} {self._modelo_display}"
         return cleaned
+    
+# Formulario para reseñas de productos
+class ProductReviewForm(forms.ModelForm):
+    class Meta:
+        model = ProductReview
+        fields = ['rating', 'comment']
+        widgets = {
+            # Usaremos un input oculto + JS para las estrellas
+            'rating': forms.NumberInput(attrs={'min': 1, 'max': 5, 'class': 'd-none', 'id': 'rating-input'}),
+            'comment': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Cuéntanos qué te gustó o no te gustó del producto…',
+                'class': 'form-control'
+            }),
+        }
+        labels = {
+            'rating': 'Calificación',
+            'comment': 'Comentario (opcional)',
+        }
+
+    def clean_rating(self):
+        r = self.cleaned_data.get('rating')
+        if not r:
+            raise forms.ValidationError('Selecciona una calificación (1 a 5).')
+        if r < 1 or r > 5:
+            raise forms.ValidationError('La calificación debe estar entre 1 y 5.')
+        return r

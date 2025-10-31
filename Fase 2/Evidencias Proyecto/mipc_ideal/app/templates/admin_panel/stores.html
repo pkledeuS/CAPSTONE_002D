@@ -1,0 +1,68 @@
+{% extends "admin_panel/admin_base.html" %}
+
+{% block admin_title %}
+<h1 class="h3 mb-3">Tiendas</h1>
+{% endblock %}
+
+{% block admin_content %}
+<div class="card">
+  <div class="card-body">
+    <form class="row g-2 mb-3" method="get">
+      <div class="col-12 col-md-4">
+        <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Buscar tienda...">
+      </div>
+      <div class="col-12 col-md-3">
+        <select name="estado" class="form-select">
+          <option value="">Estado (todos)</option>
+          <option value="1" {% if request.GET.estado == '1' %}selected{% endif %}>Activa</option>
+          <option value="0" {% if request.GET.estado == '0' %}selected{% endif %}>Inactiva</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-3">
+        <button class="btn btn-primary w-100" type="submit">Filtrar</button>
+      </div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>URL</th>
+            <th>Productos</th>
+            <th>Estado</th>
+            <th class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tienda in page_obj %}
+          <tr>
+            <td>{{ tienda.nombre }}</td>
+            <td><a href="{{ tienda.url }}" target="_blank" rel="noopener">{{ tienda.url }}</a></td>
+            <td>{{ tienda.productos_count|default:"—" }}</td>
+            <td>
+              {% if tienda.activa %}
+                <span class="badge bg-success">Activa</span>
+              {% else %}
+                <span class="badge bg-secondary">Inactiva</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <div class="btn-group btn-group-sm">
+                <a href="#" class="btn btn-outline-secondary">Ver</a>
+                <a href="#" class="btn btn-outline-warning">Activ/Desac</a>
+                <a href="#" class="btn btn-outline-danger">Eliminar</a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center text-muted">Sin resultados</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {{ pagination_html|safe }}
+  </div>
+</div>
+{% endblock %}

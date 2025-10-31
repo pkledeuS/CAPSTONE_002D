@@ -1,0 +1,74 @@
+{% extends "admin_panel/admin_base.html" %}
+
+{% block admin_title %}
+<h1 class="h3 mb-3">Productos</h1>
+{% endblock %}
+
+{% block admin_content %}
+<div class="card">
+  <div class="card-body">
+    <form class="row g-2 mb-3" method="get">
+      <div class="col-12 col-md-3">
+        <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Buscar producto...">
+      </div>
+      <div class="col-12 col-md-3">
+        <select name="categoria" class="form-select">
+          <option value="">Categoría (todas)</option>
+          {% for c in categorias %}
+          <option value="{{ c.id }}" {% if request.GET.categoria == c.id|stringformat:"s" %}selected{% endif %}>{{ c.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-3">
+        <select name="activo" class="form-select">
+          <option value="">Estado (todos)</option>
+          <option value="1" {% if request.GET.activo == '1' %}selected{% endif %}>Activo</option>
+          <option value="0" {% if request.GET.activo == '0' %}selected{% endif %}>Inactivo</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-3">
+        <button class="btn btn-primary w-100" type="submit">Filtrar</button>
+      </div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Precio mín.</th>
+            <th>Tiendas</th>
+            <th>Activo</th>
+            <th class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in page_obj %}
+          <tr>
+            <td>{{ p.nombre }}</td>
+            <td>{{ p.categoria.nombre }}</td>
+            <td>{{ p.precio_minimo }}</td>
+            <td>{{ p.tiendas_count|default:"—" }}</td>
+            <td>
+              {% if p.activo %}<span class="badge bg-success">Sí</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}
+            </td>
+            <td class="text-end">
+              <div class="btn-group btn-group-sm">
+                <a href="#" class="btn btn-outline-secondary">Ver</a>
+                <a href="#" class="btn btn-outline-warning">Activ/Desac</a>
+                <a href="#" class="btn btn-outline-danger">Eliminar</a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center text-muted">Sin productos</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {{ pagination_html|safe }}
+  </div>
+</div>
+{% endblock %}
