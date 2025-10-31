@@ -1,0 +1,84 @@
+{% extends "admin_panel/admin_base.html" %}
+{% load static %}
+
+{% block admin_title %}
+  <h4 class="mb-3">Analytics</h4>
+{% endblock %}
+
+{% block admin_content %}
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header">Top 10 más vistos</div>
+      <div class="card-body" style="height:360px">
+        <canvas id="chartViews"></canvas>
+        <div id="emptyViews" class="text-muted small d-none">Sin datos de vistas.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header">Top 10 mejor valorados</div>
+      <div class="card-body" style="height:360px">
+        <canvas id="chartRated"></canvas>
+        <div id="emptyRated" class="text-muted small d-none">Sin datos de valoraciones.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header">Mayor variación de precios (spread)</div>
+      <div class="card-body" style="height:360px">
+        <canvas id="chartPriceSpread"></canvas>
+        <div id="emptySpread" class="text-muted small d-none">Sin datos de precios por tienda.</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  {{ top_views_labels|default:"[]"|json_script:"viewsL" }}
+  {{ top_views_values|default:"[]"|json_script:"viewsV" }}
+  {{ top_rated_labels|default:"[]"|json_script:"ratedL" }}
+  {{ top_rated_values|default:"[]"|json_script:"ratedV" }}
+  {{ price_spread_labels|default:"[]"|json_script:"spreadL" }}
+  {{ price_spread_values|default:"[]"|json_script:"spreadV" }}
+
+  <script>
+    const viewsL  = JSON.parse(document.getElementById('viewsL').textContent);
+    const viewsV  = JSON.parse(document.getElementById('viewsV').textContent);
+    const ratedL  = JSON.parse(document.getElementById('ratedL').textContent);
+    const ratedV  = JSON.parse(document.getElementById('ratedV').textContent);
+    const spreadL = JSON.parse(document.getElementById('spreadL').textContent);
+    const spreadV = JSON.parse(document.getElementById('spreadV').textContent);
+
+    function mkBar(canvasId, emptyId, labels, values, label) {
+      const el = document.getElementById(canvasId);
+      const empty = document.getElementById(emptyId);
+      if (!el) return;
+      if (!Array.isArray(labels) || !labels.length) {
+        if (empty) empty.classList.remove('d-none');
+        return;
+      }
+      new Chart(el, {
+        type: 'bar',
+        data: { labels, datasets: [{ label, data: values }] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true } },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    mkBar('chartViews',       'emptyViews',  viewsL,  viewsV,  'Vistas');
+    mkBar('chartRated',       'emptyRated',  ratedL,  ratedV,  'Rating promedio');
+    mkBar('chartPriceSpread', 'emptySpread', spreadL, spreadV, 'Spread (max - min)');
+  </script>
+{% endblock %}

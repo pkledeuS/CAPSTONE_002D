@@ -7,89 +7,153 @@
 
 {% block content %}
 <div class="form-container">
-    <div class="form-title">
-        <h2 class="text-center m-2">Registro</h2>
+  <div class="form-title">
+    <h2 class="text-center m-2">Registro</h2>
+  </div>
+
+  <form method="post" action="{% url 'register' %}" id="registroForm" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-info text-center">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Tipo de cuenta -->
+    <div class="mb-3 text-center">
+      <label class="form-label d-block fw-semibold">Tipo de cuenta</label>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="profile_type" id="usuario" value="usuario" checked>
+        <label class="form-check-label" for="usuario">Usuario</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="profile_type" id="tienda" value="tienda">
+        <label class="form-check-label" for="tienda">Tienda</label>
+      </div>
     </div>
 
-    <form method="post" action="{% url 'register' %}" id="registroForm">
-        {% csrf_token %}
-        
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-info text-center">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-
-        <!-- Tipo de cuenta -->
-        <div class="mb-3 text-center">
-            <label class="form-label d-block fw-semibold">Tipo de cuenta</label>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="profile_type" id="usuario" value="usuario" checked>
-                <label class="form-check-label" for="usuario">Usuario</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="profile_type" id="tienda" value="tienda">
-                <label class="form-check-label" for="tienda">Tienda</label>
-            </div>
+    <!-- Campos de registro -->
+    <div class="form-group">
+      <div class="form-group mb-3">
+        <label for="username" class="form-label fw-semibold">Nombre de usuario</label>
+        <div class="input-wrapper">
+          <div class="input-group mb-2">
+            <span class="input-group-text"><i class="bi bi-person"></i></span>
+            <input id="username" type="text" name="username" required class="form-control" placeholder="Nombre de usuario">
+          </div>
+          <small id="usernameFeedback" class="feedback"></small>
         </div>
 
-        <!-- Campos de registro -->
-        <div class="form-group">
-            <div class="form-group mb-3">
-                <label for="username" class="form-label fw-semibold">Nombre de usuario</label>
-                <div class="input-wrapper">
-                    <div class="input-group mb-2">
-                        <span class="input-group-text"><i class="bi bi-person"></i></span>
-                        <input id="username" type="text" name="username" required class="form-control" placeholder="Nombre de usuario">
-                    </div>
-                    <small id="usernameFeedback" class="feedback"></small>
-                </div>
-
-                <div class="input-wrapper">
-                    <div class="input-group mb-2">
-                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                        <input id="email" type="email" name="email" required class="form-control" placeholder="Correo electrónico">
-                    </div>
-                    <small id="emailFeedback" class="feedback"></small>
-                </div>
-
-                <div class="input-wrapper">
-                    <div class="input-group mb-2">
-                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                        <input id="password" type="password" name="password" required class="form-control" placeholder="Contraseña">
-                    </div>
-                </div>
-
-                <div class="input-wrapper">
-                    <div class="input-group mb-2">
-                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                        <input id="confirmPassword" type="password" name="confirmPassword" required class="form-control" placeholder="Confirmar contraseña">
-                    </div>
-                    <small id="passwordFeedback" class="feedback"></small>
-                </div>
-            </div>
+        <div class="input-wrapper">
+          <div class="input-group mb-2">
+            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+            <input id="email" type="email" name="email" required class="form-control" placeholder="Correo electrónico">
+          </div>
+          <small id="emailFeedback" class="feedback"></small>
         </div>
 
-        <!-- Checkbox: mostrar contraseña -->
-        <div class="form-group form-check">
-            <input class="form-check-input" type="checkbox" id="showPassword">
-            <label class="form-check-label" for="showPassword">Mostrar contraseña</label>
+        <div class="input-wrapper">
+          <div class="input-group mb-2">
+            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+            <input id="password" type="password" name="password" required class="form-control" placeholder="Contraseña">
+          </div>
         </div>
 
-        <div class="btn-submit-container">
-            <button type="submit" class="btn-register">Registrarse</button>
+        <div class="input-wrapper">
+          <div class="input-group mb-2">
+            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+            <input id="confirmPassword" type="password" name="confirmPassword" required class="form-control" placeholder="Confirmar contraseña">
+          </div>
+          <small id="passwordFeedback" class="feedback"></small>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOLO TIENDAS: imagen y nombre de tienda -->
+    <div id="tiendaFields" class="mb-3" style="display:none;">
+        <label class="form-label fw-semibold d-block">Datos de la tienda</label>
+
+        <div class="input-group mb-2">
+            <span class="input-group-text"><i class="bi bi-shop"></i></span>
+            <input type="text" class="form-control" name="nombre_tienda" id="nombre_tienda" placeholder="Nombre de tu tienda">
         </div>
 
-        <div class="login-container">
-            <p>¿Ya tienes cuenta?
-                <br>
-                <a href="{% url 'login' %}">Inicia sesión aquí</a>
-            </p>
+        <div class="input-group mb-2">
+            <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+            <textarea class="form-control" name="descripcion_tienda" id="descripcion_tienda" rows="3"
+                    placeholder="Describe brevemente tu tienda (servicios, especialidad, etc.)"></textarea>
         </div>
-    </form>
+
+        <div class="input-group mb-2">
+            <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+            <input type="text" class="form-control" name="direccion_tienda" id="direccion_tienda"
+                placeholder="Dirección (en caso de ser tienda en línea, indica 'En línea')">
+        </div>
+
+        <div class="input-group mb-2">
+            <span class="input-group-text"><i class="bi bi-image"></i></span>
+            <input type="file" class="form-control" name="image_tienda" id="image_tienda" accept="image/*">
+        </div>
+
+        <div class="mt-2">
+            <img id="preview_tienda" src="" alt="" style="max-width:180px; display:none; border-radius:8px;">
+        </div>
+    </div>
+
+    <!-- Checkbox: mostrar contraseña -->
+    <div class="form-group form-check">
+      <input class="form-check-input" type="checkbox" id="showPassword">
+      <label class="form-check-label" for="showPassword">Mostrar contraseña</label>
+    </div>
+
+    <div class="btn-submit-container">
+      <button type="submit" class="btn-register">Registrarse</button>
+    </div>
+
+    <div class="login-container">
+      <p>¿Ya tienes cuenta?<br><a href="{% url 'login' %}">Inicia sesión aquí</a></p>
+    </div>
+  </form>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script src="{% static 'js/script.js' %}"></script>
+<script>
+  (function(){
+    const rUsuario = document.getElementById('usuario');
+    const rTienda  = document.getElementById('tienda');
+    const box      = document.getElementById('tiendaFields');
+
+    const nombre   = document.getElementById('nombre_tienda');
+    const desc     = document.getElementById('descripcion_tienda');
+    const dir      = document.getElementById('direccion_tienda');
+    const inputImg = document.getElementById('image_tienda');
+    const preview  = document.getElementById('preview_tienda');
+
+    function setRequired(isStore){
+      [nombre, desc, dir].forEach(el => { if (el) el.required = isStore; });
+    }
+
+    function toggle(){
+      const isStore = rTienda && rTienda.checked;
+      box.style.display = isStore ? 'block' : 'none';
+      setRequired(isStore);
+    }
+
+    [rUsuario, rTienda].forEach(r => r && r.addEventListener('change', toggle));
+    toggle(); // estado inicial
+
+    if (inputImg) {
+      inputImg.addEventListener('change', (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (!f) { preview.style.display='none'; preview.src=''; return; }
+        const url = URL.createObjectURL(f);
+        preview.src = url;
+        preview.style.display = 'block';
+      });
+    }
+  })();
+</script>
 {% endblock %}

@@ -7,105 +7,295 @@
 
 {% block content %}
 <div class="pd2-wrap">
-    <!-- Columna izquierda -->
-    <section class="pd2-left card">
-        <div class="pd2-hero">
-        <div class="pd2-imgbox">
-            {% if producto.imagen_producto %}
-            <img src="{{ producto.imagen_producto.url }}" alt="{{ producto.nombre_producto }}">
-            {% else %}
-            <img src="{% static 'img/default.png' %}" alt="Imagen no disponible">
-            {% endif %}
+  <!-- Columna izquierda -->
+  <section class="pd2-left card">
+    <div class="pd2-hero">
+      <div class="pd2-imgbox">
+        {% if producto.imagen_producto %}
+          <img src="{{ producto.imagen_producto.url }}" alt="{{ producto.nombre_producto }}">
+        {% else %}
+          <img src="{% static 'img/default.png' %}" alt="Imagen no disponible">
+        {% endif %}
+      </div>
+
+      <div class="pd2-head">
+        <h1 class="pd2-title">{{ producto.nombre_producto }}</h1>
+
+        <!-- Resumen rating -->
+        <div class="pd2-rating-summary">
+          <div class="stars" data-value="{{ avg_int }}">
+            {% for i in "12345" %}
+              <span class="star{% if forloop.counter <= avg_int %} filled{% endif %}">★</span>
+            {% endfor %}
+          </div>
+          <div class="rating-text">
+            <strong>{{ avg_rating|floatformat:1 }}</strong>/5
+            <span class="muted">({{ total_reviews }} reseña{{ total_reviews|pluralize:"s" }})</span>
+          </div>
         </div>
 
-        <div class="pd2-head">
-            <h1 class="pd2-title">{{ producto.nombre_producto }}</h1>
-
-            <!-- Chips opcionales (modelo / capacidad, etc.) -->
-            <div class="pd2-chips">
-            {% if producto.modelo_producto %}<span class="chip">{{ producto.modelo_producto }}</span>{% endif %}
-            <span class="chip">{{ producto.marca_producto }}</span>
-            <span class="chip">{{ producto.categoria_producto }}</span>
-            <span class="chip">{{ producto.tipo_producto }}</span>
-            </div>
+        <!-- Chips -->
+        <div class="pd2-chips">
+          {% if producto.modelo_producto %}<span class="chip">{{ producto.modelo_producto }}</span>{% endif %}
+          <span class="chip">{{ producto.marca_producto }}</span>
+          <span class="chip">{{ producto.categoria_producto }}</span>
+          <span class="chip">{{ producto.tipo_producto }}</span>
         </div>
-        </div>
+      </div>
+    </div>
 
-        <!-- Características / Especificaciones -->
-        <div class="pd2-sections">
-        <section class="pd2-block">
-            <h2>Características</h2>
+    <!-- Características / Especificaciones -->
+    <div class="pd2-sections">
+      <section class="pd2-block">
+        <h2>Características</h2>
+        <dl class="specs-grid">
+          <dt>Modelo</dt><dd>{{ producto.modelo_producto|default:"—" }}</dd>
+          <dt>Marca</dt><dd>{{ producto.marca_producto|default:"—" }}</dd>
+          <dt>Categoría</dt><dd>{{ producto.categoria_producto|default:"—" }}</dd>
+          <dt>Tipo</dt><dd>{{ producto.tipo_producto|default:"—" }}</dd>
+        </dl>
+        {% if producto.descripcion_producto %}
+          <p class="pd2-desc">{{ producto.descripcion_producto }}</p>
+        {% endif %}
+      </section>
+
+      <section class="pd2-block">
+        <h2>Especificaciones</h2>
+        {% with specs=producto.especificacionproducto_set.all %}
+          {% if specs %}
             <dl class="specs-grid">
-            <dt>Modelo</dt><dd>{{ producto.modelo_producto|default:"—" }}</dd>
-            <dt>Marca</dt><dd>{{ producto.marca_producto|default:"—" }}</dd>
-            <dt>Categoría</dt><dd>{{ producto.categoria_producto|default:"—" }}</dd>
-            <dt>Tipo</dt><dd>{{ producto.tipo_producto|default:"—" }}</dd>
+              {% for s in specs %}
+                <dt>{{ s.nombre_especificacion }}</dt>
+                <dd>{{ s.valor_especificacion }}</dd>
+              {% endfor %}
             </dl>
-            {% if producto.descripcion_producto %}
-            <p class="pd2-desc">{{ producto.descripcion_producto }}</p>
-            {% endif %}
-        </section>
+          {% else %}
+            <div class="pd2-empty">Sin especificaciones cargadas.</div>
+          {% endif %}
+        {% endwith %}
+      </section>
+    </div>
 
-        <section class="pd2-block">
-            <h2>Especificaciones</h2>
-            {% with specs=producto.especificacionproducto_set.all %}
-            {% if specs %}
-                <dl class="specs-grid">
-                {% for s in specs %}
-                    <dt>{{ s.nombre_especificacion }}</dt>
-                    <dd>{{ s.valor_especificacion }}</dd>
-                {% endfor %}
-                </dl>
-            {% else %}
-                <div class="pd2-empty">Sin especificaciones cargadas.</div>
-            {% endif %}
-            {% endwith %}
-        </section>
-        </div>
+    <!-- Tu reseña -->
+    <section class="pd2-block" id="reviews">
+      <h3>Tu reseña</h3>
+
+      <div class="review-cta">
+        <span class="muted">¿Quieres agregar una reseña?</span>
+        {% if user.is_authenticated %}
+          <button type="button" id="toggle-review" class="btn btn-sm btn-outline-primary">
+            Escribir reseña
+          </button>
+        {% else %}
+          <a class="btn btn-sm btn-primary" href="{% url 'login' %}?next={{ request.path }}">
+            Inicia sesión para reseñar
+          </a>
+        {% endif %}
+      </div>
+
+      {% if user.is_authenticated %}
+        <form method="post" class="review-form" id="review-form" hidden>
+          {% csrf_token %}
+
+          <div class="star-picker" data-target="#rating-input">
+            <span data-value="1">★</span>
+            <span data-value="2">★</span>
+            <span data-value="3">★</span>
+            <span data-value="4">★</span>
+            <span data-value="5">★</span>
+          </div>
+
+          {# Asegura el id del input oculto #}
+          <input type="hidden" name="rating" id="rating-input" value="{{ form_review.rating.value|default_if_none:'' }}">
+
+          <div class="mt-2">
+            {{ form_review.comment.label_tag }}
+            {{ form_review.comment }}
+          </div>
+
+          <button class="btn btn-primary mt-2" type="submit">Guardar reseña</button>
+          <small class="muted">Puedes editar tu reseña cuando quieras.</small>
+        </form>
+      {% endif %}
     </section>
 
-    <!-- Sidebar derecha -->
-    <aside class="pd2-right">
-        <div class="card pd2-side-header">
-        <div class="side-title">Elige tu tienda</div>
-        <div class="side-sort">
-            <label>Ordenar por</label>
-            <select class="form-select form-select-sm">
-            <option>Precio oferta</option>
-            <option>Precio normal</option>
-            <option>Stock</option>
-            </select>
-        </div>
-        </div>
+    <!-- Reseñas de usuarios -->
+    <section class="pd2-block">
+      <h3>Reseñas de usuarios</h3>
 
-        {% if ofertas %}
-        <div class="pd2-shops">
-            {% for o in ofertas %}
-            <div class="shop-card card">
-                <div class="shop-name">{{ o.tienda.nombre_tienda }}</div>
-                <div class="shop-prices">
-                <div>
-                    <div class="price-label">Precio</div>
-                    <div class="price-value">${{ o.precio|floatformat:0 }}</div>
+      {% if reviews %}
+        <ul class="reviews-list">
+          {% for r in reviews %}
+            <li class="review-item">
+              <div class="review-head">
+                <div class="review-stars">
+                  {% for i in "12345" %}
+                    <span class="star{% if forloop.counter <= r.rating %} filled{% endif %}">★</span>
+                  {% endfor %}
                 </div>
-                <div class="shop-stock">
-                    <div class="price-label">Stock</div>
-                    <div class="stock-value">{{ o.stock }}</div>
+                <div class="review-meta">
+                  <strong>{{ r.user.username }}</strong>
+                  <span class="muted">· {{ r.created_at|date:"d M Y H:i" }}</span>
+                  {% if r.updated_at > r.created_at %}
+                    <span class="muted">(editado)</span>
+                  {% endif %}
                 </div>
-                </div>
-                <div class="shop-cta">
-                {% if o.url_externa %}
-                    <a class="btn-pill" href="{{ o.url_externa }}" target="_blank" rel="nofollow noopener">Ver en tienda</a>
-                {% else %}
-                    <span class="muted">Sin enlace</span>
-                {% endif %}
-                </div>
+              </div>
+              {% if r.comment %}
+                <p class="review-comment">{{ r.comment }}</p>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="pd2-empty">Aún no hay reseñas. ¡Sé el primero en opinar!</div>
+      {% endif %}
+    </section>
+  </section>
+
+  <!-- Sidebar derecha -->
+  <aside class="pd2-right">
+    <div class="card pd2-side-header">
+      <div class="side-title">Elige tu tienda</div>
+      <div class="side-sort">
+        <label>Ordenar por</label>
+        <select id="shop-order" class="form-select form-select-sm">
+          <option value="precio">Precio</option>
+          <option value="stock">Stock</option>
+        </select>
+      </div>
+    </div>
+
+    {% if ofertas %}
+      <div class="pd2-shops" id="shops-list">
+        {% for o in ofertas %}
+          <div class="shop-card card"
+              data-precio="{{ o.precio|floatformat:0 }}"
+              data-stock="{{ o.stock|default:'0' }}"
+              {% if o.precio_normal %}data-precio-normal="{{ o.precio_normal|floatformat:0 }}"{% endif %}>
+            <div class="shop-name">{{ o.tienda.nombre_tienda }}</div>
+
+            <div class="shop-prices">
+              <div>
+                <div class="price-label">Precio</div>
+                <div class="price-value">${{ o.precio|floatformat:0 }}</div>
+              </div>
+              <div class="shop-stock">
+                <div class="price-label">Stock</div>
+                <div class="stock-value">{{ o.stock }}</div>
+              </div>
             </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="card pd2-empty">Aún no hay tiendas con este producto.</div>
-        {% endif %}
-    </aside>
+
+            <div class="shop-cta">
+              {% if o.url_externa %}
+                <a class="btn-pill" href="{{ o.url_externa }}" target="_blank" rel="nofollow noopener">Ver en tienda</a>
+              {% else %}
+                <span class="muted">Sin enlace</span>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card pd2-empty">Aún no hay tiendas con este producto.</div>
+    {% endif %}
+  </aside>
 </div>
+<script>
+(function(){
+  const select = document.getElementById('shop-order');
+  const list   = document.getElementById('shops-list');
+  if (!select || !list) return;
+
+  const parseNum = (v) => {
+    if (v == null) return NaN;
+    // soporta "123.456" o "$123.456"
+    return Number(String(v).replace(/[^0-9.-]/g, '')) || 0;
+  };
+
+  const sortCards = (key) => {
+    const cards = Array.from(list.querySelectorAll('.shop-card'));
+    const getVal = (el) => {
+      if (key === 'precio')        return parseNum(el.dataset.precio);
+      if (key === 'stock')         return parseNum(el.dataset.stock);
+      return 0;
+    };
+    // precio: ascendente; stock: descendente
+    const asc = (key === 'precio');
+
+    cards.sort((a,b) => {
+      const va = getVal(a);
+      const vb = getVal(b);
+      if (isNaN(va) && isNaN(vb)) return 0;
+      if (isNaN(va)) return 1;
+      if (isNaN(vb)) return -1;
+      return asc ? (va - vb) : (vb - va);
+    });
+
+    // reinyecta en el DOM
+    const frag = document.createDocumentFragment();
+    cards.forEach(c => frag.appendChild(c));
+    list.innerHTML = '';
+    list.appendChild(frag);
+  };
+
+  // inicial
+  sortCards(select.value);
+
+  // on change
+  select.addEventListener('change', () => sortCards(select.value));
+})();
+</script>
+<script>
+(function(){
+  const input  = document.getElementById('rating-input');
+  const picker = document.querySelector('.star-picker');
+  if (picker && input) {
+    const setUI = (val) => {
+      picker.querySelectorAll('span').forEach(s => {
+        const v = parseInt(s.getAttribute('data-value'));
+        s.classList.toggle('filled', v <= val);
+      });
+    };
+    if (input.value) setUI(parseInt(input.value));
+    picker.addEventListener('click', (e) => {
+      const span = e.target.closest('span[data-value]');
+      if (!span) return;
+      const val = parseInt(span.getAttribute('data-value'));
+      input.value = val;
+      setUI(val);
+    });
+  }
+})();
+</script>
+<script>
+(function(){
+  const starsBox = document.querySelector('.pd2-rating-summary .stars');
+  if (!starsBox) return;
+  const raw = starsBox.getAttribute('data-value');
+  const val = Math.round(parseFloat(raw || '0'));
+  starsBox.querySelectorAll('.star').forEach((el, i) => {
+    el.classList.toggle('filled', i < val);
+  });
+})();
+</script>
+<script>
+(function(){
+  const btn  = document.getElementById('toggle-review');
+  const form = document.getElementById('review-form');
+  if (!btn || !form) return;
+
+  btn.addEventListener('click', () => {
+    const abierto = !form.hasAttribute('hidden');
+    if (abierto) {
+      form.setAttribute('hidden', '');
+      btn.textContent = 'Escribir reseña';
+    } else {
+      form.removeAttribute('hidden');
+      btn.textContent = 'Ocultar formulario';
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+})();
+</script>
 {% endblock %}

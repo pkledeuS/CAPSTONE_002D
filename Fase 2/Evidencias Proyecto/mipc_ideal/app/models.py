@@ -1,6 +1,7 @@
 from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 # Create your models here.
 # En Django, los datos se crean en objetos, llamados Modelos, y en realidad son tablas en una base de datos.
@@ -19,11 +20,8 @@ class PreferenciaUsuario(models.Model):
         return f"{self.usuario.username} - {self.categoria or self.tipo_producto}"
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    profile_type = models.CharField(
-        max_length=50,
-        choices=[('usuario', 'Usuario'), ('tienda', 'Tienda')],
-        default='usuario'
-    )
+    profile_type = models.CharField(max_length=50,choices=[('usuario', 'Usuario'), ('tienda', 'Tienda')],default='usuario')
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.profile_type}"
@@ -48,6 +46,7 @@ class Tienda(models.Model):
     descripcion_tienda = models.TextField()
     image_tienda = models.ImageField(upload_to='tiendas/', null=True, blank=True)
     direccion_tienda = models.CharField(max_length=200)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.nombre_tienda
@@ -111,6 +110,7 @@ class Producto(models.Model):
     categoria_producto = models.ForeignKey('CategoriaProducto', on_delete=models.PROTECT)
     tipo_producto = models.ForeignKey('TipoProducto', on_delete=models.PROTECT)
     vistas = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.nombre_producto
@@ -156,3 +156,33 @@ class ChatTurn(models.Model):
 
     def __str__(self):
         return f"[{self.role}] {self.created_at:%Y-%m-%d %H:%M:%S}"
+    
+# MODELO PARA RESEÑAS DE PRODUCTOS
+class ProductReview(models.Model):
+    producto = models.ForeignKey('Producto', on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='product_reviews')
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = (('user', 'producto'),)
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.producto} - {self.user} ({self.rating}★)'
+    
+class Reporte(models.Model):
+    TARGETS = (
+        ('producto', 'Producto'),
+        ('tienda', 'Tienda'),
+    )
+    target_type   = models.CharField(max_length=20, choices=TARGETS)
+    producto      = models.ForeignKey('Producto', null=True, blank=True, on_delete=models.CASCADE)
+    tienda        = models.ForeignKey('Tienda', null=True, blank=True, on_delete=models.CASCADE)
+    reporter      = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    motivo        = models.CharField(max_length=255)
+    detalle       = models.TextField(blank=True)
+    created_at    = models.DateTimeField(auto_now_add=True)
+    atendido      = models.BooleanField(default=False)
