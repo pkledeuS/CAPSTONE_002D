@@ -151,6 +151,71 @@
         <div class="pd2-empty">Aún no hay reseñas. ¡Sé el primero en opinar!</div>
       {% endif %}
     </section>
+
+    <!-- Botón para reportar -->
+    <div class="pd2-block">
+      <div class="report-cta">
+        {% if user.is_authenticated %}
+          <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#reportModal">
+            Reportar producto
+          </button>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Modal para reportar -->
+    <div class="modal fade" id="reportModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Reportar producto</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <form method="post" action="{% url 'reportar_producto' producto.id %}">
+            {% csrf_token %}
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label">Motivo</label>
+                <select name="motivo" class="form-select" required>
+                  <option value="">Seleccione un motivo...</option>
+                  <option value="info_incorrecta">Información incorrecta</option>
+                  <option value="spam">Spam o contenido engañoso</option>
+                  <option value="duplicado">Producto duplicado</option>
+                  <option value="otro">Otro motivo</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Detalle</label>
+                <textarea name="detalle" class="form-control" rows="3" required placeholder="Describa el problema"></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-danger">Enviar reporte</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% if messages %}
+      <div class="modal" id="messageModal" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Aviso</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
   </section>
 
   <!-- Sidebar derecha -->
@@ -201,6 +266,13 @@
     {% endif %}
   </aside>
 </div>
+<script>
+  // Muestra modal si hay mensajes
+  document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('messageModal');
+    if (modal) new bootstrap.Modal(modal).show();
+  });
+</script>
 <script>
 (function(){
   const select = document.getElementById('shop-order');

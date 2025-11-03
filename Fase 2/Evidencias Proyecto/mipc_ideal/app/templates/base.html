@@ -22,38 +22,49 @@
             <div class="logo">
                 <a href="{% url 'home' %}"><h2>MiPc Ideal</h2></a>
             </div>
+            <!-- Reemplazar la sección del dropdown de Catálogo -->
             <div class="btn-group d-flex align-items-center">
                 <button class="btn btn-custom btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <img src="{% static 'img/category_icon.png' %}" alt="Categorias" class="button-header-icons">
                     <span>Catálogo</span>
                 </button>
-                <ul class="dropdown-menu">
-                    {% if user.is_authenticated %}
-                        {% if profile_type == 'usuario' %}
-                            <li>
-                                <a class="dropdown-item fw-semibold text-primary" href="{% url 'preferences_products_view' %}">
-                                    <i class="bi bi-star-fill me-1"></i> Mis preferencias
-                                </a>
-                            </li>
-                            <li class="dropdown-divider"></li>
-                        {% endif %}
+                <div class="dropdown-menu p-0" style="min-width: 280px;">
+                    <!-- Preferencias -->
+                    {% if user.is_authenticated and profile_type == 'usuario' %}
+                    <div class="p-3 border-bottom">
+                        <a class="text-decoration-none text-primary d-flex align-items-center" href="{% url 'preferences_products_view' %}">
+                            <i class="bi bi-star-fill me-2"></i>
+                            <span>Mis preferencias</span>
+                        </a>
+                    </div>
                     {% endif %}
-                    {% for tipoproducto in tiposproductos %}
-                        <li>
-                            <a class="dropdown-item" href="{% url 'products_by_type' tipoproducto.id %}">
-                                {{ tipoproducto.nombre_tipo }}
-                            </a>
-                        </li>
-                    {% endfor %}
-                    <li class="dropdown-divider">Categorias</li>
-                    {% for categoria in categorias %}
-                        <li>
-                            <a class="dropdown-item" href="{% url 'products_by_category' categoria.id %}">
-                                {{ categoria.nombre_categoria }}
-                            </a>
-                        </li>
-                    {% endfor %}
-                </ul>
+
+                    <!-- Productos -->
+                    <div class="p-2">
+                        <h6 class="dropdown-header text-primary bg-primary bg-opacity-10 rounded-2 mb-2">
+                            <i class="bi bi-cpu me-2"></i>Productos
+                        </h6>
+                        {% for tipoproducto in tiposproductos %}
+                        <a class="dropdown-item ps-4" href="{% url 'products_by_type' tipoproducto.id %}">
+                            {{ tipoproducto.nombre_tipo }}
+                        </a>
+                        {% endfor %}
+                    </div>
+
+                    <div class="dropdown-divider m-0"></div>
+
+                    <!-- Categorías -->
+                    <div class="p-2">
+                        <h6 class="dropdown-header text-success bg-success bg-opacity-10 rounded-2 mb-2">
+                            <i class="bi bi-tags me-2"></i>Categorías
+                        </h6>
+                        {% for categoria in categorias %}
+                        <a class="dropdown-item ps-4" href="{% url 'products_by_category' categoria.id %}">
+                            {{ categoria.nombre_categoria }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
             <div class="search-container">
                 <form class="search-form" role="search" action="{% url 'products' %}" method="get">
@@ -88,6 +99,7 @@
                         {# ---- TIENDA ---- #}
                         {% elif perfil and perfil.profile_type == 'tienda' %}
                             <li><a class="dropdown-item" href="{% url 'edit_profile' %}">Editar perfil</a></li>
+                            <li><a class="dropdown-item" href="{% url 'store_offer_new' %}">Crear producto</a></li>
                             <li><a class="dropdown-item" href="{% url 'store_offers_list' %}">Mis productos</a></li>
                             <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesión</a></li>
 

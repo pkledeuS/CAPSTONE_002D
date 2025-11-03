@@ -1,13 +1,55 @@
 {% extends "base.html" %}
 {% block content %}
-<h3 class="mb-3">Mis productos</h3>
-
-<div class="mb-3">
-    <a href="{% url 'store_offer_new' %}" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus-circle me-1"></i> Agregar producto
-    </a>
+<!-- Cabecera con título y botón de notificaciones -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">Mis productos</h3>
+    <div>
+        <a href="{% url 'store_notifications' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-bell me-1"></i>
+            Notificaciones
+            {% if notificaciones %}
+                <span class="badge bg-warning text-dark ms-1">{{ notificaciones|length }}</span>
+            {% endif %}
+        </a>
+        <a href="{% url 'store_offer_new' %}" class="btn btn-primary ms-2">
+            <i class="bi bi-plus-lg me-1"></i>Agregar producto
+        </a>
+    </div>
 </div>
 
+<!-- Alertas de notificaciones -->
+{% if notificaciones %}
+<div class="alert alert-warning">
+    <div class="d-flex justify-content-between align-items-start">
+        <div class="flex-grow-1">
+            <h5 class="alert-heading">Tienes notificaciones pendientes</h5>
+            {% for n in notificaciones %}
+                <div class="mb-3">
+                    <strong>{{ n.get_tipo_display }}:</strong><br>
+                    {{ n.mensaje|linebreaks }}
+                    
+                    <div class="text-end">
+                        <form method="post" action="{% url 'mark_notification_read' n.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-check-lg me-1"></i>Aceptar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="text-end mt-2">
+        <a href="{% url 'store_notifications' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-clock-history me-1"></i>Ver historial de notificaciones
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Listado de productos -->
 {% if ofertas %}
     <div class="table-responsive">
         <table class="table align-middle">
@@ -16,26 +58,110 @@
                     <th>Producto</th>
                     <th>Modelo</th>
                     <th>Precio</th>
-                    <th style="width:160px"></th>
+                    <th>Stock</th>
+                    <th>Estado</th>
+                    <th style="width:160px">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% for o in ofertas %}
-                    <tr>
-                    <td class="position-relative">
-                        <a href="{% url 'product_detail' o.producto.id %}" class="text-decoration-none">
-                        {{ o.producto.nombre_producto }}
-                        </a>
-                    </td>
-                    <td>{{ o.producto.modelo_producto }}</td>
-                    <td>${{ o.precio|floatformat:0 }}</td>
-                    <td>
-                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'store_offer_edit' o.id %}">Editar</a>
-                        <form method="post" action="{% url 'store_offer_delete' o.id %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
-                        </form>
-                    </td>
+                    <tr {% if o.producto.id in notif_por_producto %}class="table-warning"{% endif %}>
+                        <td class="position-relative">
+                            {{ o.producto.nombre_producto }}
+                            {% if o.producto.id in notif_por_producto %}
+                                <div class="mt-1">
+                                    <span class="badge bg-warning text-dark">
+                                        {{ notif_por_producto|dictsortreversed:o.producto.id|length }} notificación(es)
+                                    </span>
+                                    <button class="btn btn-outline-primary btn-sm ms-2" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#editModal{{ o.id }}">
+                                        <i class="bi bi-pencil-square"></i> Editar información
+                                    </button>
+                                </div>
+                                
+                                <!-- Modal de edición rápida -->
+                                <div class="modal fade" id="editModal{{ o.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Editar información del producto</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form method="post" action="{% url 'store_offer_quick_edit' o.id %}">
+                                                {% csrf_token %}
+                                                <div class="modal-body">
+                                                    <!-- Mostrar notificaciones pendientes -->
+                                                    <div class="alert alert-info">
+                                                        <h6>Notificaciones pendientes:</h6>
+                                                        {% for notif in notif_por_producto|dictsortreversed:o.producto.id %}
+                                                            <div class="mb-2">
+                                                                <strong>{{ notif.get_tipo_display }}:</strong><br>
+                                                                {{ notif.mensaje }}
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+
+                                                    <!-- Campos editables -->
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Nombre del producto</label>
+                                                        <input type="text" name="nombre" class="form-control" 
+                                                               value="{{ o.producto.nombre_producto }}">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Modelo</label>
+                                                        <input type="text" name="modelo" class="form-control" 
+                                                               value="{{ o.producto.modelo_producto }}">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Descripción</label>
+                                                        <textarea name="descripcion" class="form-control" rows="10">{{ o.producto.descripcion_producto }}</textarea>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Precio actual</label>
+                                                        <input type="number" name="precio" class="form-control" 
+                                                               value="{{ o.precio }}">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>{{ o.producto.modelo_producto }}</td>
+                        <td>${{ o.precio|floatformat:0 }}</td>
+                        <td>{{ o.stock }}</td>
+                        <td>
+                            {% if not o.producto.is_active %}
+                                <span class="badge bg-danger">Deshabilitado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a class="btn btn-outline-info" href="{% url 'product_detail' o.producto.id %}" title="Ver en catálogo">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if o.url_externa %}
+                                <a class="btn btn-outline-primary" href="{{ o.url_externa }}" target="_blank" title="Ver en tienda">
+                                    <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                                {% endif %}
+                                <a class="btn btn-outline-secondary" href="{% url 'store_offer_edit' o.id %}" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="post" action="{% url 'store_offer_delete' o.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button class="btn btn-outline-danger" type="submit" onclick="return confirm('¿Estás seguro?');" title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -44,4 +170,36 @@
 {% else %}
     <div class="alert alert-light">Aún no tienes productos. Crea el primero.</div>
 {% endif %}
+
+<style>
+    .alert-warning {
+        border-left: 4px solid #ffc107;
+    }
+    .btn-outline-success {
+        border-color: #198754;
+        color: #198754;
+    }
+    .btn-outline-success:hover {
+        background-color: #198754;
+        color: white;
+    }
+    /* Modificar los estilos del tooltip para que solo aplique a los botones de acciones */
+    .table .btn-group .btn {
+        position: relative;
+    }
+    .table .btn-group .btn:hover::after {
+        content: attr(title);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 1000;
+    }
+</style>
 {% endblock %}

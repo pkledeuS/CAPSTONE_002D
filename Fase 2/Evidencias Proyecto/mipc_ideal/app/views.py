@@ -1,7 +1,8 @@
 # app/views.py
+from django.utils import timezone
 import json
 import re
-from decimal import Decimal
+from decimal import Decimal, DecimalException
 
 from django import forms
 from django.contrib import messages
@@ -18,7 +19,7 @@ from django.views.decorators.http import require_POST
 
 from .forms import RegisterForm, ExistingProductOfferForm, ProductReviewForm, model_key
 from .models import (
-    Producto, CategoriaProducto, Reporte, TipoProducto,
+    Notificacion, Producto, CategoriaProducto, Reporte, TipoProducto,
     TipoServicio, PreferenciaUsuario, TiendaCategoria, Tienda, Profile,
     ChatSession, ChatTurn, EspecificacionProducto, TiendaProducto, MarcaProducto,
     ProductReview,
@@ -733,14 +734,21 @@ def product_detail(request, producto_id):
 @login_required
 @require_POST
 def reportar_producto(request, producto_id):
-    motivo = (request.POST.get('motivo') or '').strip()
-    detalle= (request.POST.get('detalle') or '').strip()
-    prod = get_object_or_404(Producto, id=producto_id)
-    Reporte.objects.create(
-        target_type='producto', producto=prod,
-        reporter=request.user, motivo=motivo, detalle=detalle
-    )
-    messages.success(request, "Gracias, tu reporte fue enviado.")
+    """Maneja el POST del formulario de reporte de producto"""
+    producto = get_object_or_404(Producto, pk=producto_id)
+    
+    try:
+        Reporte.objects.create(
+            target_type='producto',
+            producto=producto,
+            reporter=request.user,
+            motivo=request.POST.get('motivo'),
+            detalle=request.POST.get('detalle')
+        )
+        messages.success(request, 'Reporte enviado correctamente')
+    except Exception as e:
+        messages.error(request, 'Error al enviar el reporte')
+        
     return redirect('product_detail', producto_id=producto_id)
 
 @login_required
@@ -1034,17 +1042,39 @@ def _require_store_profile(request):
 
 @login_required
 def store_offers_list(request):
+    """Vista de listado de productos de la tienda"""
     profile = _require_store_profile(request)
     if not profile:
         return redirect('home')
-
-    tienda = _get_or_create_tienda_for_user(request.user)
-    ofertas = TiendaProducto.objects.filter(tienda=tienda)\
-        .select_related('producto').order_by('producto__nombre_producto')
-
+        
+    tienda = get_object_or_404(Tienda, user=request.user)
+    
+    # Obtener ofertas con notificaciones pendientes
+    ofertas = TiendaProducto.objects.filter(tienda=tienda).select_related('producto')
+    
+    # Obtener notificaciones no leídas y agruparlas por tipo
+    notificaciones = (Notificacion.objects
+        .filter(tienda=tienda, leida=False)
+        .order_by('-created_at'))
+    
+    # Agrupar notificaciones por producto y por tipo
+    notif_por_producto = {}
+    for notif in notificaciones:
+        if notif.producto:
+            if notif.producto.id not in notif_por_producto:
+                notif_por_producto[notif.producto.id] = []
+            notif_por_producto[notif.producto.id].append({
+                'id': notif.id,
+                'tipo': notif.get_tipo_display(),
+                'mensaje': notif.mensaje,
+                'fecha': notif.created_at,
+                'leida': notif.leida
+            })
+    
     return render(request, 'store/offers_list.html', {
         'ofertas': ofertas,
-        'tienda': tienda,
+        'notificaciones': notificaciones,
+        'notif_por_producto': notif_por_producto,
     })
 
 @login_required
@@ -1198,12 +1228,20 @@ def store_offer_edit(request, oferta_id):
     if request.method == 'POST':
         try:
             precio = request.POST.get('precio')
+            stock = request.POST.get('stock', 0)
+            url_externa = request.POST.get('url_externa', '')
+            nota_tienda = request.POST.get('nota_tienda', '')
+            
             oferta.precio = precio
-            oferta.save(update_fields=['precio'])
-            messages.success(request, "Oferta actualizada.")
+            oferta.stock = stock
+            oferta.url_externa = url_externa
+            oferta.nota_tienda = nota_tienda
+            oferta.save()
+            
+            messages.success(request, "Oferta actualizada correctamente")
             return redirect('store_offers_list')
-        except Exception:
-            messages.error(request, "No se pudo actualizar el precio.")
+        except Exception as e:
+            messages.error(request, f"No se pudo actualizar la oferta: {str(e)}")
 
     return render(request, 'store/offer_edit.html', {'oferta': oferta})
 
@@ -1222,6 +1260,22 @@ def store_offer_delete(request, oferta_id):
         return redirect('store_offers_list')
 
     return render(request, 'store/offer_delete_confirm.html', {'oferta': oferta})
+
+@login_required
+@require_POST
+def mark_notification_read(request, notification_id):
+    """Marca una notificación como leída"""
+    notification = get_object_or_404(
+        Notificacion, 
+        id=notification_id,
+        tienda__user=request.user
+    )
+    notification.leida = True
+    notification.save()
+    
+    # Redireccionar a la página anterior
+    next_url = request.POST.get('next', 'store_notifications')
+    return redirect(next_url)
 
 # === Form local: NewProductAndOfferForm (evita choque con import) ===
 class NewProductAndOfferForm(forms.ModelForm):
@@ -1567,3 +1621,82 @@ def api_products_by_type_brand(request):
             name = f"{name} ({p['modelo_producto']})"
         products.append({'id': p['id'], 'name': name})
     return JsonResponse({'products': products})
+
+@login_required
+def store_notifications(request):
+    """Vista de notificaciones para tiendas"""
+    profile = _require_store_profile(request)
+    if not profile:
+        return redirect('home')
+        
+    tienda = get_object_or_404(Tienda, user=request.user)
+    
+    # Determinar qué notificaciones mostrar
+    show_read = request.GET.get('filter') == 'all'
+    
+    # Consultar notificaciones según el filtro
+    notifications = Notificacion.objects.filter(tienda=tienda)
+    if not show_read:
+        notifications = notifications.filter(leida=False)
+    
+    # Ordenar por fecha descendente
+    notifications = notifications.order_by('-created_at')
+    
+    # Contar no leídas para el badge
+    unread_count = notifications.filter(leida=False).count()
+    
+    return render(request, 'store/notifications.html', {
+        'notifications': notifications,
+        'show_read': show_read,
+        'unread_count': unread_count,
+    })
+
+@login_required
+@require_POST
+def store_offer_quick_edit(request, oferta_id):
+    """Vista para edición rápida desde notificaciones"""
+    profile = _require_store_profile(request)
+    if not profile:
+        return redirect('home')
+        
+    tienda = get_object_or_404(Tienda, user=request.user)
+    oferta = get_object_or_404(TiendaProducto, id=oferta_id, tienda=tienda)
+    
+    # Actualizar información del producto
+    producto = oferta.producto
+    producto.nombre_producto = request.POST.get('nombre', '').strip()
+    producto.modelo_producto = request.POST.get('modelo', '').strip()
+    producto.descripcion_producto = request.POST.get('descripcion', '').strip()
+    producto.save()
+    
+    # Actualizar precio si cambió
+    try:
+        nuevo_precio = float(request.POST.get('precio', '0'))
+        if nuevo_precio > 0:
+            oferta.precio = nuevo_precio
+            oferta.save()
+    except (ValueError, TypeError):
+        pass
+
+    # Marcar notificaciones como leídas
+    Notificacion.objects.filter(
+        tienda=tienda,
+        producto=producto,
+        leida=False
+    ).update(leida=True)
+
+    # Buscar y actualizar el reporte asociado
+    reporte = Reporte.objects.filter(
+        producto=producto,
+        estado='resuelto',
+        notificacion_leida=False
+    ).order_by('-fecha_accion').first()
+
+    if reporte:
+        # Registrar que la tienda atendió el reporte
+        reporte.notificacion_leida = True
+        reporte.fecha_actualizacion = timezone.now()
+        reporte.save()
+
+    messages.success(request, 'Información actualizada correctamente')
+    return redirect('store_offers_list')

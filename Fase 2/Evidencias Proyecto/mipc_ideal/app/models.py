@@ -174,15 +174,57 @@ class ProductReview(models.Model):
         return f'{self.producto} - {self.user} ({self.rating}★)'
     
 class Reporte(models.Model):
-    TARGETS = (
-        ('producto', 'Producto'),
-        ('tienda', 'Tienda'),
-    )
-    target_type   = models.CharField(max_length=20, choices=TARGETS)
-    producto      = models.ForeignKey('Producto', null=True, blank=True, on_delete=models.CASCADE)
-    tienda        = models.ForeignKey('Tienda', null=True, blank=True, on_delete=models.CASCADE)
-    reporter      = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    motivo        = models.CharField(max_length=255)
-    detalle       = models.TextField(blank=True)
-    created_at    = models.DateTimeField(auto_now_add=True)
-    atendido      = models.BooleanField(default=False)
+    ESTADOS = [
+        ('pendiente', 'Pendiente de revisión'),
+        ('revision', 'En revisión'),
+        ('resuelto', 'Resuelto'),
+        ('rechazado', 'Rechazado'),
+    ]
+    
+    ACCIONES = [
+        ('info_incorrecta', 'Información incorrecta'),
+        ('spam', 'Spam o contenido engañoso'),
+        ('duplicado', 'Producto duplicado'),
+        ('otro', 'Otro motivo'),
+    ]
+
+    target_type = models.CharField(max_length=20, choices=[('producto', 'Producto'), ('tienda', 'Tienda')])
+    producto = models.ForeignKey('Producto', null=True, blank=True, on_delete=models.CASCADE)
+    tienda = models.ForeignKey('Tienda', null=True, blank=True, on_delete=models.CASCADE)
+    reporter = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='reportes_creados')
+    motivo = models.CharField(max_length=50, choices=ACCIONES)
+    detalle = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='pendiente')
+    
+    # Nuevos campos
+    accion_admin = models.TextField(blank=True, help_text="Notas/instrucciones del administrador")
+    fecha_accion = models.DateTimeField(null=True, blank=True)
+    admin_actor = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='reportes_moderados')
+    producto_deshabilitado = models.BooleanField(default=False)
+    notificacion_leida = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Reporte'
+        verbose_name_plural = 'Reportes'
+
+class Notificacion(models.Model):
+    TIPOS_NOTIFICACION = [
+        ('reporte_producto', 'Reporte de Producto'),
+        ('producto_eliminado', 'Producto Eliminado'),
+        ('info_incorrecta', 'Información Incorrecta'),
+        ('otro', 'Otro'),
+    ]
+    
+    tienda = models.ForeignKey('Tienda', on_delete=models.CASCADE)
+    tipo = models.CharField(max_length=50, choices=TIPOS_NOTIFICACION, help_text="Tipo de notificación")
+    mensaje = models.TextField()
+    producto = models.ForeignKey('Producto', null=True, blank=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+    leida = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Notificación'
+        verbose_name_plural = 'Notificaciones'

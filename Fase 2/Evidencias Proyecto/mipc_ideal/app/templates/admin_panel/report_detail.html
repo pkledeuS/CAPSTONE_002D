@@ -1,0 +1,119 @@
+{% extends "admin_panel/admin_base.html" %}
+
+{% block admin_content %}
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h5 class="card-title mb-0">Detalle del Reporte #{{ reporte.id }}</h5>
+      <div class="btn-group btn-group-sm">
+        {% if reporte.estado != 'resuelto' %}
+          <a href="{% url 'admin_report_action' reporte.id 'resolve' %}?next={{ request.path|urlencode }}" 
+             class="btn btn-outline-success">
+            <i class="bi bi-check-lg"></i> Marcar resuelto
+          </a>
+        {% else %}
+          <a href="{% url 'admin_report_action' reporte.id 'open' %}?next={{ request.path|urlencode }}" 
+             class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-counterclockwise"></i> Reabrir
+          </a>
+        {% endif %}
+        <a href="{% url 'admin_report_action' reporte.id 'delete' %}?next={% url 'admin_reports' %}" 
+           class="btn btn-outline-danger"
+           onclick="return confirm('¿Eliminar este reporte?');">
+          <i class="bi bi-trash"></i> Eliminar
+        </a>
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <dl>
+          <dt>Tipo</dt>
+          <dd>{{ reporte.get_target_type_display }}</dd>
+          
+          <dt>Objetivo</dt>
+          <dd>
+            {% if reporte.producto %}
+              Producto: {{ reporte.producto.nombre_producto }}
+            {% elif reporte.tienda %}
+              Tienda: {{ reporte.tienda.nombre_tienda }}
+            {% endif %}
+          </dd>
+          
+          <dt>Motivo</dt>
+          <dd>{{ reporte.get_motivo_display }}</dd>
+          
+          <dt>Detalle</dt>
+          <dd>{{ reporte.detalle|default:"--" }}</dd>
+        </dl>
+      </div>
+      
+      <div class="col-md-6">
+        <dl>
+          <dt>Reportado por</dt>
+          <dd>{{ reporte.reporter.username }} ({{ reporte.created_at|date:"d/m/Y H:i" }})</dd>
+          
+          <dt>Estado actual</dt>
+          <dd>
+            {% if reporte.estado == 'resuelto' %}
+              {% if reporte.notificacion_leida %}
+                <span class="badge bg-success">Resuelto - Actualizado</span>
+              {% else %}
+                <span class="badge bg-info">Resuelto - Pendiente</span>
+              {% endif %}
+            {% else %}
+              <span class="badge bg-warning text-dark">Abierto</span>
+            {% endif %}
+          </dd>
+        </dl>
+      </div>
+    </div>
+
+    <!-- Formulario de acción -->
+    {% if reporte.estado != 'resuelto' %}
+    <form method="post" class="border-top pt-4">
+      {% csrf_token %}
+      
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Acción a tomar</label>
+          <select name="accion" class="form-select" required>
+            <option value="">Seleccione una acción...</option>
+            <option value="info_incorrecta">Solicitar corrección de información</option>
+            <option value="spam_delete">Eliminar producto (Spam)</option>
+            <option value="duplicado_merge">Marcar como duplicado</option>
+          </select>
+        </div>
+        
+        {% if reporte.producto %}
+        <div class="col-md-6">
+          <label class="form-label">Estado del producto</label>
+          <div class="form-check">
+            <input type="checkbox" name="deshabilitar" class="form-check-input" id="deshabilitar">
+            <label class="form-check-label" for="deshabilitar">
+              Deshabilitar producto temporalmente
+            </label>
+          </div>
+        </div>
+        {% endif %}
+        
+        <div class="col-12">
+          <label class="form-label">Mensaje para la(s) tienda(s)</label>
+          <textarea name="mensaje" class="form-control" rows="4" required
+                    placeholder="Explique el problema y las acciones requeridas..."></textarea>
+        </div>
+        
+        <div class="col-12 text-end">
+          <a href="{% url 'admin_reports' %}" class="btn btn-outline-secondary">
+            Cancelar
+          </a>
+          <button type="submit" class="btn btn-primary">
+            Aplicar acción
+          </button>
+        </div>
+      </div>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
