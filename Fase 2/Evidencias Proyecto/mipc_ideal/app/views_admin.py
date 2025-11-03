@@ -1,19 +1,24 @@
 # app/views_admin.py
 from __future__ import annotations
 
-import json
-from typing import Any, Iterable
-
+from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
-from django.db.models import Q, Count, Avg, FloatField, F, Value, CharField, Max, Min, ExpressionWrapper
+from django.db.models import (
+    Q, Count, Avg, FloatField, F, 
+    Value, CharField, Max, Min, ExpressionWrapper
+)
 from django.db.models.functions import Cast, Coalesce
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
+from django.utils import timezone
+import json
 
-from .models import Producto, Tienda
-
+from .models import (
+    Notificacion, Producto, Reporte, 
+    Tienda, TiendaProducto
+)
 
 # =========================
 #     UTILIDADES / INTROS
@@ -402,160 +407,190 @@ def _datefmt(dt):
     except Exception:
         return str(dt) if dt is not None else "—"
 
+# =========================
+#         REPORTES (Moderación)
+# =========================
+
 @staff_member_required
 def admin_reports(request):
-    """
-    Moderación de reportes enviados por usuarios sobre Productos o Tiendas.
-    - target: productos | tiendas | todos
-    - estado: abiertos | resueltos | todos
-    Muestra columnas: Tipo, Objetivo, Motivo, Detalle, Usuario, Fecha, Estado, Acciones.
-    """
-    target = (request.GET.get("target") or "todos").lower()
-    estado = (request.GET.get("estado") or "abiertos").lower()
-
-    filas = []
-
-    # Detecta modelos de reporte (reverse) tanto en Producto como en Tienda
-    product_report_model = _get_reverse_model(Producto, {"reporte", "reportes", "reports"})
-    store_report_model   = _get_reverse_model(Tienda,   {"reporte", "reportes", "reports"})
-
-    # Helper para procesar un queryset de reportes homogéneo
-    def collect_rows(qs, tipo):
-        rows = []
-        for r in qs[:1000]:
-            # Descubrir campos comunes en el modelo de reporte
-            motivo   = _pick_attr(r, ["motivo", "razon", "reason", "asunto"], default="—")
-            detalle  = _pick_attr(r, ["detalle", "descripcion", "comentario", "observacion", "notes"], default="—")
-            usuario  = _pick_attr(r, ["user", "usuario", "reporter", "autor", "creator"], default=None)
-            fecha    = _pick_attr(r, ["created_at", "fecha", "fecha_creacion", "created", "timestamp"], default=None)
-
-            # Estado/resuelto
-            is_resolved = None
-            if hasattr(r, "is_resolved"):
-                is_resolved = bool(getattr(r, "is_resolved"))
-            elif hasattr(r, "resuelto"):
-                is_resolved = bool(getattr(r, "resuelto"))
-            elif hasattr(r, "estado"):
-                # intenta mapear strings tipo "resuelto"/"abierto"
-                val = str(getattr(r, "estado") or "").lower()
-                if val in {"resuelto", "cerrado", "solucionado"}:
-                    is_resolved = True
-                elif val in {"abierto", "pendiente"}:
-                    is_resolved = False
-
-            estado_txt = "Resuelto" if is_resolved else "Abierto"
-
-            # Obtener objeto objetivo y su nombre
-            target_obj = None
-            target_name = "—"
-            if tipo == "Producto":
-                target_obj = _pick_attr(r, ["producto", "product"], default=None)
-                if target_obj:
-                    nm = getattr(target_obj, (NAME_FIELD or ""), None)
-                    target_name = nm if nm else f"Producto #{getattr(target_obj, 'pk', '—')}"
+    """Vista del listado de reportes con filtros"""
+    target = request.GET.get("target", "todos")
+    estado = request.GET.get("estado", "abiertos")
+    
+    # Consultar reportes
+    qs = Reporte.objects.all().select_related('producto', 'tienda', 'reporter')
+    
+    # Aplicar filtros
+    if target == "productos":
+        qs = qs.filter(target_type="producto")
+    elif target == "tiendas":
+        qs = qs.filter(target_type="tienda")
+        
+    # Corregir filtrado por estado
+    if estado == "abiertos":
+        qs = qs.filter(Q(estado='pendiente') | Q(estado='abierto'))
+    elif estado == "resueltos":
+        qs = qs.filter(estado='resuelto')
+    # Si es "todos" no aplicamos filtro
+    
+    # Ordenar por fecha descendente
+    qs = qs.order_by("-created_at")
+    
+    # Preparar filas para la tabla
+    report_rows = []
+    for r in qs:
+        # Determinar estado y clase visual
+        if r.estado == "resuelto":
+            if hasattr(r, 'notificacion_leida') and r.notificacion_leida:
+                estado_txt = "Resuelto - Actualizado"
+                estado_class = "success"
             else:
-                target_obj = _pick_attr(r, ["tienda", "store"], default=None)
-                if target_obj:
-                    nm = getattr(target_obj, (TIENDA_NAME_FIELD or ""), None)
-                    target_name = nm if nm else f"Tienda #{getattr(target_obj, 'pk', '—')}"
-
-            rows.append([
-                tipo,
-                target_name,
-                str(motivo)[:120],
-                str(detalle)[:160],
-                getattr(usuario, "username", str(usuario)) if usuario else "—",
-                _datefmt(fecha),
-                estado_txt,
-                # Acción: construimos URLs en plantilla con pk y acción
-                r.pk,
-            ])
-        return rows
-
-    # Construir querysets según filtros
-    if target in {"productos", "todos"} and product_report_model:
-        qs_p = product_report_model.objects.all()
-        # Filtros por estado
-        if estado in {"abiertos", "resueltos"}:
-            # intenta filtrado por booleans convencionales
-            if "is_resolved" in {f.name for f in product_report_model._meta.get_fields()}:
-                qs_p = qs_p.filter(is_resolved=(estado == "resueltos"))
-            elif "resuelto" in {f.name for f in product_report_model._meta.get_fields()}:
-                qs_p = qs_p.filter(resuelto=(estado == "resueltos"))
-            elif "estado" in {f.name for f in product_report_model._meta.get_fields()}:
-                # textual
-                if estado == "resueltos":
-                    qs_p = qs_p.filter(estado__in=["resuelto", "cerrado", "solucionado"])
-                else:
-                    qs_p = qs_p.filter(estado__in=["abierto", "pendiente"])
-        qs_p = qs_p.order_by("-id")
-        filas += collect_rows(qs_p, "Producto")
-
-    if target in {"tiendas", "todos"} and store_report_model:
-        qs_t = store_report_model.objects.all()
-        if estado in {"abiertos", "resueltos"}:
-            if "is_resolved" in {f.name for f in store_report_model._meta.get_fields()}:
-                qs_t = qs_t.filter(is_resolved=(estado == "resueltos"))
-            elif "resuelto" in {f.name for f in store_report_model._meta.get_fields()}:
-                qs_t = qs_t.filter(resuelto=(estado == "resueltos"))
-            elif "estado" in {f.name for f in store_report_model._meta.get_fields()}:
-                if estado == "resueltos":
-                    qs_t = qs_t.filter(estado__in=["resuelto", "cerrado", "solucionado"])
-                else:
-                    qs_t = qs_t.filter(estado__in=["abierto", "pendiente"])
-        qs_t = qs_t.order_by("-id")
-        filas += collect_rows(qs_t, "Tienda")
-
-    # Orden final por “fecha/ID” descendente (las filas son listas; última col es pk, penúltima es estado, antepenúltima fecha formateada)
-    # Ya ordenamos por id desc en cada qs; mantener tal cual.
-    report_columns = ["Tipo", "Objetivo", "Motivo", "Detalle", "Usuario", "Fecha", "Estado", "Acciones"]
-    report_rows = filas
-
+                estado_txt = "Resuelto - Pendiente"
+                estado_class = "info"
+        else:
+            estado_txt = "Abierto"
+            estado_class = "warning"
+            
+        # Determinar objetivo
+        if r.target_type == "producto" and r.producto:
+            objetivo = r.producto.nombre_producto
+        elif r.target_type == "tienda" and r.tienda:
+            objetivo = r.tienda.nombre_tienda
+        else:
+            objetivo = "—"
+            
+        report_rows.append([
+            r.get_target_type_display(),
+            objetivo,
+            r.get_motivo_display(),
+            r.detalle[:160],
+            r.reporter.username if r.reporter else "—",
+            r.created_at.strftime("%Y-%m-%d %H:%M"),
+            estado_txt,  # Cambiado para que coincida con el template
+            r.pk
+        ])
+    
     context = {
-        "report_columns": report_columns,
+        "report_columns": ["Tipo", "Objetivo", "Motivo", "Detalle", "Usuario", "Fecha", "Estado", "Acciones"],
         "report_rows": report_rows,
-        "download_url": None,
     }
     return render(request, "admin_panel/reports.html", context)
 
+@staff_member_required
+def admin_report_detail(request, pk):
+    """Vista detallada de un reporte"""
+    reporte = get_object_or_404(Reporte, pk=pk)
+    
+    if request.method == 'POST':
+        accion = request.POST.get('accion')
+        mensaje = request.POST.get('mensaje')
+        deshabilitar = request.POST.get('deshabilitar') == 'on'
+        
+        # Obtener tiendas afectadas
+        tiendas_afectadas = []
+        if reporte.producto:
+            tiendas_afectadas = TiendaProducto.objects.filter(producto=reporte.producto)
+            
+            # Manejar estado del producto
+            producto = reporte.producto
+            if deshabilitar:
+                producto.is_active = False
+                producto.save()
+                # Registrar en el reporte que se deshabilitó
+                reporte.producto_deshabilitado = True
+            else:
+                producto.is_active = True
+                producto.save()
+                reporte.producto_deshabilitado = False
+        
+        if accion == 'info_incorrecta':
+            if reporte.producto:
+                for tp in tiendas_afectadas:
+                    Notificacion.objects.create(
+                        tienda=tp.tienda,
+                        tipo='info_incorrecta',
+                        producto=reporte.producto,
+                        mensaje=f"""
+                        Se ha reportado información incorrecta en: {reporte.producto.nombre_producto}
+                        
+                        Motivo del reporte: {reporte.detalle}
+                        Acción requerida: {mensaje}
+                        Estado: {'Deshabilitado temporalmente' if deshabilitar else 'Activo'}
+                        
+                        Por favor, revise y actualice la información del producto.
+                        """
+                    )
+                    
+        elif accion == 'spam_delete':
+            if reporte.producto:
+                # Notificar antes de eliminar
+                for tp in tiendas_afectadas:
+                    Notificacion.objects.create(
+                        tienda=tp.tienda,
+                        tipo='producto_eliminado',
+                        mensaje=f"""
+                        El producto "{reporte.producto.nombre_producto}" ha sido eliminado.
+                        
+                        Motivo: Contenido inapropiado/spam
+                        Detalles: {mensaje}
+                        
+                        Este producto ha sido eliminado de su catálogo.
+                        """
+                    )
+                
+                # Almacenar el ID antes de eliminar
+                producto_id = reporte.producto.id
+                reporte.producto = None  # Desvinculamos el producto antes de eliminarlo
+                reporte.save()
+                
+                # Ahora sí eliminamos el producto
+                Producto.objects.filter(id=producto_id).delete()
+                
+        elif accion == 'duplicado_merge':
+            if reporte.producto:
+                # Notificar duplicado
+                for tp in tiendas_afectadas:
+                    Notificacion.objects.create(
+                        tienda=tp.tienda,
+                        tipo='producto_duplicado',
+                        producto=reporte.producto,
+                        mensaje=f"""
+                        El producto {reporte.producto.nombre_producto} ha sido marcado como duplicado.
+                        
+                        Por favor revise: {mensaje}
+                        """
+                    )
+                    
+        # Actualizar reporte
+        reporte.estado = 'resuelto'
+        reporte.accion_admin = mensaje
+        reporte.fecha_accion = timezone.now()
+        reporte.admin_actor = request.user
+        reporte.save()
+
+        return redirect('admin_reports')
+        
+    return render(request, 'admin_panel/report_detail.html', {
+        'reporte': reporte
+    })
 
 @staff_member_required
-def admin_reports_mark(request, pk: int, action: str):
-    """
-    Marca/gestiona un reporte:
-      - action = resolve | open | delete
-    Busca en ambos modelos de reportes (producto/tienda) y aplica el cambio si corresponde.
-    """
-    # Detectar modelos de reporte
-    product_report_model = _get_reverse_model(Producto, {"reporte", "reportes", "reports"})
-    store_report_model   = _get_reverse_model(Tienda,   {"reporte", "reportes", "reports"})
-
-    def act_on(model):
-        if not model:
-            return False
-        obj = model.objects.filter(pk=pk).first()
-        if not obj:
-            return False
-
-        if action == "delete":
-            obj.delete()
-            return True
-
-        # toggles/estado
-        if hasattr(obj, "is_resolved"):
-            obj.is_resolved = (action == "resolve")
-            obj.save(update_fields=["is_resolved"])
-            return True
-        if hasattr(obj, "resuelto"):
-            obj.resuelto = (action == "resolve")
-            obj.save(update_fields=["resuelto"])
-            return True
-        if hasattr(obj, "estado"):
-            obj.estado = "resuelto" if action == "resolve" else "abierto"
-            obj.save(update_fields=["estado"])
-            return True
-        return False
-
-    # Intenta en ambos modelos
-    changed = act_on(product_report_model) or act_on(store_report_model)
-    return _redirect_back(request, "admin_reports")
+def admin_report_action(request, pk, action):
+    """Acciones rápidas sobre reportes desde el listado"""
+    reporte = get_object_or_404(Reporte, pk=pk)
+    
+    if action == 'resolve':
+        reporte.estado = 'resuelto'
+        reporte.save()
+        messages.success(request, 'Reporte marcado como resuelto')
+        
+    elif action == 'open':
+        reporte.estado = 'pendiente'
+        reporte.save()
+        messages.success(request, 'Reporte reabierto')
+        
+    elif action == 'delete':
+        reporte.delete()
+        messages.success(request, 'Reporte eliminado')
+    
+    return _redirect_back(request, 'admin_reports')

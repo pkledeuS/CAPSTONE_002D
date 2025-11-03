@@ -7,81 +7,102 @@
 {% block admin_content %}
 <div class="card">
   <div class="card-body">
-    <form class="row g-2 align-items-end mb-3" method="get">
-      <div class="col-12 col-md-3">
-        <label class="form-label">Objetivo</label>
-        <select name="target" class="form-select">
-          <option value="todos"     {% if request.GET.target == 'todos' or not request.GET.target %}selected{% endif %}>Todos</option>
-          <option value="productos" {% if request.GET.target == 'productos' %}selected{% endif %}>Productos</option>
-          <option value="tiendas"   {% if request.GET.target == 'tiendas' %}selected{% endif %}>Tiendas</option>
+    <!-- Filtros mejorados -->
+    <form class="row g-3 mb-4" method="get">
+      <div class="col-12 col-md-4">
+        <label class="form-label small text-muted">Filtrar por objetivo</label>
+        <select name="target" class="form-select form-select-sm">
+          <option value="todos" {% if request.GET.target == 'todos' or not request.GET.target %}selected{% endif %}>Todos los objetivos</option>
+          <option value="productos" {% if request.GET.target == 'productos' %}selected{% endif %}>Solo productos</option>
+          <option value="tiendas" {% if request.GET.target == 'tiendas' %}selected{% endif %}>Solo tiendas</option>
         </select>
       </div>
-      <div class="col-12 col-md-3">
-        <label class="form-label">Estado</label>
-        <select name="estado" class="form-select">
-          <option value="abiertos"  {% if request.GET.estado == 'abiertos' or not request.GET.estado %}selected{% endif %}>Abiertos</option>
-          <option value="resueltos" {% if request.GET.estado == 'resueltos' %}selected{% endif %}>Resueltos</option>
-          <option value="todos"     {% if request.GET.estado == 'todos' %}selected{% endif %}>Todos</option>
+      <div class="col-12 col-md-4">
+        <label class="form-label small text-muted">Filtrar por estado</label>
+        <select name="estado" class="form-select form-select-sm">
+          <option value="abiertos" {% if request.GET.estado == 'abiertos' or not request.GET.estado %}selected{% endif %}>Reportes abiertos</option>
+          <option value="resueltos" {% if request.GET.estado == 'resueltos' %}selected{% endif %}>Reportes resueltos</option>
+          <option value="todos" {% if request.GET.estado == 'todos' %}selected{% endif %}>Todos los estados</option>
         </select>
       </div>
-      <div class="col-12 col-md-3">
-        <button class="btn btn-primary w-100" type="submit">Filtrar</button>
+      <div class="col-12 col-md-4">
+        <label class="form-label">&nbsp;</label>
+        <button class="btn btn-primary btn-sm w-100" type="submit">
+          <i class="bi bi-funnel-fill me-1"></i> Aplicar filtros
+        </button>
       </div>
     </form>
 
+    <!-- Tabla mejorada -->
     <div class="table-responsive">
-      <table class="table table-sm align-middle">
-        <thead>
+      <table class="table table-hover table-sm align-middle">
+        <thead class="table-light">
           <tr>
-            {% for col in report_columns %}
-              <th>{{ col }}</th>
-            {% endfor %}
+            <th scope="col" style="width: 10%">Tipo</th>
+            <th scope="col" style="width: 15%">Objetivo</th>
+            <th scope="col" style="width: 15%">Motivo</th>
+            <th scope="col" style="width: 20%">Detalle</th>
+            <th scope="col" style="width: 10%">Usuario</th>
+            <th scope="col" style="width: 10%">Fecha</th>
+            <th scope="col" style="width: 10%">Estado</th>
+            <th scope="col" style="width: 10%">Acciones</th>
           </tr>
         </thead>
         <tbody>
           {% for row in report_rows %}
-          {# row = [Tipo, Objetivo, Motivo, Detalle, Usuario, Fecha, Estado, PK] #}
           <tr>
             <td>{{ row.0 }}</td>
-            <td>{{ row.1 }}</td>
+            <td class="fw-medium">{{ row.1|default:"—" }}</td>
             <td>{{ row.2 }}</td>
-            <td class="text-truncate" style="max-width: 28rem">{{ row.3 }}</td>
+            <td class="text-truncate" style="max-width: 200px">{{ row.3 }}</td>
             <td>{{ row.4 }}</td>
-            <td>{{ row.5 }}</td>
+            <td class="text-nowrap">{{ row.5 }}</td>
             <td>
-              {% if row.6 == 'Resuelto' %}
-                <span class="badge bg-success">Resuelto</span>
+              {% if row.6 == 'Resuelto - Actualizado' %}
+                  <span class="badge bg-success rounded-pill">{{ row.6 }}</span>
+              {% elif row.6 == 'Resuelto - Pendiente' %}
+                  <span class="badge bg-info rounded-pill">{{ row.6 }}</span>
               {% else %}
-                <span class="badge bg-warning text-dark">Abierto</span>
+                  <span class="badge bg-warning text-dark rounded-pill">{{ row.6 }}</span>
               {% endif %}
             </td>
-            <td class="text-nowrap">
-              {% if row.6 == 'Resuelto' %}
-                <a class="btn btn-outline-secondary btn-sm"
-                   href="{% url 'admin_reports_mark' row.7 'open' %}?next={{ request.get_full_path|urlencode }}">
-                   Reabrir
-                </a>
-              {% else %}
-                <a class="btn btn-outline-success btn-sm"
-                   href="{% url 'admin_reports_mark' row.7 'resolve' %}?next={{ request.get_full_path|urlencode }}">
-                   Marcar resuelto
-                </a>
-              {% endif %}
-              <a class="btn btn-outline-danger btn-sm"
-                 href="{% url 'admin_reports_mark' row.7 'delete' %}?next={{ request.get_full_path|urlencode }}"
-                 onclick="return confirm('¿Eliminar este reporte?');">
-                 Eliminar
-              </a>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    {% if row.6 == 'Abierto' %}
+                        <a class="btn btn-outline-success" 
+                          href="{% url 'admin_report_action' row.7 'resolve' %}?next={{ request.get_full_path|urlencode }}" 
+                          title="Marcar resuelto">
+                            <i class="bi bi-check-lg"></i>
+                        </a>
+                    {% else %}
+                        <a class="btn btn-outline-secondary" 
+                          href="{% url 'admin_report_action' row.7 'open' %}?next={{ request.get_full_path|urlencode }}" 
+                          title="Reabrir">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </a>
+                    {% endif %}
+                    <a class="btn btn-outline-info" href="{% url 'admin_report_detail' row.7 %}" title="Ver detalle">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a class="btn btn-outline-danger" 
+                      href="{% url 'admin_report_action' row.7 'delete' %}?next={{ request.get_full_path|urlencode }}" 
+                      onclick="return confirm('¿Eliminar este reporte?');" title="Eliminar">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </div>
             </td>
           </tr>
           {% empty %}
-          <tr><td colspan="8" class="text-center text-muted">Sin reportes</td></tr>
+          <tr>
+            <td colspan="8" class="text-center text-muted py-4">
+              <i class="bi bi-inbox h4 d-block"></i>
+              No hay reportes que coincidan con los filtros
+            </td>
+          </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-
-    {# No hay descarga aquí; se puede agregar luego si lo necesitas #}
   </div>
 </div>
 {% endblock %}

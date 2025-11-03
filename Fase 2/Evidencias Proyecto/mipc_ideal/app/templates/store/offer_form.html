@@ -1,179 +1,271 @@
 {% extends "base.html" %}
-
 {% load static %}
 
 {% block content %}
-<h3 class="mb-3">Agregar producto</h3>
+<div class="container py-4">
+  <h3 class="mb-4">Agregar producto</h3>
 
-<ul class="nav nav-tabs mb-3" role="tablist">
+  <!-- Tabs mejorados -->
+  <ul class="nav nav-pills nav-fill mb-4">
     <li class="nav-item">
-        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-existing" type="button">Seleccionar existente</button>
+      <button class="nav-link active px-4" data-bs-toggle="tab" data-bs-target="#tab-existing">
+        <i class="bi bi-search me-2"></i>Seleccionar producto existente
+      </button>
     </li>
     <li class="nav-item">
-        <button class="nav-link second" data-bs-toggle="tab" data-bs-target="#tab-new" type="button">Crear nuevo + oferta</button>
+      <button class="nav-link px-4" data-bs-toggle="tab" data-bs-target="#tab-new">
+        <i class="bi bi-plus-circle me-2"></i>Crear nuevo producto
+      </button>
     </li>
-</ul>
+  </ul>
 
-<div class="tab-content">
+  <div class="tab-content">
+    <!-- Tab Producto Existente -->
     <div class="tab-pane fade show active" id="tab-existing">
-        <form method="post" id="form-existing">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+          <form method="post" id="form-existing">
             {% csrf_token %}
             <input type="hidden" name="mode" value="existing">
 
-            <div class="row g-3">
-            <!-- Tipo -->
-            <div class="col-md-4">
-                <label class="form-label">Tipo de producto</label>
-                <select id="tipo-select" class="form-select">
-                <option value="">Selecciona…</option>
-                {% for t in tiposproductos %}
+            <!-- Filtros de búsqueda -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <label class="form-label small text-muted">Tipo de producto</label>
+                <select id="tipo-select" class="form-select form-select-lg">
+                  <option value="">Selecciona…</option>
+                  {% for t in tiposproductos %}
                     <option value="{{ t.id }}">{{ t.nombre_tipo }}</option>
-                {% endfor %}
+                  {% endfor %}
                 </select>
-            </div>
+              </div>
 
-            <!-- Marca -->
-            <div class="col-md-4">
-                <label class="form-label">Marca</label>
-                <select id="marca-select" class="form-select" disabled>
-                <option value="">Selecciona tipo…</option>
+              <div class="col-md-4">
+                <label class="form-label small text-muted">Marca</label>
+                <select id="marca-select" class="form-select form-select-lg" disabled>
+                  <option value="">Selecciona tipo…</option>
                 </select>
-            </div>
+              </div>
 
-            <!-- Producto -->
-            <div class="col-md-4">
-                <label class="form-label">Producto</label>
-                <select id="producto-select" name="producto" class="form-select" disabled>
-                <option value="">Selecciona marca…</option>
-                <!-- Se agrega automáticamente + Crear nuevo -->
+              <div class="col-md-4">
+                <label class="form-label small text-muted">Producto</label>
+                <select id="producto-select" name="producto" class="form-select form-select-lg" disabled>
+                  <option value="">Selecciona marca…</option>
                 </select>
-            </div>
-            </div>
-
-            <div id="existing-offer-fields" class="row g-3 mt-2" style="display:none">
-            <div class="col-md-3">{{ form_existing.precio.label_tag }} {{ form_existing.precio }}</div>
-            <div class="col-md-5">{{ form_existing.url_externa.label_tag }} {{ form_existing.url_externa }}</div>
-            <div class="col-md-2">{{ form_existing.stock.label_tag }} {{ form_existing.stock }}</div>
-            <div class="col-md-12">{{ form_existing.nota_tienda.label_tag }} {{ form_existing.nota_tienda }}</div>
+              </div>
             </div>
 
-            <div class="mt-3">
-            <button class="btn btn-primary" type="submit">Guardar</button>
-            <a href="{% url 'store_offers_list' %}" class="btn btn-light">Cancelar</a>
+            <!-- Campos de oferta -->
+            <div id="existing-offer-fields" class="border-top pt-4 mt-2" style="display:none">
+              <h5 class="mb-3">Detalles de la oferta</h5>
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label small text-muted">Precio (CLP)</label>
+                  <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input type="number" name="precio" class="form-control form-control-lg" 
+                          min="0" step="1" required
+                          placeholder="Precio en CLP">
+                  </div>
+                </div>
+                
+                <div class="col-md-2">
+                  <label class="form-label small text-muted">Stock</label>
+                  <input type="number" name="stock" class="form-control form-control-lg"
+                        min="0" step="1" required
+                        placeholder="Cantidad disponible">
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label small text-muted">URL del producto</label>
+                  <input type="url" name="url_externa" class="form-control form-control-lg"
+                        placeholder="https://www.tutienda.com/producto">
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label small text-muted">Nota adicional</label>
+                  <textarea name="nota_tienda" class="form-control" rows="3"
+                            placeholder="Información adicional sobre el producto o la oferta"></textarea>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <button class="btn btn-lg btn-primary" type="submit">
+                  <i class="bi bi-check-lg me-2"></i>Guardar oferta
+                </button>
+                <a href="{% url 'store_offers_list' %}" class="btn btn-lg btn-light">Cancelar</a>
+              </div>
             </div>
-        </form>
-    </div>
-    
-    <!---------------------------------------------------------------------------------------->
-    <div class="tab-pane fade" id="tab-new">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-light">
-                <strong>Crear producto nuevo</strong>
-            </div>
-            <div class="card-body">
-                <form method="post" enctype="multipart/form-data" id="form-new">
-                    {% csrf_token %}
-                    <input type="hidden" name="mode" value="new">
-
-                    <div class="row g-3">
-                        <!-- Modelo + Imagen -->
-                        <div class="col-md-6">
-                            <label class="form-label">Modelo</label>
-                            {{ form_new.modelo_producto }}
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Imagen</label>
-                            {{ form_new.imagen_producto }}
-                        </div>
-
-                        <!-- Descripción -->
-                        <div class="col-12">
-                            <label class="form-label">Descripción</label>
-                            {{ form_new.descripcion_producto }}
-                        </div>
-
-                        <!-- Marca / Tipo / Categoría -->
-                        <div class="col-md-4">
-                            <label class="form-label">Marca</label>
-                            {{ form_new.marca_producto }}
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Tipo</label>
-                            {{ form_new.tipo_producto }}
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Categoría</label>
-                            {{ form_new.categoria_producto }}
-                        </div>
-
-                        <!-- Especificaciones -->
-                        <div class="col-12 mt-2">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                            <label class="form-label m-0">Especificaciones técnicas</label>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-add-spec">
-                                <i class="bi bi-plus-circle me-1"></i> Agregar fila
-                            </button>
-                            </div>
-                            <div class="table-responsive">
-                            <table class="table table-sm align-middle table-bordered" id="specs-table">
-                                <thead class="table-light">
-                                <tr>
-                                    <th style="width: 40%">Nombre especificación</th>
-                                    <th>Valor</th>
-                                    <th style="width: 40px"></th>
-                                </tr>
-                                </thead>
-                                <tbody id="specs-body"></tbody>
-                            </table>
-                            </div>
-                            <div class="form-text">
-                            Ej.: Procesador → “Núcleos/Hilos”, “Frecuencia”, “Socket”, “Cache L3”; Notebook → “Pantalla”, “CPU”, “GPU”, “RAM”, “Almacenamiento”
-                            </div>
-                        </div>
-
-                        <!-- Oferta -->
-                        <div class="col-md-3">
-                            <label class="form-label">Precio (CLP)</label>
-                            <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            {{ form_new.precio }}
-                            </div>
-                            <div class="form-text">Ingresa el valor sin puntos ni comas.</div>
-                        </div>
-                        <div class="col-md-5">
-                            <label class="form-label">URL de tu tienda</label>
-                            {{ form_new.url_externa }}
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Stock</label>
-                            {{ form_new.stock }}
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Nota</label>
-                            {{ form_new.nota_tienda }}
-                        </div>
-                    </div>
-
-                    <div class="d-flex gap-2 mt-4">
-                        <button class="btn btn-primary" type="submit">
-                            <i class="bi bi-save me-1"></i> Guardar
-                        </button>
-                        <a href="{% url 'store_offers_list' %}" class="btn btn-light">Cancelar</a>
-                    </div>
-                </form>
-            </div>
+          </form>
         </div>
+      </div>
     </div>
+
+    <!-- Tab Nuevo Producto -->
+    <div class="tab-pane fade" id="tab-new">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+          <form method="post" enctype="multipart/form-data" id="form-new">
+            {% csrf_token %}
+            <input type="hidden" name="mode" value="new">
+
+            <!-- Información básica -->
+            <h5 class="mb-3">Información básica</h5>
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Modelo</label>
+                {{ form_new.modelo_producto }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Imagen del producto</label>
+                {{ form_new.imagen_producto }}
+              </div>
+              <div class="col-12">
+                <label class="form-label small text-muted">Descripción</label>
+                {{ form_new.descripcion_producto }}
+              </div>
+            </div>
+
+            <!-- Clasificación -->
+            <h5 class="mb-3">Clasificación</h5>
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <label class="form-label small text-muted">Marca</label>
+                {{ form_new.marca_producto }}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small text-muted">Tipo</label>
+                {{ form_new.tipo_producto }}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small text-muted">Categoría</label>
+                {{ form_new.categoria_producto }}
+              </div>
+            </div>
+
+            <!-- Especificaciones -->
+            <div class="mb-4">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="mb-0">Especificaciones técnicas</h5>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="btn-add-spec">
+                  <i class="bi bi-plus-circle me-1"></i>Agregar especificación
+                </button>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-sm align-middle" id="specs-table">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width:40%">Especificación</th>
+                      <th>Valor</th>
+                      <th style="width:40px"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="specs-body"></tbody>
+                </table>
+              </div>
+              <div class="form-text small">
+                Las especificaciones ayudan a los usuarios a comparar productos similares.
+              </div>
+            </div>
+
+            <!-- Detalles de la oferta -->
+            <h5 class="mb-3">Detalles de la oferta</h5>
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label small text-muted">Precio (CLP)</label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  {{ form_new.precio }}
+                </div>
+              </div>
+              <div class="col-md-5">
+                <label class="form-label small text-muted">URL del producto</label>
+                {{ form_new.url_externa }}
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small text-muted">Stock</label>
+                {{ form_new.stock }}
+              </div>
+              <div class="col-12">
+                <label class="form-label small text-muted">Nota adicional</label>
+                {{ form_new.nota_tienda }}
+              </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+              <button class="btn btn-primary" type="submit">
+                <i class="bi bi-save me-2"></i>Guardar producto y oferta
+              </button>
+              <a href="{% url 'store_offers_list' %}" class="btn btn-light">Cancelar</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <style>
-  /* Sutiles ajustes visuales */
-  #form-new .form-text { font-size: .85rem; }
-  #specs-table tbody tr { transition: background-color .15s ease; }
-  #specs-table tbody tr:hover { background-color: #fafafa; }
-  .card { max-width: 1100px; margin: 0 auto; }
+.nav-pills .nav-link.active {
+  background-color: #0d6efd;
+}
+.nav-pills .nav-link {
+  color: #0d6efd;
+}
+.form-control:focus, .form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25);
+}
+#specs-table tbody tr { 
+  transition: all .2s ease-in-out;
+}
+#specs-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+.card {
+  border-radius: 12px;
+}
+/* Estilos para formularios */
+.form-control, .form-select {
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  border-radius: 0.5rem;
+}
+.form-control-lg, .form-select-lg {
+  padding: 0.875rem 1.25rem;
+  font-size: 1.125rem;
+  border-radius: 0.5rem;
+}
+.input-group > .form-control {
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+.input-group-text {
+  font-size: 1.125rem;
+  padding: 0.875rem 1rem;
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+}
+textarea.form-control {
+  min-height: 100px;
+  resize: vertical;
+}
+.btn-lg {
+  padding: 0.875rem 1.75rem;
+  font-size: 1.125rem;
+}
+/* Ajustes de espaciado */
+.row.g-3 {
+  --bs-gutter-y: 1rem;
+}
+.card {
+  --bs-card-border-color: rgba(0,0,0,.05);
+}
 </style>
 
+<!-- Mantener los scripts existentes -->
 <script>
 (function(){
   // Helpers
