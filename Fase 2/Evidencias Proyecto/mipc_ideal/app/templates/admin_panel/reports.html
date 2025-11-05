@@ -20,8 +20,9 @@
       <div class="col-12 col-md-4">
         <label class="form-label small text-muted">Filtrar por estado</label>
         <select name="estado" class="form-select form-select-sm">
-          <option value="abiertos" {% if request.GET.estado == 'abiertos' or not request.GET.estado %}selected{% endif %}>Reportes abiertos</option>
-          <option value="resueltos" {% if request.GET.estado == 'resueltos' %}selected{% endif %}>Reportes resueltos</option>
+          <option value="abiertos" {% if request.GET.estado == 'abiertos' or not request.GET.estado %}selected{% endif %}>Nuevos reportes</option>
+          <option value="pendientes" {% if request.GET.estado == 'pendientes' %}selected{% endif %}>Pendientes de tienda</option>
+          <option value="resueltos" {% if request.GET.estado == 'resueltos' %}selected{% endif %}>Resueltos</option>
           <option value="todos" {% if request.GET.estado == 'todos' %}selected{% endif %}>Todos los estados</option>
         </select>
       </div>

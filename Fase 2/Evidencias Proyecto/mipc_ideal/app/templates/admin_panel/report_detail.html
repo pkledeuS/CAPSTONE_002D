@@ -56,13 +56,11 @@
           <dt>Estado actual</dt>
           <dd>
             {% if reporte.estado == 'resuelto' %}
-              {% if reporte.notificacion_leida %}
-                <span class="badge bg-success">Resuelto - Actualizado</span>
-              {% else %}
-                <span class="badge bg-info">Resuelto - Pendiente</span>
-              {% endif %}
+              <span class="badge bg-success">Resuelto</span>
+            {% elif reporte.estado == 'pendiente' %}
+              <span class="badge bg-warning">Pendiente de tienda</span>
             {% else %}
-              <span class="badge bg-warning text-dark">Abierto</span>
+              <span class="badge bg-info">Nuevo reporte</span>
             {% endif %}
           </dd>
         </dl>
@@ -79,9 +77,15 @@
           <label class="form-label">Acción a tomar</label>
           <select name="accion" class="form-select" required>
             <option value="">Seleccione una acción...</option>
-            <option value="info_incorrecta">Solicitar corrección de información</option>
-            <option value="spam_delete">Eliminar producto (Spam)</option>
-            <option value="duplicado_merge">Marcar como duplicado</option>
+            {% if reporte.target_type == 'producto' %}
+              <option value="info_incorrecta">Solicitar corrección de información</option>
+              <option value="spam_delete">Eliminar producto (Spam)</option>
+              <option value="duplicado_merge">Marcar como duplicado</option>
+            {% else %}
+              <option value="servicio_deficiente">Solicitar mejora de servicio</option>
+              <option value="estafa">Investigar posible estafa</option>
+              <option value="incumplimiento">Incumplimiento de entrega</option>
+            {% endif %}
           </select>
         </div>
         

@@ -4,6 +4,7 @@ from __future__ import annotations
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db.models import (
     Q, Count, Avg, FloatField, F, 
@@ -17,7 +18,7 @@ import json
 
 from .models import (
     CategoriaProducto, Notificacion, Producto, Reporte, 
-    Tienda, TiendaProducto
+    Tienda, TiendaProducto, TipoServicio
 )
 
 # =========================
@@ -285,14 +286,23 @@ def admin_users(request):
     q = (request.GET.get("q") or "").strip()
     activo = request.GET.get("activo")
 
-    qs = User.objects.all().order_by("-date_joined")
+    # Modificamos el queryset para filtrar solo usuarios (no tiendas)
+    qs = User.objects.filter(profile__profile_type='usuario').order_by("-date_joined")
+
     if q:
         qs = qs.filter(Q(username__icontains=q) | Q(email__icontains=q))
     if activo in {"0", "1"}:
         qs = qs.filter(is_active=(activo == "1"))
 
+    # Agregamos select_related para optimizar
+    qs = qs.select_related('profile')
+
     page_obj = _paginate(request, qs, per_page=20)
-    context = {"page_obj": page_obj, "pagination_html": ""}
+    context = {
+        "page_obj": page_obj, 
+        "pagination_html": "",
+        "total_users": qs.count()
+    }
     return render(request, "admin_panel/users.html", context)
 
 
@@ -309,7 +319,7 @@ def admin_products(request):
           .select_related('categoria_producto')
           .annotate(
               tiendas_count=Count('tiendaproducto', distinct=True),
-              precio_minimo=Min('tiendaproducto__precio')
+              precio=Min('tiendaproducto__precio')  # Cambiado a precio para coincidir con el template
           ))
 
     if q:
@@ -325,7 +335,11 @@ def admin_products(request):
     if activo in {"0", "1"}:
         qs = qs.filter(is_active=(activo == "1"))
 
-    categorias = CategoriaProducto.objects.all()
+    # Traer solo las categorías que tienen productos
+    categorias = CategoriaProducto.objects.filter(
+        id__in=Producto.objects.values('categoria_producto_id').distinct()
+    ).order_by('nombre_categoria')
+
     page_obj = _paginate(request, qs.order_by('-id'), per_page=20)
 
     return render(request, "admin_panel/products.html", {
@@ -411,39 +425,36 @@ def admin_reports(request):
     target = request.GET.get("target", "todos")
     estado = request.GET.get("estado", "abiertos")
     
-    # Consultar reportes
     qs = Reporte.objects.all().select_related('producto', 'tienda', 'reporter')
     
-    # Aplicar filtros
+    # Filtrar por objetivo
     if target == "productos":
         qs = qs.filter(target_type="producto")
     elif target == "tiendas":
         qs = qs.filter(target_type="tienda")
         
-    # Corregir filtrado por estado
+    # Filtrar por estado
     if estado == "abiertos":
-        qs = qs.filter(Q(estado='pendiente') | Q(estado='abierto'))
+        qs = qs.filter(estado='abierto')
+    elif estado == "pendientes":
+        qs = qs.filter(estado='pendiente')
     elif estado == "resueltos":
         qs = qs.filter(estado='resuelto')
-    # Si es "todos" no aplicamos filtro
     
-    # Ordenar por fecha descendente
     qs = qs.order_by("-created_at")
     
-    # Preparar filas para la tabla
     report_rows = []
     for r in qs:
         # Determinar estado y clase visual
         if r.estado == "resuelto":
-            if hasattr(r, 'notificacion_leida') and r.notificacion_leida:
-                estado_txt = "Resuelto - Actualizado"
-                estado_class = "success"
-            else:
-                estado_txt = "Resuelto - Pendiente"
-                estado_class = "info"
-        else:
-            estado_txt = "Abierto"
+            estado_txt = "Resuelto"
+            estado_class = "success"
+        elif r.estado == "pendiente":
+            estado_txt = "Pendiente de tienda"
             estado_class = "warning"
+        else:
+            estado_txt = "Nuevo"
+            estado_class = "info"
             
         # Determinar objetivo
         if r.target_type == "producto" and r.producto:
@@ -472,7 +483,6 @@ def admin_reports(request):
 
 @staff_member_required
 def admin_report_detail(request, pk):
-    """Vista detallada de un reporte"""
     reporte = get_object_or_404(Reporte, pk=pk)
     
     if request.method == 'POST':
@@ -480,93 +490,92 @@ def admin_report_detail(request, pk):
         mensaje = request.POST.get('mensaje')
         deshabilitar = request.POST.get('deshabilitar') == 'on'
         
-        # Obtener tiendas afectadas
-        tiendas_afectadas = []
-        if reporte.producto:
-            tiendas_afectadas = TiendaProducto.objects.filter(producto=reporte.producto)
-            
-            # Manejar estado del producto
-            producto = reporte.producto
-            if deshabilitar:
-                producto.is_active = False
-                producto.save()
-                # Registrar en el reporte que se deshabilitó
-                reporte.producto_deshabilitado = True
-            else:
-                producto.is_active = True
-                producto.save()
-                reporte.producto_deshabilitado = False
+        # Cambiar estado a pendiente cuando se toma acción
+        reporte.estado = 'pendiente'
         
-        if accion == 'info_incorrecta':
-            if reporte.producto:
-                for tp in tiendas_afectadas:
-                    Notificacion.objects.create(
-                        tienda=tp.tienda,
-                        tipo='info_incorrecta',
-                        producto=reporte.producto,
-                        mensaje=f"""
-                        Se ha reportado información incorrecta en: {reporte.producto.nombre_producto}
-                        
-                        Motivo del reporte: {reporte.detalle}
-                        Acción requerida: {mensaje}
-                        Estado: {'Deshabilitado temporalmente' if deshabilitar else 'Activo'}
-                        
-                        Por favor, revise y actualice la información del producto.
-                        """
-                    )
-                    
-        elif accion == 'spam_delete':
-            if reporte.producto:
-                # Notificar antes de eliminar
-                for tp in tiendas_afectadas:
-                    Notificacion.objects.create(
-                        tienda=tp.tienda,
-                        tipo='producto_eliminado',
-                        mensaje=f"""
-                        El producto "{reporte.producto.nombre_producto}" ha sido eliminado.
-                        
-                        Motivo: Contenido inapropiado/spam
-                        Detalles: {mensaje}
-                        
-                        Este producto ha sido eliminado de su catálogo.
-                        """
-                    )
-                
-                # Almacenar el ID antes de eliminar
-                producto_id = reporte.producto.id
-                reporte.producto = None  # Desvinculamos el producto antes de eliminarlo
-                reporte.save()
-                
-                # Ahora sí eliminamos el producto
-                Producto.objects.filter(id=producto_id).delete()
-                
-        elif accion == 'duplicado_merge':
-            if reporte.producto:
-                # Notificar duplicado
-                for tp in tiendas_afectadas:
-                    Notificacion.objects.create(
-                        tienda=tp.tienda,
-                        tipo='producto_duplicado',
-                        producto=reporte.producto,
-                        mensaje=f"""
-                        El producto {reporte.producto.nombre_producto} ha sido marcado como duplicado.
-                        
-                        Por favor revise: {mensaje}
-                        """
-                    )
-                    
-        # Actualizar reporte
-        reporte.estado = 'resuelto'
+        # Notificar según el tipo de reporte
+        if reporte.target_type == 'producto':
+            _handle_product_report(reporte, accion, mensaje, deshabilitar)
+        else:  # tienda
+            _handle_store_report(reporte, accion, mensaje)
+            
         reporte.accion_admin = mensaje
         reporte.fecha_accion = timezone.now()
         reporte.admin_actor = request.user
         reporte.save()
-
+        
+        messages.success(request, 'Reporte procesado correctamente')
         return redirect('admin_reports')
         
     return render(request, 'admin_panel/report_detail.html', {
         'reporte': reporte
     })
+
+def _handle_product_report(reporte, accion, mensaje, deshabilitar):
+    """Maneja reportes de productos"""
+    if not reporte.producto:
+        return
+    
+    # Cambiar estado del producto según acción
+    if accion == 'info_incorrecta':
+        reporte.producto.is_active = not deshabilitar  # activa si NO es deshabilitar
+        reporte.producto.save()
+        
+    elif accion == 'spam_delete':
+        # Almacenar el ID antes de eliminar
+        producto_id = reporte.producto.id
+        reporte.producto = None  # Desvinculamos el producto antes de eliminarlo
+        reporte.save()
+        
+        # Ahora sí eliminamos el producto
+        Producto.objects.filter(id=producto_id).delete()
+        
+    elif accion == 'duplicado_merge':
+        # Aquí podrías implementar la lógica para manejar duplicados,
+        # como fusionar productos o marcar como duplicado.
+        pass
+    
+    # Crear notificación para el producto
+    Notificacion.objects.create(
+        producto=reporte.producto,
+        tipo=accion,
+        mensaje=f"""
+        Se ha reportado un problema con el producto:
+        
+        Motivo del reporte: {reporte.get_motivo_display()}
+        Detalle: {reporte.detalle}
+        
+        Acción requerida: {mensaje}
+        
+        Por favor, tome las medidas necesarias y responda a este reporte.
+        """,
+    )
+
+def _handle_store_report(reporte, accion, mensaje):
+    """Maneja reportes de tiendas"""
+    if not reporte.tienda:
+        return
+        
+    # Crear notificación para la tienda
+    Notificacion.objects.create(
+        tienda=reporte.tienda,
+        tipo=accion,
+        mensaje=f"""
+        Se ha reportado un problema con su tienda:
+        
+        Motivo del reporte: {reporte.get_motivo_display()}
+        Detalle: {reporte.detalle}
+        
+        Acción requerida: {mensaje}
+        
+        Por favor, tome las medidas necesarias y responda a este reporte.
+        """,
+    )
+    
+    # Si es un reporte grave, podemos desactivar la tienda
+    if accion in ['estafa', 'incumplimiento']:
+        reporte.tienda.is_active = False
+        reporte.tienda.save()
 
 @staff_member_required
 def admin_report_action(request, pk, action):
@@ -588,3 +597,90 @@ def admin_report_action(request, pk, action):
         messages.success(request, 'Reporte eliminado')
     
     return _redirect_back(request, 'admin_reports')
+
+@staff_member_required
+def admin_store_toggle(request, pk):
+    """Activa/desactiva una tienda"""
+    try:
+        tienda = get_object_or_404(Tienda, pk=pk)
+        estado_anterior = tienda.is_active
+        tienda.is_active = not tienda.is_active
+        tienda.save()
+        
+        estado = "activada" if tienda.is_active else "desactivada"
+        messages.success(request, f'Tienda {estado} correctamente')
+        
+    except Exception as e:
+        messages.error(request, f'Error al modificar la tienda: {str(e)}')
+    return redirect('admin_stores')
+
+@staff_member_required
+def admin_store_delete(request, pk):
+    """Elimina una tienda"""
+    try:
+        tienda = get_object_or_404(Tienda, pk=pk)
+        nombre = tienda.nombre_tienda
+        tienda.delete()
+        messages.success(request, f'Tienda "{nombre}" eliminada correctamente')
+    except Exception as e:
+        messages.error(request, f'Error al eliminar la tienda: {str(e)}')
+    return redirect('admin_stores')
+
+@staff_member_required
+def admin_store_detail(request, pk):
+    """Vista detallada de una tienda"""
+    tienda = get_object_or_404(Tienda, pk=pk)
+    servicios = TipoServicio.objects.filter(tiendaservicio__tienda=tienda)
+    categorias = CategoriaProducto.objects.filter(tiendacategoria__tienda=tienda)
+    return render(request, 'admin_panel/store_detail.html', {
+        'tienda': tienda,
+        'servicios': servicios,
+        'categorias': categorias
+    })
+
+@staff_member_required
+def admin_user_toggle(request, pk):
+    """Activa/desactiva un usuario"""
+    try:
+        user = get_object_or_404(User, pk=pk)
+        estado_anterior = user.is_active
+        user.is_active = not user.is_active
+        user.save()
+        
+        estado = "activado" if user.is_active else "desactivado"
+        messages.success(request, f'Usuario {estado} correctamente')
+        
+    except Exception as e:
+        messages.error(request, f'Error al modificar el usuario: {str(e)}')
+    return redirect('admin_users')
+
+@staff_member_required
+def admin_user_delete(request, pk):
+    """Elimina un usuario"""
+    try:
+        user = get_object_or_404(User, pk=pk)
+        if user.profile.profile_type != 'usuario':
+            messages.error(request, 'Solo se pueden eliminar perfiles de usuario')
+            return redirect('admin_users')
+            
+        username = user.username
+        user.delete()
+        messages.success(request, f'Usuario "{username}" eliminado correctamente')
+    except Exception as e:
+        messages.error(request, f'Error al eliminar el usuario: {str(e)}')
+    return redirect('admin_users')
+
+@staff_member_required
+def admin_user_detail(request, pk):
+    """Vista detallada de un usuario"""
+    user = get_object_or_404(User, pk=pk)
+    if user.profile.profile_type != 'usuario':
+        messages.error(request, 'Solo se pueden ver perfiles de usuario')
+        return redirect('admin_users')
+        
+    preferencias = user.preferenciausuario_set.all()
+    
+    return render(request, 'admin_panel/user_detail.html', {
+        'user_detail': user,
+        'preferencias': preferencias,
+    })

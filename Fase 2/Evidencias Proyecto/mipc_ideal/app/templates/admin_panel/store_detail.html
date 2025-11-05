@@ -1,0 +1,180 @@
+{% extends "admin_panel/admin_base.html" %}
+
+{% load static %}
+
+{% block title %}Detalle de Tienda - {{ tienda.nombre_tienda }}{% endblock %}
+
+{% block admin_content %}
+<div class="card">
+  <div class="card-body">
+    <!-- Header con acciones -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+      <div>
+        <h3 class="card-title mb-1">{{ tienda.nombre_tienda }}</h3>
+        <div class="text-muted">
+          {{ tienda.email_tienda }}
+        </div>
+      </div>
+      <div class="btn-group">
+        <a href="{% url 'admin_store_toggle' tienda.id %}" 
+           class="btn btn-warning"
+           onclick="return confirm('¿{% if tienda.is_active %}Desactivar{% else %}Activar{% endif %} esta tienda?');">
+          <i class="bi bi-power me-1"></i>
+          {{ tienda.is_active|yesno:"Desactivar,Activar" }}
+        </a>
+        <a href="{% url 'admin_store_delete' tienda.id %}" 
+           class="btn btn-danger"
+           onclick="return confirm('¿Estás seguro de eliminar esta tienda? Esta acción no se puede deshacer.');">
+          <i class="bi bi-trash me-1"></i>
+          Eliminar
+        </a>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Columna izquierda -->
+      <div class="col-md-6">
+        <!-- Imagen de la tienda -->
+        <div class="text-center mb-4">
+          {% if tienda.image_tienda %}
+            <img src="{{ tienda.image_tienda.url }}" alt="{{ tienda.nombre_tienda }}" 
+                 style="max-height: 200px; width: auto; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          {% else %}
+            <img src="{% static 'img/vemon.jpg' %}" alt="Imagen por defecto" 
+                 style="max-height: 200px; width: auto; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          {% endif %}
+        </div>
+
+        <!-- Información básica -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Información básica</h5>
+          </div>
+          <div class="card-body">
+            <dl class="row mb-0">
+              <dt class="col-sm-4">Nombre</dt>
+              <dd class="col-sm-8">{{ tienda.nombre_tienda }}</dd>
+              
+              <dt class="col-sm-4">Email</dt>
+              <dd class="col-sm-8">{{ tienda.email_tienda }}</dd>
+              
+              <dt class="col-sm-4">Dirección</dt>
+              <dd class="col-sm-8">{{ tienda.direccion_tienda|default:"—" }}</dd>
+              
+              <dt class="col-sm-4">Sitio web</dt>
+              <dd class="col-sm-8">
+                {% if tienda.url_tienda %}
+                  <a href="{{ tienda.url_tienda }}" target="_blank" rel="noopener noreferrer">
+                    {{ tienda.url_tienda }}
+                  </a>
+                {% else %}
+                  —
+                {% endif %}
+              </dd>
+              
+              <dt class="col-sm-4">Estado</dt>
+              <dd class="col-sm-8">
+                {% if tienda.is_active %}
+                  <span class="badge bg-success">Activa</span>
+                {% else %}
+                  <span class="badge bg-secondary">Inactiva</span>
+                {% endif %}
+              </dd>
+
+              <dt class="col-sm-4">Fecha registro</dt>
+              <dd class="col-sm-8">{{ tienda.fecha_registro|date:"d/m/Y" }}</dd>
+            </dl>
+          </div>
+        </div>
+
+        <!-- Descripción -->
+        {% if tienda.descripcion_tienda %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Descripción</h5>
+          </div>
+          <div class="card-body">
+            <p class="card-text">{{ tienda.descripcion_tienda }}</p>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Columna derecha -->
+      <div class="col-md-6">
+        <!-- Servicios ofrecidos -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Servicios ofrecidos</h5>
+          </div>
+          <div class="card-body">
+            {% if servicios %}
+              <div class="d-flex flex-wrap gap-2">
+                {% for servicio in servicios %}
+                  <span class="badge bg-info">{{ servicio.nombre_tipo_servicio }}</span>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="text-muted mb-0">No hay servicios registrados.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Categorías -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Categorías de productos</h5>
+          </div>
+          <div class="card-body">
+            {% if categorias %}
+              <div class="d-flex flex-wrap gap-2">
+                {% for categoria in categorias %}
+                  <span class="badge bg-primary">{{ categoria.nombre_categoria }}</span>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="text-muted mb-0">No hay categorías registradas.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Productos -->
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Productos</h5>
+            <span class="badge bg-secondary">Total: {{ tienda.tiendaproducto_set.count }}</span>
+          </div>
+          <div class="card-body">
+            {% with productos=tienda.tiendaproducto_set.all|slice:":5" %}
+              {% if productos %}
+                <div class="list-group">
+                  {% for tp in productos %}
+                    <div class="list-group-item">
+                      <div class="d-flex w-100 justify-content-between align-items-center">
+                        <div>
+                          <h6 class="mb-1">{{ tp.producto.nombre_producto }}</h6>
+                          <small class="text-muted">
+                            {{ tp.producto.marca_producto }} · {{ tp.producto.categoria_producto }}
+                          </small>
+                        </div>
+                        <span class="badge bg-primary">${{ tp.precio|floatformat:0 }}</span>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+                {% if tienda.tiendaproducto_set.count > 5 %}
+                  <div class="text-end mt-2">
+                    <small class="text-muted">Mostrando 5 de {{ tienda.tiendaproducto_set.count }} productos</small>
+                  </div>
+                {% endif %}
+              {% else %}
+                <p class="text-muted mb-0">No hay productos registrados.</p>
+              {% endif %}
+            {% endwith %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

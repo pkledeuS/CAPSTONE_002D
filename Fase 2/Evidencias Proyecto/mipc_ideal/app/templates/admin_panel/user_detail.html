@@ -1,0 +1,125 @@
+{% extends "admin_panel/admin_base.html" %}
+
+{% block title %}Detalle de Usuario - {{ user_detail.username }}{% endblock %}
+
+{% block admin_content %}
+<div class="card">
+  <div class="card-body">
+    <!-- Header con acciones -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+      <div>
+        <h3 class="card-title mb-1">{{ user_detail.username }}</h3>
+        <div class="text-muted">
+          {{ user_detail.email }}
+        </div>
+      </div>
+      <div class="btn-group">
+        <a href="{% url 'admin_user_toggle' user_detail.id %}" 
+           class="btn btn-warning"
+           onclick="return confirm('¿{% if user_detail.is_active %}Desactivar{% else %}Activar{% endif %} este usuario?');">
+          <i class="bi bi-power me-1"></i>
+          {{ user_detail.is_active|yesno:"Desactivar,Activar" }}
+        </a>
+        <a href="{% url 'admin_user_delete' user_detail.id %}" 
+           class="btn btn-danger"
+           onclick="return confirm('¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.');">
+          <i class="bi bi-trash me-1"></i>
+          Eliminar
+        </a>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Columna izquierda -->
+      <div class="col-md-6">
+        <!-- Información básica -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Información básica</h5>
+          </div>
+          <div class="card-body">
+            <dl class="row mb-0">
+              <dt class="col-sm-4">Usuario</dt>
+              <dd class="col-sm-8">{{ user_detail.username }}</dd>
+              
+              <dt class="col-sm-4">Email</dt>
+              <dd class="col-sm-8">{{ user_detail.email }}</dd>
+              
+              <dt class="col-sm-4">Estado</dt>
+              <dd class="col-sm-8">
+                {% if user_detail.is_active %}
+                  <span class="badge bg-success">Activo</span>
+                {% else %}
+                  <span class="badge bg-secondary">Inactivo</span>
+                {% endif %}
+              </dd>
+
+              <dt class="col-sm-4">Fecha registro</dt>
+              <dd class="col-sm-8">{{ user_detail.date_joined|date:"d/m/Y H:i" }}</dd>
+
+              <dt class="col-sm-4">Último acceso</dt>
+              <dd class="col-sm-8">{{ user_detail.last_login|date:"d/m/Y H:i"|default:"—" }}</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna derecha -->
+      <div class="col-md-6">
+        <!-- Preferencias -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Preferencias</h5>
+          </div>
+          <div class="card-body">
+            {% if preferencias %}
+              <div class="d-flex flex-wrap gap-2">
+                {% for pref in preferencias %}
+                  <span class="badge bg-primary">
+                    {% if pref.categoria %}
+                      {{ pref.categoria.nombre_categoria }}
+                    {% endif %}
+                    {% if pref.tipo %}
+                      {{ pref.tipo.nombre_tipo_producto }}
+                    {% endif %}
+                  </span>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="text-muted mb-0">No hay preferencias registradas.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Productos favoritos -->
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Productos favoritos</h5>
+          </div>
+          <div class="card-body">
+            {% with favoritos=user_detail.productosfavoritos_set.all %}
+              {% if favoritos %}
+                <div class="list-group">
+                  {% for fav in favoritos %}
+                    <div class="list-group-item">
+                      <div class="d-flex w-100 justify-content-between align-items-center">
+                        <h6 class="mb-1">{{ fav.producto.nombre_producto }}</h6>
+                        <small class="text-muted">{{ fav.fecha_agregado|date:"d/m/Y" }}</small>
+                      </div>
+                      <small class="text-muted">
+                        {{ fav.producto.marca_producto }} · {{ fav.producto.categoria_producto }}
+                      </small>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p class="text-muted mb-0">No hay productos favoritos.</p>
+              {% endif %}
+            {% endwith %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

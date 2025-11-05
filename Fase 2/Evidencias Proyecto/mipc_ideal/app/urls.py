@@ -66,4 +66,13 @@ urlpatterns = [
     
     # URL para reportar tiendas
     path('reportar/tienda/<int:tienda_id>/', views.reportar_tienda, name='reportar_tienda'),
+    # URLs para administración de tiendas
+    path('admin-panel/tiendas/<int:pk>/toggle/', views_admin.admin_store_toggle, name='admin_store_toggle'),
+    path('admin-panel/tiendas/<int:pk>/delete/', views_admin.admin_store_delete, name='admin_store_delete'),
+    path('admin-panel/tiendas/<int:pk>/', views_admin.admin_store_detail, name='admin_store_detail'),
+
+    # URLs para administración de usuarios
+    path('admin-panel/usuarios/<int:pk>/', views_admin.admin_user_detail, name='admin_user_detail'),
+    path('admin-panel/usuarios/<int:pk>/toggle/', views_admin.admin_user_toggle, name='admin_user_toggle'),
+    path('admin-panel/usuarios/<int:pk>/delete/', views_admin.admin_user_delete, name='admin_user_delete'),
 ]

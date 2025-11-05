@@ -46,6 +46,7 @@ class Tienda(models.Model):
     descripcion_tienda = models.TextField()
     image_tienda = models.ImageField(upload_to='tiendas/', null=True, blank=True)
     direccion_tienda = models.CharField(max_length=200)
+    url_tienda = models.URLField(max_length=200, null=True, blank=True, help_text="URL del sitio web de la tienda")
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -185,10 +186,9 @@ class ProductReview(models.Model):
     
 class Reporte(models.Model):
     ESTADOS = [
-        ('pendiente', 'Pendiente de revisión'),
-        ('revision', 'En revisión'),
-        ('resuelto', 'Resuelto'),
-        ('rechazado', 'Rechazado'),
+        ('abierto', 'Abierto'),  # Nuevo reporte sin revisar
+        ('pendiente', 'Pendiente'),  # En espera de acción de la tienda
+        ('resuelto', 'Resuelto'),  # Reporte completamente resuelto
     ]
     
     ACCIONES = [
@@ -196,6 +196,10 @@ class Reporte(models.Model):
         ('spam', 'Spam o contenido engañoso'),
         ('duplicado', 'Producto duplicado'),
         ('otro', 'Otro motivo'),
+        # Acciones específicas para tiendas
+        ('servicio_deficiente', 'Servicio deficiente'),
+        ('estafa', 'Posible estafa'),
+        ('incumplimiento', 'Incumplimiento de entrega'),
     ]
 
     target_type = models.CharField(max_length=20, choices=[('producto', 'Producto'), ('tienda', 'Tienda')])
@@ -205,7 +209,7 @@ class Reporte(models.Model):
     motivo = models.CharField(max_length=50, choices=ACCIONES)
     detalle = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    estado = models.CharField(max_length=20, choices=ESTADOS, default='pendiente')
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='abierto')
     
     # Nuevos campos
     accion_admin = models.TextField(blank=True, help_text="Notas/instrucciones del administrador")
