@@ -145,6 +145,18 @@
         </div>
 
       {% elif profile_type == 'tienda' %}
+        <!-- Categorías para tiendas -->
+          <div class="preferences-block">
+            <h5 class="section-title">Categorías de productos</h5>
+            <div class="form-check-container">
+                {% for categoria in categorias %}
+                    <label class="form-check-label">
+                        <input type="checkbox" name="categorias" value="{{ categoria.id }}" {% if categoria.id in seleccionadas_categorias %}checked{% endif %}>
+                        {{ categoria.nombre_categoria }}
+                    </label>
+                {% endfor %}
+            </div>
+        </div>
         <!-- Servicios para tiendas -->
         <div class="preferences-block">
           <h5 class="section-title">Servicios ofrecidos</h5>

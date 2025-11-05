@@ -56,6 +56,16 @@ class TipoServicio(models.Model):
 
     def __str__(self):
         return self.nombre_tipo_servicio
+    
+class TiendaServicio(models.Model):
+    tienda = models.ForeignKey(Tienda, on_delete=models.CASCADE)
+    tipo_servicio = models.ForeignKey(TipoServicio, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ['tienda', 'tipo_servicio']
+
+    def __str__(self):
+        return f"{self.tienda.nombre_tienda} - {self.tipo_servicio.nombre_tipo_servicio}"
 
 class TiendaCategoria(models.Model):
     tienda = models.ForeignKey('Tienda', on_delete=models.CASCADE)
@@ -228,3 +238,18 @@ class Notificacion(models.Model):
         ordering = ['-created_at']
         verbose_name = 'Notificación'
         verbose_name_plural = 'Notificaciones'
+
+# MODELO PARA RESEÑAS DE TIENDAS
+class StoreReview(models.Model):
+    tienda = models.ForeignKey(Tienda, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['tienda', 'user']
+
+    def __str__(self):
+        return f"Review de {self.user.username} para {self.tienda.nombre_tienda}"

@@ -16,6 +16,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.text import slugify
 from django.views.decorators.http import require_POST
+from .models import StoreReview, TiendaServicio
+from .forms import StoreReviewForm
 
 from .forms import RegisterForm, ExistingProductOfferForm, ProductReviewForm, model_key
 from .models import (
@@ -610,8 +612,8 @@ def _intent_mejor(text: str) -> bool:
 #   VISTAS CATÁLOGO/UI
 # =========================
 def home(request):
-    productos_vistos = Producto.objects.order_by('-vistas')[:6]
-    productos_recientes = Producto.objects.order_by('-fecha_creacion')[:6]
+    productos_vistos = Producto.objects.filter(is_active=True).order_by('-vistas')[:6]
+    productos_recientes = Producto.objects.filter(is_active=True).order_by('-fecha_creacion')[:6]
     return render(request, 'home.html', {
         'productos_vistos': productos_vistos,
         'productos_recientes': productos_recientes,
@@ -630,7 +632,8 @@ def products(request):
     order   = request.GET.get('order') or 'recientes'
 
     productos = (Producto.objects
-                 .select_related('marca_producto','categoria_producto','tipo_producto'))
+                .filter(is_active=True)
+                .select_related('marca_producto','categoria_producto','tipo_producto'))
 
     if q:
         productos = productos.filter(
@@ -773,10 +776,10 @@ def products_by_category(request, categoria_id):
     order   = request.GET.get('order') or 'recientes'
 
     productos = (Producto.objects
-                 .filter(categoria_producto=categoria)
-                 .select_related('marca_producto','categoria_producto','tipo_producto')
-                 .annotate(min_price=Min('tiendaproducto__precio'),
-                           total_stock=Sum('tiendaproducto__stock')))
+                .filter(categoria_producto=categoria, is_active=True)
+                .select_related('marca_producto','categoria_producto','tipo_producto')
+                .annotate(min_price=Min('tiendaproducto__precio'),
+                        total_stock=Sum('tiendaproducto__stock')))
 
     if tipo_id:
         productos = productos.filter(tipo_producto_id=tipo_id)
@@ -795,11 +798,11 @@ def products_by_category(request, categoria_id):
         productos = productos.order_by('-fecha_creacion')
 
     tipos_disponibles = (TipoProducto.objects
-                         .filter(id__in=productos.values_list('tipo_producto_id', flat=True))
-                         .order_by('nombre_tipo').distinct())
+                        .filter(id__in=productos.values_list('tipo_producto_id', flat=True))
+                        .order_by('nombre_tipo').distinct())
     marcas_disponibles = (MarcaProducto.objects
-                          .filter(id__in=productos.values_list('marca_producto_id', flat=True))
-                          .order_by('nombre_marca').distinct())
+                        .filter(id__in=productos.values_list('marca_producto_id', flat=True))
+                        .order_by('nombre_marca').distinct())
 
     productos = productos.order_by('tipo_producto__nombre_tipo', 'nombre_producto')
     productos_recientes = Producto.objects.order_by('-fecha_creacion')[:6]
@@ -822,10 +825,10 @@ def products_by_type(request, tipo_id):
     q       = (request.GET.get('q') or '').strip()
 
     productos = (Producto.objects
-                 .filter(tipo_producto=tipo)
-                 .select_related('marca_producto','categoria_producto','tipo_producto')
-                 .annotate(min_price=Min('tiendaproducto__precio'),
-                           total_stock=Sum('tiendaproducto__stock')))
+                .filter(tipo_producto=tipo, is_active=True)
+                .select_related('marca_producto','categoria_producto','tipo_producto')
+                .annotate(min_price=Min('tiendaproducto__precio'),
+                        total_stock=Sum('tiendaproducto__stock')))
 
     if q:
         productos = productos.filter(
@@ -991,15 +994,17 @@ def edit_profile(request):
             if new_password: user.set_password(new_password)
             user.save()
 
+            # Limpiar y guardar categorías
             TiendaCategoria.objects.filter(tienda=tienda).delete()
             seleccion_categorias = request.POST.getlist('categorias')
-            seleccion_servicios = request.POST.getlist('servicios')
             for categoria_id in seleccion_categorias:
                 TiendaCategoria.objects.create(tienda=tienda, categoria_id=categoria_id)
-            if hasattr(tienda, 'servicios'):
-                tienda.servicios.clear()
-                for servicio_id in seleccion_servicios:
-                    tienda.servicios.add(servicio_id)
+
+            # Limpiar y guardar servicios
+            TiendaServicio.objects.filter(tienda=tienda).delete()  # Agregar este modelo si no existe
+            seleccion_servicios = request.POST.getlist('servicios')
+            for servicio_id in seleccion_servicios:
+                TiendaServicio.objects.create(tienda=tienda, tipo_servicio_id=servicio_id)
 
             nombre_tienda      = (request.POST.get('nombre_tienda') or '').strip()
             descripcion_tienda = (request.POST.get('descripcion_tienda') or '').strip()
@@ -1019,9 +1024,7 @@ def edit_profile(request):
             return redirect('edit_profile')
         else:
             seleccionadas_categorias = TiendaCategoria.objects.filter(tienda=tienda).values_list('categoria_id', flat=True)
-            seleccionados_servicios = []
-            if hasattr(tienda, 'servicios'):
-                seleccionados_servicios = tienda.servicios.values_list('id', flat=True)
+            seleccionados_servicios = TiendaServicio.objects.filter(tienda=tienda).values_list('tipo_servicio_id', flat=True)
 
         context.update({
             'servicios': servicios,
@@ -1365,6 +1368,7 @@ def preferences_products_view(request):
 
     if categorias_ids and tipos_ids:
         productos = Producto.objects.filter(
+            is_active=True,
             categoria_producto__in=categorias_ids,
             tipo_producto__in=tipos_ids
         ).distinct()
@@ -1700,3 +1704,46 @@ def store_offer_quick_edit(request, oferta_id):
 
     messages.success(request, 'Información actualizada correctamente')
     return redirect('store_offers_list')
+
+def store_detail(request, tienda_id):
+    tienda = get_object_or_404(Tienda, id=tienda_id)
+    
+    # Obtener servicios de la tienda
+    servicios = TipoServicio.objects.filter(tiendaservicio__tienda=tienda)
+    
+    # Obtener categorías de la tienda
+    categorias = CategoriaProducto.objects.filter(tiendacategoria__tienda=tienda)
+    
+    # Obtener reseñas y calcular promedio
+    agg = tienda.reviews.aggregate(avg=Avg('rating'), total=Count('id'))
+    avg_rating = agg['avg'] or 0
+    total_reviews = agg['total'] or 0
+    reviews = tienda.reviews.select_related('user')
+    avg_int = int(avg_rating)
+
+    if request.method == 'POST' and request.user.is_authenticated:
+        form = StoreReviewForm(request.POST)
+        if form.is_valid():
+            rating = form.cleaned_data['rating']
+            comment = form.cleaned_data['comment']
+
+            StoreReview.objects.update_or_create(tienda=tienda, user=request.user, defaults={'rating': rating, 'comment': comment})
+            messages.success(request, '¡Tu reseña fue guardada!')
+            return redirect(reverse('store_detail', args=[tienda.id]) + '#reviews')
+    else:
+        initial = {}
+        if request.user.is_authenticated:
+            my = StoreReview.objects.filter(tienda=tienda, user=request.user).first()
+            if my:
+                initial = {'rating': my.rating, 'comment': my.comment}
+        form = StoreReviewForm(initial=initial)
+
+    return render(request, 'store-detail.html', {
+        'tienda': tienda,
+        'servicios': servicios,
+        'avg_rating': avg_rating,
+        'avg_int': avg_int,
+        'total_reviews': total_reviews,
+        'reviews': reviews,
+        'form_review': form,
+    })
