@@ -49,9 +49,20 @@
             </td>
             <td class="text-end">
               <div class="btn-group btn-group-sm">
-                <a href="#" class="btn btn-outline-secondary">Ver</a>
-                <a href="#" class="btn btn-outline-warning">Activ/Desac</a>
-                <a href="#" class="btn btn-outline-danger">Eliminar</a>
+                <a href="{% url 'admin_store_detail' tienda.id %}" class="btn btn-outline-secondary">
+                  <i class="bi bi-eye"></i> Ver
+                </a>
+                <a href="{% url 'admin_store_toggle' tienda.id %}" 
+                   class="btn btn-outline-warning"
+                   onclick="return confirm('¿{% if tienda.is_active %}Desactivar{% else %}Activar{% endif %} esta tienda?');">
+                  <i class="bi bi-power"></i> 
+                  {{ tienda.is_active|yesno:"Desactivar,Activar" }}
+                </a>
+                <a href="{% url 'admin_store_delete' tienda.id %}" 
+                   class="btn btn-outline-danger"
+                   onclick="return confirm('¿Estás seguro de eliminar esta tienda? Esta acción no se puede deshacer.');">
+                  <i class="bi bi-trash"></i> Eliminar
+                </a>
               </div>
             </td>
           </tr>

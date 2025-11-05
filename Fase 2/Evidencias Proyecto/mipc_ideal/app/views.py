@@ -1009,12 +1009,14 @@ def edit_profile(request):
             nombre_tienda      = (request.POST.get('nombre_tienda') or '').strip()
             descripcion_tienda = (request.POST.get('descripcion_tienda') or '').strip()
             direccion_tienda   = (request.POST.get('direccion_tienda') or '').strip()
+            url_tienda        = (request.POST.get('url_tienda') or '').strip()
             img                = request.FILES.get('image_tienda')
 
             if nombre_tienda:
                 tienda.nombre_tienda = nombre_tienda
             tienda.descripcion_tienda = descripcion_tienda
             tienda.direccion_tienda   = direccion_tienda
+            tienda.url_tienda        = url_tienda
             if img:
                 tienda.image_tienda = img
 

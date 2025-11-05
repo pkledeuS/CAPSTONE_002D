@@ -53,6 +53,16 @@
           <dt>Nombre</dt><dd>{{ tienda.nombre_tienda }}</dd>
           <dt>Email</dt><dd>{{ tienda.email_tienda }}</dd>
           <dt>Dirección</dt><dd>{{ tienda.direccion_tienda|default:"—" }}</dd>
+          <dt>Sitio web</dt>
+          <dd>
+            {% if tienda.url_tienda %}
+              <a href="{{ tienda.url_tienda }}" target="_blank" rel="noopener noreferrer">
+                {{ tienda.url_tienda }}
+              </a>
+            {% else %}
+              —
+            {% endif %}
+          </dd>
           <dt>Estado</dt><dd>{% if tienda.is_active %}Activa{% else %}Inactiva{% endif %}</dd>
         </dl>
         {% if tienda.descripcion_tienda %}

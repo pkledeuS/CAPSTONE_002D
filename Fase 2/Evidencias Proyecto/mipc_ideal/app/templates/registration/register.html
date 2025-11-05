@@ -96,6 +96,17 @@
             <input type="file" class="form-control" name="image_tienda" id="image_tienda" accept="image/*">
         </div>
 
+        <div class="input-group mb-2">
+            <span class="input-group-text"><i class="bi bi-globe"></i></span>
+            <input type="url" 
+                   class="form-control" 
+                   name="url_tienda" 
+                   id="url_tienda"
+                   placeholder="URL del sitio web (opcional)"
+                   pattern="https?://.+"
+                   title="Incluye http:// o https:// en la URL">
+        </div>
+
         <div class="mt-2">
             <img id="preview_tienda" src="" alt="" style="max-width:180px; display:none; border-radius:8px;">
         </div>
