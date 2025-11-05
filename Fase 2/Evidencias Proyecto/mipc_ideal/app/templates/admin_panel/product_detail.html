@@ -1,0 +1,117 @@
+{% extends "admin_panel/admin_base.html" %}
+{% load static %}
+
+{% block title %}Detalle del Producto - {{ producto.nombre_producto }}{% endblock %}
+{% block admin_content %}
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <h3 class="card-title mb-1">{{ producto.nombre_producto }}</h3>
+                <div class="text-muted">
+                {{ producto.marca_producto }} · {{ producto.modelo_producto }}
+                </div>
+            </div>
+            <div class="btn-group">
+                <a href="{% url 'admin_product_toggle' producto.id %}" 
+                class="btn btn-warning"
+                onclick="return confirm('¿{% if producto.is_active %}Desactivar{% else %}Activar{% endif %} este producto?');">
+                    <i class="bi bi-power me-1"></i>
+                    {{ producto.is_active|yesno:"Desactivar,Activar" }}
+                </a>
+                <a href="{% url 'admin_product_delete' producto.id %}" 
+                    class="btn btn-danger"
+                    onclick="return confirm('¿Eliminar este producto? Esta acción no se puede deshacer.');">
+                    <i class="bi bi-trash me-1"></i>Eliminar
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Información básica -->
+            <div class="col-md-6">
+                <div class="text-center mb-4">
+                    {% if producto.imagen_producto %}
+                        <img src="{{ producto.imagen_producto.url }}" alt="{{ producto.nombre_producto }}" 
+                            style="max-height: 200px; width: auto; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    {% else %}
+                        <img src="{% static 'img/default.jpg' %}" alt="Imagen por defecto"
+                            style="max-height: 200px; width: auto; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    {% endif %}
+                </div>
+                <h5 class="mb-3">Información básica</h5>
+                <dl class="row">
+                <dt class="col-sm-4">Categoría</dt>
+                <dd class="col-sm-8">{{ producto.categoria_producto }}</dd>
+                
+                <dt class="col-sm-4">Tipo</dt>
+                <dd class="col-sm-8">{{ producto.tipo_producto }}</dd>
+                
+                <dt class="col-sm-4">Estado</dt>
+                <dd class="col-sm-8">
+                    {% if producto.is_active %}
+                    <span class="badge bg-success">Activo</span>
+                    {% else %}
+                    <span class="badge bg-danger">Desactivado</span>
+                    {% endif %}
+                </dd>
+                </dl>
+            </div>
+
+            <!-- Especificaciones -->
+            <div class="col-md-6">
+                <h5 class="mb-3">Especificaciones</h5>
+                {% with specs=producto.especificacionproducto_set.all %}
+                {% if specs %}
+                    <dl class="row">
+                    {% for spec in specs %}
+                        <dt class="col-sm-4">{{ spec.nombre_especificacion }}</dt>
+                        <dd class="col-sm-8">{{ spec.valor_especificacion }}</dd>
+                    {% endfor %}
+                    </dl>
+                {% else %}
+                    <p class="text-muted">Sin especificaciones</p>
+                {% endif %}
+                {% endwith %}
+            </div>
+
+            <!-- Ofertas -->
+            <div class="col-12 mt-4">
+                <h5 class="mb-3">Ofertas activas</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                        <tr>
+                            <th>Tienda</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>URL</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for oferta in producto.tiendaproducto_set.all %}
+                            <tr>
+                            <td>{{ oferta.tienda.nombre_tienda }}</td>
+                            <td>${{ oferta.precio|floatformat:0 }}</td>
+                            <td>{{ oferta.stock }}</td>
+                            <td>
+                                {% if oferta.url_externa %}
+                                <a href="{{ oferta.url_externa }}" target="_blank">Ver en tienda</a>
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                            <td colspan="4" class="text-center text-muted">Sin ofertas activas</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

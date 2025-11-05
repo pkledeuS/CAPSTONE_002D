@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth.models import User
 from .models import (
     Profile, Producto, MarcaProducto, CategoriaProducto, TipoProducto,
-    ProductReview,
+    ProductReview, StoreReview
 )
 
 class RegisterForm(forms.ModelForm):
@@ -155,6 +155,37 @@ class ProductReviewForm(forms.ModelForm):
             'comment': forms.Textarea(attrs={
                 'rows': 3,
                 'placeholder': 'Cuéntanos qué te gustó o no te gustó del producto…',
+                'class': 'form-control'
+            }),
+        }
+        labels = {
+            'rating': 'Calificación',
+            'comment': 'Comentario (opcional)',
+        }
+
+    def clean_rating(self):
+        r = self.cleaned_data.get('rating')
+        if not r:
+            raise forms.ValidationError('Selecciona una calificación (1 a 5).')
+        if r < 1 or r > 5:
+            raise forms.ValidationError('La calificación debe estar entre 1 y 5.')
+        return r
+    
+# Formulario para reseñas de tiendas
+class StoreReviewForm(forms.ModelForm):
+    class Meta:
+        model = StoreReview
+        fields = ['rating', 'comment']
+        widgets = {
+            'rating': forms.NumberInput(attrs={
+                'min': 1, 
+                'max': 5, 
+                'class': 'd-none', 
+                'id': 'rating-input'
+            }),
+            'comment': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Cuéntanos tu experiencia con esta tienda...',
                 'class': 'form-control'
             }),
         }

@@ -16,7 +16,7 @@ from django.utils import timezone
 import json
 
 from .models import (
-    Notificacion, Producto, Reporte, 
+    CategoriaProducto, Notificacion, Producto, Reporte, 
     Tienda, TiendaProducto
 )
 
@@ -305,77 +305,71 @@ def admin_products(request):
     categoria_id = request.GET.get("categoria")
     activo = request.GET.get("activo")
 
-    qs = Producto.objects.all()
+    qs = (Producto.objects
+          .select_related('categoria_producto')
+          .annotate(
+              tiendas_count=Count('tiendaproducto', distinct=True),
+              precio_minimo=Min('tiendaproducto__precio')
+          ))
 
-    # Alias para plantilla (p.nombre / p.activo)
-    if NAME_FIELD and NAME_FIELD != "nombre":
-        qs = qs.annotate(nombre=F(NAME_FIELD))
-    if ACTIVE_FIELD and ACTIVE_FIELD != "activo":
-        qs = qs.annotate(activo=F(ACTIVE_FIELD))
-
-    # Conteo de tiendas
-    if HAS_REL_TP:
-        qs = qs.annotate(tiendas_count=Count("tiendaproducto", distinct=True))
-    else:
-        qs = qs.annotate(tiendas_count=Count("id"))  # fallback neutro
-
-    if CATEGORY_FK:
-        qs = qs.select_related(CATEGORY_FK)
-
-    # Filtro texto
     if q:
-        or_filter = Q(**{f"{NAME_FIELD or 'id'}__icontains": q}) if NAME_FIELD else Q(pk__icontains=q)
-        if CATEGORY_FK and CATEGORY_NAME_FIELD:
-            or_filter |= Q(**{f"{CATEGORY_FK}__{CATEGORY_NAME_FIELD}__icontains": q})
-        qs = qs.filter(or_filter)
+        qs = qs.filter(
+            Q(nombre_producto__icontains=q) |
+            Q(modelo_producto__icontains=q) |
+            Q(categoria_producto__nombre_categoria__icontains=q)
+        )
 
-    # Filtro categoría
-    if CATEGORY_FK and categoria_id:
-        qs = qs.filter(**{f"{CATEGORY_FK}_id": categoria_id})
+    if categoria_id:
+        qs = qs.filter(categoria_producto_id=categoria_id)
 
-    # Filtro activo
-    if activo in {"0", "1"} and ACTIVE_FIELD:
-        qs = qs.filter(**{ACTIVE_FIELD: (activo == "1")})
+    if activo in {"0", "1"}:
+        qs = qs.filter(is_active=(activo == "1"))
 
-    page_obj = _paginate(request, qs.order_by("-id"), per_page=20)
+    categorias = CategoriaProducto.objects.all()
+    page_obj = _paginate(request, qs.order_by('-id'), per_page=20)
 
-    # Categorías para el <select>
-    if CATEGORY_FK and CategoriaModel and CATEGORY_NAME_FIELD:
-        categorias_qs = CategoriaModel.objects.only("id", CATEGORY_NAME_FIELD).order_by(CATEGORY_NAME_FIELD)
-        # Anota alias 'nombre' para plantilla ({{ c.nombre }})
-        categorias = categorias_qs.annotate(nombre=F(CATEGORY_NAME_FIELD))
-    else:
-        categorias = []
-
-    context = {
-        "page_obj": page_obj,
-        "categorias": categorias,
-        "pagination_html": "",
-    }
-    return render(request, "admin_panel/products.html", context)
+    return render(request, "admin_panel/products.html", {
+        'page_obj': page_obj,
+        'categorias': categorias,
+        'pagination_html': ""
+    })
 
 
 @staff_member_required
-def admin_products_toggle(request, pk: int):
-    try:
-        p = Producto.objects.get(pk=pk)
-        # Determina el campo booleano a cambiar
-        field_name = ACTIVE_FIELD or ("activo" if hasattr(p, "activo") else "is_active")
-        current = bool(getattr(p, field_name))
-        setattr(p, field_name, not current)
-        p.save(update_fields=[field_name])
-    except Producto.DoesNotExist:
-        pass
-    return _redirect_back(request, "admin_products")
-
+def admin_product_detail(request, pk):
+    """Vista detallada de un producto para administradores"""
+    producto = get_object_or_404(Producto, pk=pk)
+    return render(request, 'admin_panel/product_detail.html', {
+        'producto': producto
+    })
 
 @staff_member_required
-def admin_products_delete(request, pk: int):
+def admin_product_toggle(request, pk):
+    """Activa/desactiva un producto"""
     try:
-        Producto.objects.filter(pk=pk).delete()
-    except Exception:
-        pass
-    return _redirect_back(request, "admin_products")
+        producto = get_object_or_404(Producto, pk=pk)
+        estado_anterior = producto.is_active
+        producto.is_active = not producto.is_active
+        producto.save()
+        
+        estado = "activado" if producto.is_active else "desactivado"
+        messages.success(request, f'Producto {estado} correctamente')
+        
+    except Exception as e:
+        messages.error(request, f'Error al modificar el producto: {str(e)}')
+    return redirect('admin_products')
+
+@staff_member_required
+def admin_product_delete(request, pk):
+    """Elimina un producto"""
+    try:
+        producto = get_object_or_404(Producto, pk=pk)
+        nombre = producto.nombre_producto
+        producto.delete()
+        messages.success(request, f'Producto "{nombre}" eliminado correctamente')
+    except Exception as e:
+        messages.error(request, f'Error al eliminar el producto: {str(e)}')
+    return redirect('admin_products')
 
 
 # =========================

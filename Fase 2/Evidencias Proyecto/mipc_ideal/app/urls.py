@@ -18,6 +18,7 @@ urlpatterns = [
     path('products/categoria/<int:categoria_id>/', views.products_by_category, name='products_by_category'),
     path('products/tipo/<int:tipo_id>/', views.products_by_type, name='products_by_type'),
 
+    path('tienda/<int:tienda_id>/', views.store_detail, name='store_detail'),
     path('tienda/ofertas/', views.store_offers_list, name='store_offers_list'),
     path('tienda/ofertas/nueva/', views.store_offer_new, name='store_offer_new'),
     path('tienda/ofertas/<int:oferta_id>/editar/', views.store_offer_edit, name='store_offer_edit'),
@@ -46,8 +47,6 @@ urlpatterns = [
     path('admin-panel/reportes/', views_admin.admin_reports, name='admin_reports'),
 
     # acciones de producto:
-    path('admin-panel/productos/<int:pk>/toggle/', views_admin.admin_products_toggle, name='admin_products_toggle'),
-    path('admin-panel/productos/<int:pk>/delete/', views_admin.admin_products_delete, name='admin_products_delete'),
     path('reportar/producto/<int:producto_id>/', views.reportar_producto, name='reportar_producto'),
 
     # URLs para reportes (admin)
@@ -58,4 +57,13 @@ urlpatterns = [
     # URLs para notificaciones (tienda)
     path('store/notifications/', views.store_notifications, name='store_notifications'),
     path('notifications/<int:notification_id>/mark-read/', views.mark_notification_read, name='mark_notification_read'),
+
+    # URLs de administración de productos
+    path('admin-panel/products/', views_admin.admin_products, name='admin_products'),
+    path('admin-panel/products/<int:pk>/', views_admin.admin_product_detail, name='admin_product_detail'),
+    path('admin-panel/productos/<int:pk>/toggle/', views_admin.admin_product_toggle, name='admin_product_toggle'),
+    path('admin-panel/productos/<int:pk>/delete/', views_admin.admin_product_delete, name='admin_product_delete'),
+    
+    # URL para reportar tiendas
+    path('reportar/tienda/<int:tienda_id>/', views.reportar_tienda, name='reportar_tienda'),
 ]

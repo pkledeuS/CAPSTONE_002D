@@ -16,6 +16,7 @@
     <div class="title"><h3>Nuevos productos</h3></div>
     <div class="carousel-2">
       {% for producto in productos_recientes %}
+        {% if producto.is_active %}  {# Solo mostrar si está activo #}
         <div class="product-item card product-card h-100">
           {% if producto.imagen_producto %}
             <img src="{{ producto.imagen_producto.url }}" class="card-img-top" alt="{{ producto.nombre_producto }}">
@@ -28,6 +29,7 @@
             <a href="{% url 'product_detail' producto.id %}" class="btn btn-sm btn-primary">Ver más</a>
           </div>
         </div>
+        {% endif %}
       {% endfor %}
     </div>
   {% endif %}

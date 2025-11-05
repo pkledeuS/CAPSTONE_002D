@@ -19,7 +19,7 @@
                 <div class="card-body">
                     <h6 class="card-title">{{ tienda.nombre_tienda }}</h6>
                     <p class="card-text">{{ tienda.descripcion_tienda|default:"Sin descripción." }}</p>
-                    <a href="#" class="btn btn-sm btn-primary">Ver más</a>
+                    <a href="{% url 'store_detail' tienda.id %}" class="btn btn-sm btn-primary">Ver más</a>
                 </div>
                 </div>
             {% endfor %}
@@ -55,6 +55,7 @@
     <div class="carousel-2">
         <!-- Carrusel de Productos Más Vistos -->
         {% for producto in productos_vistos %}
+        {% if producto.is_active %}  {# Solo mostrar si está activo #}
         <div class="product-item card product-card h-100">
             {% if producto.imagen_producto %}
                 <img src="{{ producto.imagen_producto.url }}" class="card-img-top" alt="{{ producto.nombre_producto }}">
@@ -67,6 +68,7 @@
                 <a href="{% url 'product_detail' producto.id %}" class="btn btn-sm btn-primary">Ver más</a>
             </div>
         </div>
+        {% endif %}
         {% endfor %}
     </div>
 
