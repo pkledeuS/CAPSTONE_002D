@@ -11,7 +11,7 @@ from .models import (
 
 class EspecificacionProductoInline(admin.TabularInline):
     model = EspecificacionProducto
-    extra = 3  # muestra 3 filas vacías por defecto
+    extra = 20  # muestra 3 filas vacías por defecto
     fields = ("nombre_especificacion", "valor_especificacion")
 
 class TiendaProductoInline(admin.TabularInline):
@@ -60,5 +60,3 @@ admin.site.register(PreferenciaUsuario)
 admin.site.register(ProductosFavoritos)
 admin.site.register(TipoServicio)
 admin.site.register(TiendaCategoria)
-# admin.site.register(Producto)  # <-- NO dupliques, ya está con @admin.register
-# admin.site.register(ProductoVisto)  # <-- ya está con @admin.register

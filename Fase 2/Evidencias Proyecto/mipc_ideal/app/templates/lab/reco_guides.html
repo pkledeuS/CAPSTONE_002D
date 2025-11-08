@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'recommender/recommender.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 reco-container">
+  <h1 class="h4 mb-2">Guias y comparativas</h1>
+  <p class="text-secondary small mb-4">
+    Lecciones rapidas para entender decisiones de compra sin marketing agresivo.
+  </p>
+
+  <div class="row g-3">
+    {% for guide in guides %}
+    <div class="col-12 col-md-6">
+      <article class="card h-100 card-hover">
+        <div class="card-body">
+          <h2 class="h6">{{ guide.title }}</h2>
+          <p class="small text-secondary mb-3">
+            {{ guide.summary }}
+          </p>
+          <ul class="small mb-3">
+            {% for bullet in guide.bullets %}
+            <li>{{ bullet }}</li>
+            {% endfor %}
+          </ul>
+          <a href="{{ guide.url }}" class="btn btn-sm btn-outline-primary"
+             data-reco-track="open-guide" aria-label="Abrir guia sobre {{ guide.title }}">
+            Abrir guia
+          </a>
+        </div>
+      </article>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="alert alert-info mb-0">Aun no hay guias editoriales disponibles.</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'recommender/recommender.js' %}"></script>
+{% endblock %}

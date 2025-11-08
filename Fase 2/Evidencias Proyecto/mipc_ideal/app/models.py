@@ -120,6 +120,13 @@ class Producto(models.Model):
     marca_producto = models.ForeignKey('MarcaProducto', on_delete=models.PROTECT)
     categoria_producto = models.ForeignKey('CategoriaProducto', on_delete=models.PROTECT)
     tipo_producto = models.ForeignKey('TipoProducto', on_delete=models.PROTECT)
+    categorias_extra = models.ManyToManyField(
+        'CategoriaProducto',
+        blank=True,
+        related_name='productos_extra',
+        verbose_name='Categorias adicionales',
+        help_text='Categorias secundarias para este producto sin duplicarlo.',
+    )
     vistas = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
 

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'recommender/recommender.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 reco-container">
+  <h1 class="h4 mb-2">Ajusta tus preferencias</h1>
+  <p class="text-secondary small mb-4">
+    Define el tono de tus recomendaciones; cada respuesta impacta el match y los trade-offs sugeridos.
+  </p>
+
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <form class="card" method="get" action="{% url 'reco_explore' %}">
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="pref-categoria">Categoria preferida</label>
+              <select class="form-select" id="pref-categoria" name="categoria">
+                <option value="">Todas</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if selected_categoria and selected_categoria.id == cat.id %}selected{% endif %}>
+                  {{ cat.nombre_categoria }}
+                </option>
+                {% endfor %}
+              </select>
+              <p class="form-text">Elige la familia de productos que mas visitas para priorizar coincidencias.</p>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="pref-tipo">Tipo de producto</label>
+              <select class="form-select" id="pref-tipo" name="tipo">
+                <option value="">Todos</option>
+                {% for tipo in types %}
+                <option value="{{ tipo.id }}" {% if selected_tipo and selected_tipo.id == tipo.id %}selected{% endif %}>
+                  {{ tipo.nombre_tipo }}
+                </option>
+                {% endfor %}
+              </select>
+              <p class="form-text">Restringe las recomendaciones a formatos concretos (ej. Notebook, Procesador).</p>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="pref-presupuesto">Presupuesto de referencia</label>
+              <select class="form-select" id="pref-presupuesto" name="presupuesto">
+                <option value="">Sin filtro</option>
+                {% for option in budget_options %}
+                <option value="{{ option.value }}">{{ option.label }}</option>
+                {% endfor %}
+              </select>
+              <p class="form-text">Define tu rango de inversion para evaluar la relacion rendimiento/$$.</p>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="pref-nota">Notas personales</label>
+              <textarea id="pref-nota" class="form-control" rows="2"
+                        placeholder="Anota requisitos o trade-offs que quieres monitorear."></textarea>
+              <p class="form-text">Usalo como checklist al comparar alternativas.</p>
+            </div>
+          </div>
+
+          <div class="mt-3 d-flex justify-content-end gap-2 flex-wrap">
+            <a href="{% url 'reco_home' %}" class="btn btn-outline-secondary">Volver al inicio</a>
+            <button type="submit" class="btn btn-primary"
+                    data-reco-track="apply-preferences" aria-label="Ver recomendaciones segun preferencias">
+              Ver recomendaciones
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6">Tu contexto actual</h2>
+          <p class="reco-alt-hint">
+            Guardamos esta seleccion para orientar futuras sugerencias sin convertirnos en catalogo.
+          </p>
+          <ul class="small mb-3">
+            <li>
+              Categoria preferida:
+              <strong>
+                {% if selected_categoria %}
+                {{ selected_categoria.nombre_categoria }}
+                {% else %}
+                Sin definir
+                {% endif %}
+              </strong>
+            </li>
+            <li>
+              Tipo de producto:
+              <strong>
+                {% if selected_tipo %}
+                {{ selected_tipo.nombre_tipo }}
+                {% else %}
+                Sin definir
+                {% endif %}
+              </strong>
+            </li>
+            <li>
+              Recuerda: puedes ajustar filtros por viaje, presupuesto o silencio desde la vista de explorar.
+            </li>
+          </ul>
+          <a href="{% url 'reco_explore' %}" class="btn btn-sm btn-outline-primary w-100"
+             data-reco-track="quick-explore">
+            Ir a explorar ahora
+          </a>
+        </div>
+      </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'recommender/recommender.js' %}"></script>
+{% endblock %}

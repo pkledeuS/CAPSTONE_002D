@@ -703,8 +703,10 @@ def product_detail(request, producto_id):
     reviews = producto.reviews.select_related('user')
     avg_int = int(avg_rating)
 
+    show_review_form = False
     if request.method == 'POST' and request.user.is_authenticated:
         form = ProductReviewForm(request.POST)
+        show_review_form = True
         if form.is_valid():
             rating = form.cleaned_data['rating']
             comment = form.cleaned_data['comment']
@@ -723,6 +725,7 @@ def product_detail(request, producto_id):
             if my:
                 initial = {'rating': my.rating, 'comment': my.comment}
         form = ProductReviewForm(initial=initial)
+        show_review_form = bool(initial)
 
     return render(request, 'product-detail.html', {
         'producto': producto,
@@ -732,6 +735,7 @@ def product_detail(request, producto_id):
         'total_reviews': total_reviews,
         'reviews': reviews,
         'form_review': form,
+        'show_review_form': show_review_form,
     })
 
 @login_required

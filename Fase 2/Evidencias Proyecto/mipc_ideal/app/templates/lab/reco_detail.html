@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'recommender/recommender.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 reco-container">
+
+  <div class="reco-subheader mb-3">
+    <nav class="reco-breadcrumb" aria-label="Ruta de detalle">
+      <a href="{% url 'reco_home' %}">Inicio recomendaciones</a>
+      <span aria-hidden="true">&gt;</span>
+      <a href="{% url 'reco_explore' %}">Explorar</a>
+      <span aria-hidden="true">&gt;</span>
+      <span>{{ product.name }}</span>
+    </nav>
+    <p class="text-secondary small mb-0">
+      Resume el por que del match antes de profundizar en especificaciones.
+    </p>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <article class="card reco-detail-hero">
+        <div class="card-body">
+          <div class="row g-3 align-items-start">
+            <div class="col-sm-auto text-center">
+              {% if product.image %}
+              <img src="{{ product.image }}" alt="{{ product.name }}"
+                   class="reco-detail-hero__img rounded-3" width="120" height="120">
+              {% endif %}
+            </div>
+            <div class="col">
+              <p class="text-secondary small mb-1">{{ product.type }}</p>
+              <h1 class="h4 mb-1 text-break">{{ product.name }}</h1>
+              <div class="text-secondary small">
+                Modelo: {{ product.model|default:"No especificado" }}
+                {% if product.brand %} - {{ product.brand }}{% endif %}
+              </div>
+              {% if product.min_price_display %}
+              <div class="fw-semibold text-success small">Desde {{ product.min_price_display }}</div>
+              {% endif %}
+              {% if product.categories_meta %}
+              {% with primary=product.categories_meta|first %}
+              <div class="text-secondary small">Categoria principal: <a href="{% url 'reco_explore' %}?categoria={{ primary.id }}">{{ primary.name }}</a></div>
+              {% endwith %}
+              {% if product.categories_meta|length > 1 %}
+              <div class="d-flex flex-wrap gap-2 mt-1 align-items-center">
+                <span class="text-secondary small">Tambien clasifica en:</span>
+                <div class="d-flex flex-wrap gap-1">
+                  {% for cat in product.categories_meta|slice:"1:" %}
+                  {% if cat.id %}
+                  <a href="{% url 'reco_explore' %}?categoria={{ cat.id }}"
+                     class="reco-badge reco-badge--link" data-reco-track="category-chip">
+                    {{ cat.name }}
+                  </a>
+                  {% else %}
+                  <span class="reco-badge">{{ cat.name }}</span>
+                  {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+              {% else %}
+              <div class="text-secondary small">{{ product.category }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="row g-3 mt-2">
+            <div class="col-md-6">
+              <ul class="list-unstyled small mb-0">
+                {% for highlight in product.type_highlights %}
+                <li>&bull; {{ highlight }}</li>
+                {% empty %}
+                <li>&bull; Revisa specs clave antes de decidir.</li>
+                {% endfor %}
+              </ul>
+            </div>
+            <div class="col-md-6">
+              <div class="d-flex flex-wrap gap-2">
+                {% for reason in product.reasons|slice:":2" %}
+                <span class="reco-badge reco-badge--positive">+ {{ reason }}</span>
+                {% endfor %}
+                {% for tradeoff in product.tradeoffs|slice:":1" %}
+                <span class="reco-badge reco-badge--negative">- {{ tradeoff }}</span>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <div class="reco-top-metrics mt-3">
+            <div class="reco-top-metrics__grid">
+              {% for metric in product.type_metrics %}
+              <div>
+                <div class="text-secondary small text-uppercase fw-semibold">{{ metric.label }}</div>
+                <div class="fw-semibold">{{ metric.value }}</div>
+              </div>
+              {% empty %}
+              <div>
+                <div class="text-secondary small text-uppercase fw-semibold">Referencias</div>
+                <div class="fw-semibold">Revisa ficha completa</div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="reco-detail-pill mt-3">
+            {% for badge in product.criteria %}
+            <div>
+              <span class="text-secondary small text-uppercase fw-semibold">{{ badge.label }}</span>
+              <span class="fw-semibold">{{ badge.value }}</span>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="row g-3 mt-3">
+            <div class="col-md-6">
+              <h2 class="h6">Para quien</h2>
+              <p class="mb-0 small">{{ product.for_whom }}</p>
+            </div>
+            <div class="col-md-6">
+              <h2 class="h6">Por que</h2>
+              <p class="mb-0 small">{{ product.why }}</p>
+            </div>
+          </div>
+
+          <hr>
+
+          <h2 class="h6">Resumen ejecutivo</h2>
+          <ul class="small mb-3">
+            {% for bullet in product.summary_bullets %}
+            <li>{{ bullet }}</li>
+            {% endfor %}
+          </ul>
+
+          <h2 class="h6">Especificaciones clave</h2>
+          <div class="reco-detail-specgrid small">
+            {% for spec in product.key_specs %}
+            <div>
+              <div class="text-secondary text-uppercase fw-semibold">{{ spec.name }}</div>
+              <div class="fw-semibold">{{ spec.value }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </article>
+
+      {% if alternatives_compatible %}
+      <section class="card mt-3" id="compatibles">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <h2 class="h6 mb-0">Compatibilidad guiada</h2>
+            <div class="d-flex gap-2 flex-wrap">  
+            <a href="{{ alternatives_compatible_link }}" class="btn btn-sm btn-outline-secondary" data-reco-track="compat-more">
+              Ver mas compatibles
+            </a>
+            </div>
+          </div>
+          <p class="reco-alt-hint mb-3">
+            Documentamos sockets, conectores y buses donde ya comprobamos compatibilidad real para que armes tu setup sin sorpresas.
+          </p>
+          <div class="row g-3">
+            {% for alt in alternatives_compatible|slice:":3" %}
+            {% if forloop.counter > 3 %}
+            <div class="col-12 col-md-4 d-none" data-reco-more="compatible">
+            {% else %}
+            <div class="col-12 col-md-4">
+            {% endif %}
+              <article class="card h-100 card-hover">
+                <div class="card-body">
+                  <div class="fw-semibold small mb-1">{{ alt.type }} - {{ alt.name }}</div>
+                  <div class="small text-secondary mb-2">Match {{ alt.match }}</div>
+                  <ul class="list-unstyled small mb-2">
+                    {% for h in alt.type_highlights %}
+                    <li>&bull; {{ h }}</li>
+                    {% empty %}
+                    <li>&bull; Revisa especificaciones clave antes de anadir.</li>
+                    {% endfor %}
+                  </ul>
+                  <p class="reco-alt-hint mt-2 mb-3">{{ alt.summary }}</p>
+                  <a href="{{ alt.detail_url }}" class="btn btn-sm btn-outline-primary w-100"
+                     data-reco-track="view-compatible" aria-label="Ver detalle de {{ alt.name }}">
+                    Ver detalle
+                  </a>
+                </div>
+              </article>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+      {% endif %}
+
+      {% if alternatives_similar %}
+      <section class="card mt-3">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <h2 class="h6 mb-0">Alternativas cercanas</h2>
+            <div class="d-flex gap-2 flex-wrap">  
+            <a href="{{ alternatives_similar_link }}" class="btn btn-sm btn-outline-secondary" data-reco-track="compat-more">
+              Ver mas alternativas
+            </a>
+            </div>
+          </div>
+          <p class="reco-alt-hint mb-3">
+            Compara match y trade-offs para validar si la alternativa resuelve tus tareas prioritarias.
+          </p>
+          <div class="row g-3">
+            {% for alt in alternatives_similar|slice:":3" %}
+            {% if forloop.counter > 3 %}
+            <div class="col-12 col-md-4 d-none" data-reco-more="similar">
+            {% else %}
+            <div class="col-12 col-md-4">
+            {% endif %}
+              <article class="card h-100 card-hover">
+                <div class="card-body">
+                  <div class="fw-semibold small mb-1">{{ alt.name }}</div>
+                  <div class="small text-secondary mb-2">Match {{ alt.match }}</div>
+                  <ul class="list-unstyled small mb-2">
+                    {% for h in alt.type_highlights %}
+                    <li>&bull; {{ h }}</li>
+                    {% endfor %}
+                  </ul>
+                  <p class="reco-alt-hint mt-2 mb-3">{{ alt.summary }}</p>
+                  <a href="{{ alt.detail_url }}" class="btn btn-sm btn-outline-primary w-100"
+                     data-reco-track="view-alternative" aria-label="Ver detalle de {{ alt.name }}">
+                    Ver detalle
+                  </a>
+                </div>
+              </article>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+      {% endif %}
+    </div>
+
+    <!-- Col derecha: Tiendas (neutral) y Valoraciones -->
+    <aside class="col-lg-4">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h2 class="h6">Tiendas (referencia)</h2>
+          <p class="reco-alt-hint mb-3">No patrocinado: se muestran como punto de partida para validar stock y garantia.</p>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+              <thead><tr><th>Tienda</th><th class="text-end">Precio</th><th></th></tr></thead>
+              <tbody>
+                {% for store in stores %}
+                <tr>
+                  <td>{{ store.name }}</td>
+                  <td class="text-end">{{ store.price|default:"Por confirmar" }}</td>
+                  <td class="text-end">
+                    {% if store.url %}
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ store.url }}" target="_blank"
+                       rel="noopener" data-reco-track="visit-store" aria-label="Abrir sitio de {{ store.name }}">
+                      Ver sitio
+                    </a>
+                    {% else %}
+                    <span class="text-secondary small">Sin enlace</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="text-secondary small">Sin referencias disponibles.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <h2 class="h6">Valoraciones</h2>
+          {% if product.avg_rating %}
+          <div class="small text-secondary mb-2">Promedio: {{ product.avg_rating|floatformat:1 }} de 5 ({{ product.review_count }} resenas).</div>
+          {% else %}
+          <div class="small text-secondary mb-2">Aun recopilamos resenas verificadas para un balance completo.</div>
+          {% endif %}
+          <div class="vstack gap-2">
+            {% for review in reviews %}
+            <div class="border rounded-3 p-2 small">
+              <div class="fw-semibold">{{ review.user }}</div>
+              <div>{{ review.rating }} de 5 - <span class="text-secondary">{{ review.date }}</span></div>
+              <div>{{ review.comment }}</div>
+            </div>
+            {% empty %}
+                <div class="text-secondary small">No hay resenas disponibles para este producto.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'recommender/recommender.js' %}"></script>
+{% endblock %}

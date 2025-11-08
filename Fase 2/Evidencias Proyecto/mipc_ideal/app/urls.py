@@ -2,6 +2,7 @@
 from django.urls import path
 from . import views
 from . import views_admin
+from . import views_reco
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -75,4 +76,21 @@ urlpatterns = [
     path('admin-panel/usuarios/<int:pk>/', views_admin.admin_user_detail, name='admin_user_detail'),
     path('admin-panel/usuarios/<int:pk>/toggle/', views_admin.admin_user_toggle, name='admin_user_toggle'),
     path('admin-panel/usuarios/<int:pk>/delete/', views_admin.admin_user_delete, name='admin_user_delete'),
+
+
+
+
+
+    path('lab/reco-home/', views_reco.reco_home, name='reco_home'),
+
+    path('lab/reco-explore/', views_reco.reco_explore, name='reco_explore'),
+
+    path('lab/reco-detail/', views_reco.reco_detail, name='reco_detail'),
+
+    path('lab/reco-guides/', views_reco.reco_guides, name='reco_guides'),
+
+    path('lab/reco-preferences/', views_reco.reco_preferences, name='reco_preferences'),
+
+    path('lab/reco-saved/', views_reco.reco_saved, name='reco_saved'),
+
 ]
