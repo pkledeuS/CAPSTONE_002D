@@ -1,25 +1,49 @@
 :root {
-  --reco-primary: #4b33f0;
-  --reco-primary-dark: #291c7a;
-  --reco-primary-contrast: #fbf9ff;
-  --reco-primary-soft: rgba(75, 51, 240, 0.14);
-  --reco-accent: #ff6b4a;
+  --reco-primary: #6ed3ff;
+  --reco-primary-dark: #0f172a;
+  --reco-primary-contrast: #f7f9ff;
+  --reco-primary-soft: rgba(110, 211, 255, 0.18);
+  --reco-accent: #ff8863;
+  --reco-accent-contrast: #100c14;
+  --reco-accent-soft: rgba(255, 136, 99, 0.24);
+  --reco-secondary: #5fe9c7;
+  --reco-secondary-soft: rgba(95, 233, 199, 0.25);
+  --reco-muted: #9aa3b8;
+  --reco-surface: #0c1424;
+  --reco-surface-strong: #111a2e;
+  --reco-border: rgba(255, 255, 255, 0.08);
+  --reco-positive: #56f4c7;
+  --reco-positive-soft: rgba(86, 244, 199, 0.18);
+  --reco-negative: #ffb08c;
+  --reco-negative-soft: rgba(255, 176, 140, 0.22);
+  --reco-hero-gradient: linear-gradient(150deg, rgba(110, 211, 255, 0.18), rgba(95, 233, 199, 0.16), rgba(255, 136, 99, 0.18));
+  --reco-panel-gradient: radial-gradient(circle at 25% 20%, rgba(95, 233, 199, 0.18), transparent 50%), radial-gradient(circle at 80% 0%, rgba(255, 136, 99, 0.18), transparent 45%), rgba(12, 20, 36, 0.96);
+  --reco-card-shadow: 0 25px 50px rgba(4, 6, 18, 0.55);
+  --reco-card-shadow-soft: 0 16px 30px rgba(4, 6, 18, 0.35);
+}
+
+.theme-light {
+  --reco-primary: #3252d8;
+  --reco-primary-dark: #0e1b4f;
+  --reco-primary-contrast: #0e1220;
+  --reco-primary-soft: rgba(50, 82, 216, 0.16);
+  --reco-accent: #ff7a5a;
   --reco-accent-contrast: #1c1625;
-  --reco-accent-soft: rgba(255, 107, 74, 0.2);
-  --reco-secondary: #22cbd3;
-  --reco-secondary-soft: rgba(34, 203, 211, 0.2);
-  --reco-muted: #4a4d63;
-  --reco-surface: #f7f5ff;
-  --reco-surface-strong: #ece7ff;
-  --reco-border: rgba(32, 25, 75, 0.2);
-  --reco-positive: #16b190;
-  --reco-positive-soft: rgba(22, 177, 144, 0.18);
-  --reco-negative: #ffb25c;
-  --reco-negative-soft: rgba(255, 178, 92, 0.22);
-  --reco-hero-gradient: linear-gradient(135deg, rgba(75, 51, 240, 0.18), rgba(34, 203, 211, 0.16), rgba(255, 107, 74, 0.18));
-  --reco-panel-gradient: radial-gradient(circle at 20% 20%, rgba(255, 107, 74, 0.25), transparent 45%), linear-gradient(130deg, rgba(34, 203, 211, 0.12), rgba(75, 51, 240, 0.08));
-  --reco-card-shadow: 0 22px 45px rgba(15, 10, 35, 0.18);
-  --reco-card-shadow-soft: 0 12px 32px rgba(15, 10, 35, 0.1);
+  --reco-accent-soft: rgba(255, 122, 90, 0.2);
+  --reco-secondary: #1f9c8d;
+  --reco-secondary-soft: rgba(31, 156, 141, 0.22);
+  --reco-muted: #475067;
+  --reco-surface: #f4f6ff;
+  --reco-surface-strong: #e6ebff;
+  --reco-border: rgba(15, 23, 42, 0.12);
+  --reco-positive: #0d9d7b;
+  --reco-positive-soft: rgba(13, 157, 123, 0.18);
+  --reco-negative: #f8a15c;
+  --reco-negative-soft: rgba(248, 161, 92, 0.22);
+  --reco-hero-gradient: linear-gradient(135deg, rgba(50, 82, 216, 0.18), rgba(31, 156, 141, 0.16), rgba(255, 122, 90, 0.18));
+  --reco-panel-gradient: radial-gradient(circle at 25% 20%, rgba(31, 156, 141, 0.22), transparent 50%), radial-gradient(circle at 80% -10%, rgba(255, 122, 90, 0.22), transparent 45%), rgba(247, 249, 255, 0.95);
+  --reco-card-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+  --reco-card-shadow-soft: 0 12px 28px rgba(15, 23, 42, 0.12);
 }
 
 .reco-container {
@@ -27,10 +51,99 @@
 }
 
 body.reco-app {
-  background: radial-gradient(circle at top left, rgba(34, 203, 211, 0.18), transparent 45%), var(--reco-panel-gradient);
+  background: radial-gradient(circle at 15% 20%, rgba(110, 211, 255, 0.16), transparent 50%), var(--reco-panel-gradient);
   min-height: 100vh;
   font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  color: #1f1b2e;
+  color: var(--reco-primary-contrast);
+}
+
+body.reco-app.theme-light {
+  background: radial-gradient(circle at 20% 10%, rgba(30, 136, 255, 0.12), transparent 55%),
+              radial-gradient(circle at 80% 0%, rgba(255, 111, 97, 0.12), transparent 45%),
+              var(--reco-panel-gradient);
+}
+
+.theme-light .reco-hero {
+  background: var(--reco-hero-gradient);
+  color: var(--reco-primary-contrast);
+  border: 1px solid var(--reco-border);
+  box-shadow: 0 25px 40px rgba(15, 23, 42, 0.15);
+}
+
+.theme-light .reco-surface {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.theme-light .reco-section,
+.theme-light .card.reco-card,
+.theme-light .reco-panel,
+.theme-light .reco-panel--soft {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+  box-shadow: 0 25px 35px rgba(15, 23, 42, 0.12);
+}
+
+.theme-light .reco-section__description,
+.theme-light .reco-alt-hint,
+.theme-light .text-secondary {
+  color: rgba(16, 24, 40, 0.65) !important;
+}
+
+.theme-light .reco-badge {
+  background: rgba(15, 23, 42, 0.06);
+  color: #0f172a;
+}
+
+.theme-light .reco-badge--link {
+  border-color: rgba(30, 136, 255, 0.35);
+  color: #1e88ff;
+}
+
+.theme-light .reco-badge--positive {
+  background: rgba(13, 157, 123, 0.12);
+  color: #0d9d7b;
+}
+
+.theme-light .reco-badge--negative {
+  background: rgba(248, 161, 92, 0.18);
+  color: #c75e1b;
+}
+
+.theme-light .reco-top-metrics {
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.theme-light .reco-compat-target__item {
+  background: rgba(247, 249, 255, 0.95);
+  border: 1px dashed rgba(30, 136, 255, 0.25);
+  box-shadow: none;
+}
+
+.theme-light .reco-compat-card {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.theme-light .reco-top-card__img {
+  background: rgba(15, 23, 42, 0.05);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.theme-light .btn-outline-primary {
+  color: #1e88ff;
+  border-color: rgba(30, 136, 255, 0.45);
+  background: transparent;
+}
+
+.theme-light .btn-outline-primary:hover,
+.theme-light .btn-outline-primary:focus {
+  color: #fff;
+  background: #1e88ff;
+  border-color: #1e88ff;
+  box-shadow: 0 12px 24px rgba(30, 136, 255, 0.35);
 }
 
 .reco-shell {
@@ -455,7 +568,7 @@ body.reco-app {
   font-size: .75rem;
   font-weight: 600;
   letter-spacing: .01em;
-  background: rgba(247, 245, 255, 0.75);
+  background: var(--reco-primary-soft);
   color: var(--reco-muted);
 }
 
@@ -696,7 +809,7 @@ a.reco-badge {
   border: 1px solid var(--reco-border);
   border-radius: .85rem;
   padding: .6rem .75rem;
-  background: rgba(247, 245, 255, 0.9);
+  background: linear-gradient(115deg, rgba(75, 51, 240, 0.08), rgba(34, 203, 211, 0.08));
   box-shadow: inset 0 0 0 1px rgba(255, 107, 74, 0.08);
 }
 
@@ -713,4 +826,20 @@ a.reco-badge {
 
 .reco-compat-pill .reco-badge {
   margin: 2px;
+}
+
+.reco-rating-picker {
+  display: inline-flex;
+  gap: .25rem;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: var(--reco-muted);
+}
+
+.reco-rating-picker span {
+  transition: color .2s ease;
+}
+
+.reco-rating-picker span.is-filled {
+  color: var(--reco-accent);
 }

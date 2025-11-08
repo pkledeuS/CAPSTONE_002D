@@ -13,25 +13,7 @@
 
   {# Nuevos productos (solo si no hay q) #}
   {% if not q %}
-    <div class="title"><h3>Nuevos productos</h3></div>
-    <div class="carousel-2">
-      {% for producto in productos_recientes %}
-        {% if producto.is_active %}  {# Solo mostrar si está activo #}
-        <div class="product-item card product-card h-100">
-          {% if producto.imagen_producto %}
-            <img src="{{ producto.imagen_producto.url }}" class="card-img-top" alt="{{ producto.nombre_producto }}">
-          {% else %}
-            <img src="{% static 'img/default.png' %}" class="card-img-top" alt="Default">
-          {% endif %}
-          <div class="card-body">
-            <h6 class="card-title">{{ producto.nombre_producto }}</h6>
-            <p class="card-text">{{ producto.descripcion_producto }}</p>
-            <a href="{% url 'product_detail' producto.id %}" class="btn btn-sm btn-primary">Ver más</a>
-          </div>
-        </div>
-        {% endif %}
-      {% endfor %}
-    </div>
+    <div class="title"><h3>TODA ESTA VISTA QLA SE VA A ELIMINAR</h3></div>
   {% endif %}
     <div class="title"><h3>{% if q %}Productos encontrados{% else %}Productos{% endif %}</h3></div>
   {# ===== Barra de filtros ===== #}

@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block body_class %}reco-app{% endblock %}
+
 {% block css %}
 <link rel="stylesheet" href="{% static 'recommender/recommender.css' %}">
 {% endblock %}
@@ -10,7 +12,7 @@
 
   <!-- HERO editorial -->
   <section class="reco-hero mb-4">
-    <div class="p-4 p-md-5 rounded-4 reco-surface">
+    <div class="p-4 p-md-5 rounded-6 reco-surface">
       <div class="row align-items-center g-3">
         <div class="col-md-7">
           <h1 class="display-6 mb-2">Encuentra tu equipo ideal</h1>
@@ -155,18 +157,18 @@
                   <a href="{% url 'reco_explore' %}?categoria={{ primary.id }}"
                      class="btn btn-sm btn-outline-secondary" data-reco-track="view-alternatives"
                      aria-label="Explorar alternativas para {{ item.name }}">
-                    Ver alternativas
+                    Explorar mas
                   </a>
                   {% elif item.category_id %}
                   <a href="{% url 'reco_explore' %}?categoria={{ item.category_id }}"
                      class="btn btn-sm btn-outline-secondary" data-reco-track="view-alternatives"
                      aria-label="Explorar alternativas para {{ item.name }}">
-                    Ver alternativas
+                    Explorar mas
                   </a>
                   {% else %}
                   <a href="{% url 'reco_explore' %}" class="btn btn-sm btn-outline-secondary"
                      data-reco-track="view-alternatives" aria-label="Explorar alternativas para {{ item.name }}">
-                    Ver alternativas
+                    Explorar mas
                   </a>
                   {% endif %}
                   {% endwith %}
@@ -174,12 +176,12 @@
                   <a href="{% url 'reco_explore' %}?categoria={{ item.category_id }}"
                      class="btn btn-sm btn-outline-secondary" data-reco-track="view-alternatives"
                      aria-label="Explorar alternativas para {{ item.name }}">
-                    Ver alternativas
+                    Explorar mas
                   </a>
                   {% else %}
                   <a href="{% url 'reco_explore' %}" class="btn btn-sm btn-outline-secondary"
                      data-reco-track="view-alternatives" aria-label="Explorar alternativas para {{ item.name }}">
-                    Ver alternativas
+                    Explorar mas
                   </a>
                   {% endif %}
                 </div>

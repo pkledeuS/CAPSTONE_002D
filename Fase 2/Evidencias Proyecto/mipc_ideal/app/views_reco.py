@@ -4,11 +4,12 @@ from collections import defaultdict
 from decimal import Decimal
 from typing import Dict, List, Tuple
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Count, DecimalField, IntegerField, Max, Min, Prefetch, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from django.http import Http404
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
 from .models import (
@@ -21,6 +22,7 @@ from .models import (
     TiendaProducto,
     TipoProducto,
 )
+from .forms import ProductReviewForm
 from .views import SPEC_CANON, SPEC_TEMPLATES, _norm_key
 
 
@@ -189,7 +191,7 @@ def _portability_profile(product: Producto, specs: Dict[str, str], description: 
                 return ("Ultraligera", 0)
             if weight <= 1.8:
                 return ("Ligera", 1)
-            return (f"{weight:.1f} kg", 2)
+            return (f"{weight:.1f} g", 2)
         return ("Portatil", 1)
     if "all-in-one" in tipo:
         return ("Movible", 2)
@@ -1315,6 +1317,43 @@ def reco_detail(request):
             }
         )
 
+    user_review = None
+    if request.user.is_authenticated:
+        user_review = ProductReview.objects.filter(producto=product, user=request.user).first()
+    user_has_review = bool(user_review)
+
+    show_review_form = False
+    if request.method == "POST":
+        if not request.user.is_authenticated:
+            login_url = f"{reverse('login')}?next={request.get_full_path()}"
+            return redirect(login_url)
+        form_review = ProductReviewForm(request.POST)
+        show_review_form = True
+        if form_review.is_valid():
+            ProductReview.objects.update_or_create(
+                producto=product,
+                user=request.user,
+                defaults={
+                    "rating": form_review.cleaned_data["rating"],
+                    "comment": form_review.cleaned_data["comment"],
+                },
+            )
+            messages.success(request, "Tu reseña fue guardada.")
+            detail_url = f"{reverse('reco_detail')}?id={product.id}#reco-reviews"
+            return redirect(detail_url)
+        if not user_has_review and ProductReview.objects.filter(producto=product, user=request.user).exists():
+            user_has_review = True
+    else:
+        initial = {}
+        if user_has_review and user_review:
+            initial = {"rating": user_review.rating, "comment": user_review.comment}
+        form_review = ProductReviewForm(initial=initial)
+        show_review_form = False
+    if request.method != "POST":
+        form_review_errors = None
+    else:
+        form_review_errors = form_review.errors if form_review else None
+
     alternatives = _build_alternatives_payload(product, base_signature)
     similar_alts = alternatives["similar"]
     compatible_alts = alternatives["compatible"]
@@ -1368,27 +1407,141 @@ def reco_detail(request):
         "alternatives_similar_link": similar_more_link,
         "alternatives_compatible_link": compatible_more_link,
         "compatibility_story": compatibility_story,
+        "form_review": form_review,
+        "show_review_form": show_review_form,
+        "user_has_review": user_has_review,
     }
     return render(request, "lab/reco_detail.html", context)
 
 
+_GUIDE_BLUEPRINTS = {
+    "hogar": {
+        "persona": "Usuarios que mezclan tareas de oficina ligera, clases en linea y uso familiar.",
+        "themes": ["Consumo energético", "Conectividad doméstica", "Silencio"],
+        "checklist": [
+            "Prioriza almacenamiento de alta capacidad (1 TB NVMe o NVMe + HDD).",
+            "Verifica WiFi 6/6E o ethernet estable y puertos frontales accesibles.",
+            "Evalúa ruido total (chasis/ventiladores) si estará en espacios compartidos.",
+        ],
+        "tradeoffs": [
+            "Equipos compactos y AIO limitan opciones de actualización.",
+            "HDD ofrece más capacidad pero menor velocidad que NVMe."
+        ],
+        "filters": ["categoria", "tipo_producto", "presupuesto", "silencio", "almacenamiento"]
+    },
+    "gamer": {
+        "persona": "Jugadores que requieren fps estables y compatibilidad con perifericos competitivos.",
+        "themes": ["Rendimiento sostenido", "Refrigeracion", "Espacio en gabinete"],
+        "checklist": [
+            "Alinea GPU con tu resolución/Hz objetivo (1080p/1440p/4K).",
+            "Asegura fuente con potencia y conectores PCIe suficientes.",
+            "Verifica airflow del chasis y altura/longitud de la GPU.",
+            "En notebooks gamer: revisa TGP real de la dGPU y sistema térmico."
+        ],
+        "tradeoffs": [
+            "Chasis muy estéticos suelen sacrificar airflow.",
+            "RAM de alta frecuencia puede implicar latencias mayores si no se ajusta bien."
+        ],
+        "filters": ["tipo_producto", "rendimiento", "compatibilidad_gpu", "presupuesto", "display_hz"]
+    },
+    "trabajo": {
+        "persona": "Profesionales que alternan software de productividad con videollamadas y edicion ligera.",
+        "themes": ["Confiabilidad", "Autonomia", "Conectividad"],
+        "checklist": [
+            "Prioriza 16-32 GB de RAM y SSD NVMe para respuesta fluida.",
+            "Revisa calidad de webcam/mic y conectividad (USB-C/Thunderbolt, HDMI, LAN).",
+        ],
+        "tradeoffs": [
+            "Más portabilidad suele significar menos puertos físicos.",
+            "AIO simplifica la mesa pero reduce posibilidades de upgrade."
+        ],
+        "filters": ["tipo_producto", "ram", "almacenamiento", "puertos", "bateria"]
+    },
+    "estudio": {
+        "persona": "Estudiantes que necesitan autonomia, peso reducido y resistencia.",
+        "themes": ["Bateria", "Durabilidad", "Seguridad"],
+        "checklist": [
+            "Prioriza batería real alta (Wh) y carga por USB-C si es posible.",
+            "Confirma 16 GB RAM y 512 GB NVMe mínimo para trabajos y proyectos.",
+            "Valora chasis resistente (MIL-STD) y teclado cómodo para escribir."
+        ],
+        "tradeoffs": [
+            "2-en-1 ganan versatilidad pero pierden algunos puertos.",
+            "Pantallas táctiles reflejan más en exteriores."
+        ],
+        "filters": ["peso", "bateria", "puertos", "ram", "almacenamiento"]
+    },
+    "diseno": {
+        "persona": "Ilustradores y creativos que usan tabletas gráficas (con o sin pantalla) y requieren precisión y color fiable.",
+        "themes": ["Superficie y precisión", "Conectividad y drivers", "Ergonomía/soporte"],
+        "checklist": [
+            "Verifica compatibilidad de drivers con tu SO y apps (Adobe/Autodesk/Clip Studio).",
+            "Confirma tipo de conexión: USB-C con DP Alt (1 cable) o HDMI+USB (3 en 1) para pen displays.",
+            "Prioriza 8192 niveles de presión, buen RPS y soporte de inclinación (tilt).",
+            "Si tiene pantalla: pide laminado, bajo parallax y cobertura sRGB/AdobeRGB certificada.",
+            "Asegura stand/soporte ajustable o VESA para sesiones largas."
+        ],
+        "tradeoffs": [
+            "Pantallas laminadas y alta cobertura de color aumentan costo.",
+            "Superficies con textura tipo papel gastan puntas más rápido.",
+            "Pen displays grandes requieren más espacio y potencia/ado de energía."
+        ],
+        "filters": ["tipo_tableta", "tamano", "resolucion", "cobertura_color", "conexiones", "presupuesto"]
+    },
+}
+
+def _guide_payload(cat: CategoriaProducto) -> Dict[str, object]:
+    key = cat.nombre_categoria.lower()
+    blueprint = None
+    for slug, data in _GUIDE_BLUEPRINTS.items():
+        if slug in key:
+            blueprint = data
+            break
+    if blueprint is None:
+        blueprint = {
+            "persona": _short_text(cat.descripcion_categoria, 120),
+            "themes": ["Compatibilidad", "Budget", "Garantia"],
+            "checklist": [
+                "Define requisitos de uso antes de ver precios.",
+                "Revisa trade-offs en terminos de ruido, calor y upgrades.",
+                "Valida disponibilidad real en tiendas neutrales.",
+            ],
+            "tradeoffs": [
+                "Productos economicos suelen sacrificar soporte.",
+                "Componentes de alto rendimiento consumen mas energia.",
+            ],
+            "filters": ["categoria", "tipo_producto", "presupuesto"],
+            "spec_focus": ["Compatibilidad", "Budget", "Garantia"],
+        }
+    return {
+        "id": cat.id,
+        "title": cat.nombre_categoria,
+        "summary": _short_text(cat.descripcion_categoria, 180),
+        "persona": blueprint["persona"],
+        "themes": blueprint["themes"],
+        "checklist": blueprint["checklist"],
+        "tradeoffs": blueprint["tradeoffs"],
+        "filters": blueprint["filters"],
+        "spec_focus": blueprint.get("spec_focus", []),
+        "cta_url": f"{reverse('reco_explore')}?categoria={cat.id}",
+    }
+
+
 def reco_guides(request):
-    categorias = _categories_with_inventory().order_by("-prod_count", "nombre_categoria")[:6]
-    guides = []
-    for cat in categorias:
-        guides.append(
-            {
-                "title": f"{cat.nombre_categoria}: claves de seleccion",
-                "summary": _short_text(cat.descripcion_categoria, 160),
-                "bullets": [
-                    "Checklist editorial previo a decidir.",
-                    "Trade-offs frecuentes segun uso real.",
-                    "Referencias neutras para comparar tiendas.",
-                ],
-                "url": f"{reverse('reco_explore')}?categoria={cat.id}",
-            }
-        )
-    context = {"guides": guides}
+    categorias = _categories_with_inventory().order_by("-prod_count", "nombre_categoria")[:8]
+    cards = [_guide_payload(cat) for cat in categorias]
+
+    selected_id = request.GET.get("categoria")
+    selected_card = None
+    if selected_id and selected_id.isdigit():
+        selected_card = next((card for card in cards if card["id"] == int(selected_id)), None)
+    if not selected_card and cards:
+        selected_card = cards[0]
+
+    context = {
+        "selected_guide": selected_card,
+        "guide_cards": cards,
+    }
     return render(request, "lab/reco_guides.html", context)
 
 
