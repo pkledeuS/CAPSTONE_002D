@@ -28,6 +28,13 @@
               <span class="star{% if forloop.counter <= avg_int %} filled{% endif %}">★</span>
             {% endfor %}
           </div>
+          {% if form_review.rating.errors %}
+          <div class="text-danger small mt-1">
+            {% for error in form_review.rating.errors %}
+            <div>{{ error }}</div>
+            {% endfor %}
+          </div>
+          {% endif %}
           <div class="rating-text">
             <strong>{{ avg_rating|floatformat:1 }}</strong>/5
             <span class="muted">({{ total_reviews }} reseña{{ total_reviews|pluralize:"s" }})</span>
@@ -94,7 +101,7 @@
       </div>
 
       {% if user.is_authenticated %}
-        <form method="post" class="review-form" id="review-form" hidden>
+        <form method="post" class="review-form" id="review-form" {% if not show_review_form %}hidden{% endif %}>
           {% csrf_token %}
 
           <div class="star-picker" data-target="#rating-input">
@@ -104,13 +111,35 @@
             <span data-value="4">★</span>
             <span data-value="5">★</span>
           </div>
+          {% if form_review.rating.errors %}
+          <div class="text-danger small mt-1">
+            {% for error in form_review.rating.errors %}
+            <div>{{ error }}</div>
+            {% endfor %}
+          </div>
+          {% endif %}
 
           {# Asegura el id del input oculto #}
           <input type="hidden" name="rating" id="rating-input" value="{{ form_review.rating.value|default_if_none:'' }}">
 
+          {% if form_review.non_field_errors %}
+          <div class="alert alert-danger small mt-2">
+            {% for error in form_review.non_field_errors %}
+            <div>{{ error }}</div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
           <div class="mt-2">
             {{ form_review.comment.label_tag }}
             {{ form_review.comment }}
+            {% if form_review.comment.errors %}
+            <div class="text-danger small mt-1">
+              {% for error in form_review.comment.errors %}
+              <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+            {% endif %}
           </div>
 
           <button class="btn btn-primary mt-2" type="submit">Guardar reseña</button>
@@ -357,16 +386,21 @@
   const form = document.getElementById('review-form');
   if (!btn || !form) return;
 
+  const syncLabel = () => {
+    const abierto = !form.hasAttribute('hidden');
+    btn.textContent = abierto ? 'Ocultar formulario' : 'Escribir reseña';
+  };
+  syncLabel();
+
   btn.addEventListener('click', () => {
     const abierto = !form.hasAttribute('hidden');
     if (abierto) {
       form.setAttribute('hidden', '');
-      btn.textContent = 'Escribir reseña';
     } else {
       form.removeAttribute('hidden');
-      btn.textContent = 'Ocultar formulario';
       form.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+    syncLabel();
   });
 })();
 </script>

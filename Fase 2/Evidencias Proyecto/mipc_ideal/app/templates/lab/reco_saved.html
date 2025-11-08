@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'recommender/recommender.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 reco-container">
+
+  <div class="reco-subheader mb-3">
+    <nav class="reco-breadcrumb" aria-label="Ruta de guardados">
+      <a href="{% url 'reco_home' %}">Inicio recomendaciones</a>
+      <span aria-hidden="true">&gt;</span>
+      <span>Mis guardadas</span>
+    </nav>
+    <p class="text-secondary small mb-0">
+      Tus productos guardados se recalculan con el mismo criterio editorial: match, razones y trade-offs se actualizan segun tus preferencias.
+    </p>
+  </div>
+
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
+    <h1 class="h4 mb-0">Mis recomendaciones guardadas</h1>
+    <div class="text-secondary small">
+      {{ saved_total }} elemento{% if saved_total != 1 %}s{% endif %} listos para revisar.
+    </div>
+  </div>
+
+  {% if saved_cards %}
+  <div class="row g-3">
+    {% for entry in saved_cards %}
+    {% with product=entry.product %}
+    <div class="col-12">
+      <article class="card reco-card card-hover">
+        <div class="card-body">
+          <div class="d-flex flex-column flex-md-row gap-3 align-items-start">
+            {% with image=product.image|default:'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=400&auto=format&fit=crop' %}
+            <img class="rounded-3 object-fit-cover" style="width:96px;height:96px"
+                 src="{{ image }}" alt="Imagen de {{ product.name }}">
+            {% endwith %}
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+                <div>
+                  <h2 class="h6 mb-0">{{ product.name }}</h2>
+                  <div class="text-secondary small">{{ product.type }}</div>
+                  {% if product.categories_meta %}
+                  <div class="d-flex flex-wrap gap-1 mt-1">
+                    {% for cat in product.categories_meta %}
+                    {% if cat.id %}
+                    <a href="{% url 'reco_explore' %}?categoria={{ cat.id }}"
+                       class="reco-badge reco-badge--link" data-reco-track="category-chip">
+                      {{ cat.name }}
+                    </a>
+                    {% else %}
+                    <span class="reco-badge">{{ cat.name }}</span>
+                    {% endif %}
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+                <span class="badge reco-badge-match">Match {{ product.match }}</span>
+              </div>
+              <div class="text-secondary small mt-1">
+                {% if product.min_price_display %}
+                Referencias desde {{ product.min_price_display }}
+                {% else %}
+                Precio por confirmar con tiendas
+                {% endif %}
+              </div>
+              <div class="mt-2 d-flex flex-wrap gap-2">
+                {% for reason in product.reasons %}
+                <span class="reco-badge reco-badge--positive">+ {{ reason }}</span>
+                {% endfor %}
+                {% for tradeoff in product.tradeoffs %}
+                <span class="reco-badge reco-badge--negative">- {{ tradeoff }}</span>
+                {% endfor %}
+              </div>
+              <p class="reco-alt-hint mt-3 mb-2">{{ entry.note }}</p>
+              <div class="d-flex flex-wrap gap-2">
+                <a href="{{ product.detail_url }}" class="btn btn-sm btn-outline-primary"
+                   data-reco-track="refresh-match" aria-label="Actualizar match de {{ product.name }}">
+                  Actualizar match
+                </a>
+                {% if product.categories_meta %}
+                {% with primary=product.categories_meta|first %}
+                {% if primary.id %}
+                <a href="{% url 'reco_explore' %}?categoria={{ primary.id }}" class="btn btn-sm btn-outline-secondary"
+                   data-reco-track="explore-alt" aria-label="Ver alternativas de {{ product.name }}">
+                  Ver alternativas
+                </a>
+                {% elif product.category_id %}
+                <a href="{% url 'reco_explore' %}?categoria={{ product.category_id }}" class="btn btn-sm btn-outline-secondary"
+                   data-reco-track="explore-alt" aria-label="Ver alternativas de {{ product.name }}">
+                  Ver alternativas
+                </a>
+                {% else %}
+                <a href="{% url 'reco_explore' %}" class="btn btn-sm btn-outline-secondary"
+                   data-reco-track="explore-alt" aria-label="Ver alternativas de {{ product.name }}">
+                  Ver alternativas
+                </a>
+                {% endif %}
+                {% endwith %}
+                {% elif product.category_id %}
+                <a href="{% url 'reco_explore' %}?categoria={{ product.category_id }}" class="btn btn-sm btn-outline-secondary"
+                   data-reco-track="explore-alt" aria-label="Ver alternativas de {{ product.name }}">
+                  Ver alternativas
+                </a>
+                {% else %}
+                <a href="{% url 'reco_explore' %}" class="btn btn-sm btn-outline-secondary"
+                   data-reco-track="explore-alt" aria-label="Ver alternativas de {{ product.name }}">
+                  Ver alternativas
+                </a>
+                {% endif %}
+              </div>
+            </div>
+            <div class="d-none d-md-flex flex-column gap-2">
+              {% for badge in product.criteria %}
+              <div class="reco-criteria">
+                <span class="reco-criteria__label">{{ badge.label }}</span>
+                <span class="reco-criteria__value">{{ badge.value }}</span>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+    {% endwith %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card">
+    <div class="card-body text-center py-5">
+      <p class="mb-3 fw-semibold">Todavia no guardas recomendaciones.</p>
+      <p class="text-secondary small mb-4">
+        Explora y guarda productos para revisarlos con calma; mantendremos las razones y trade-offs a mano.
+      </p>
+      <a href="{% url 'reco_explore' %}" class="btn btn-primary">
+        Explorar recomendaciones
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'recommender/recommender.js' %}"></script>
+{% endblock %}

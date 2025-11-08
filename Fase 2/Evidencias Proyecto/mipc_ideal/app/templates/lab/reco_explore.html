@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'recommender/recommender.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 reco-container">
+
+  <div class="reco-subheader mb-3">
+    <nav class="reco-breadcrumb" aria-label="Ruta de exploracion">
+      <a href="{% url 'reco_home' %}">Inicio recomendaciones</a>
+      <span aria-hidden="true">&gt;</span>
+      {% if selected_categoria %}
+      <span>{{ selected_categoria.nombre_categoria }}</span>
+      {% elif selected_tipo %}
+      <span>{{ selected_tipo.nombre_tipo }}</span>
+      {% else %}
+      <span>Explorar</span>
+      {% endif %}
+    </nav>
+    <p class="text-secondary small mb-0">
+      Ajusta filtros y revisa las razones educativas antes de tomar una decision.
+      {% if selected_categoria %}
+      Foco actual: {{ selected_categoria.descripcion_categoria|default:"Categoria editorial" }}
+      {% endif %}
+    </p>
+  </div>
+
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
+    <h1 class="h4 mb-0">Explorar recomendaciones</h1>
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn btn-outline-secondary btn-sm {% if selected_filters.sort == 'match' %}active{% endif %}"
+         href="?{% if selected_filters.categoria %}categoria={{ selected_filters.categoria }}&{% endif %}{% if selected_filters.tipo %}tipo={{ selected_filters.tipo }}&{% endif %}{% if selected_filters.presupuesto %}presupuesto={{ selected_filters.presupuesto }}&{% endif %}sort=match"
+         aria-label="Ordenar por mejor match">Mejor match</a>
+      <a class="btn btn-outline-secondary btn-sm {% if selected_filters.sort == 'value' %}active{% endif %}"
+         href="?{% if selected_filters.categoria %}categoria={{ selected_filters.categoria }}&{% endif %}{% if selected_filters.tipo %}tipo={{ selected_filters.tipo }}&{% endif %}{% if selected_filters.presupuesto %}presupuesto={{ selected_filters.presupuesto }}&{% endif %}sort=value"
+         aria-label="Ordenar por relacion rendimiento dinero">Rend/$$</a>
+      <a class="btn btn-outline-secondary btn-sm {% if selected_filters.sort == 'quiet' %}active{% endif %}"
+         href="?{% if selected_filters.categoria %}categoria={{ selected_filters.categoria }}&{% endif %}{% if selected_filters.tipo %}tipo={{ selected_filters.tipo }}&{% endif %}{% if selected_filters.presupuesto %}presupuesto={{ selected_filters.presupuesto }}&{% endif %}sort=quiet"
+         aria-label="Ordenar por nivel de silencio">Silencio</a>
+      <a class="btn btn-outline-secondary btn-sm {% if selected_filters.sort == 'portable' %}active{% endif %}"
+         href="?{% if selected_filters.categoria %}categoria={{ selected_filters.categoria }}&{% endif %}{% if selected_filters.tipo %}tipo={{ selected_filters.tipo }}&{% endif %}{% if selected_filters.presupuesto %}presupuesto={{ selected_filters.presupuesto }}&{% endif %}sort=portable"
+         aria-label="Ordenar por portabilidad">Portabilidad</a>
+    </div>
+  </div>
+
+  {% if compat_notice %}
+  <div class="alert alert-{{ compat_notice_level }} mb-4">
+    {{ compat_notice }}
+  </div>
+  {% endif %}
+
+  <div class="row g-3">
+    <!-- Filtros con explicacion -->
+    <aside class="col-12 col-lg-3">
+      <form method="get" class="card h-100">
+        <div class="card-body">
+          <h2 class="h6">Filtros explicados</h2>
+          <hr>
+
+          <div class="mb-3">
+            <label class="form-label" for="filtro-categoria">Categoria</label>
+            <select class="form-select" id="filtro-categoria" name="categoria">
+              <option value="">Todas</option>
+              {% for cat in categories %}
+              <option value="{{ cat.id }}" {% if selected_filters.categoria == cat.id|stringformat:"s" %}selected{% endif %}>
+                {{ cat.nombre_categoria }}
+              </option>
+              {% endfor %}
+            </select>
+            <p class="form-text">Navega por universos similares para mantener comparaciones justas.</p>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="filtro-tipo">Tipo de producto</label>
+            <select class="form-select" id="filtro-tipo" name="tipo">
+              <option value="">Todos</option>
+              {% for tipo in types %}
+              <option value="{{ tipo.id }}" {% if selected_filters.tipo == tipo.id|stringformat:"s" %}selected{% endif %}>
+                {{ tipo.nombre_tipo }}
+              </option>
+              {% endfor %}
+            </select>
+            <p class="form-text">Limita la busqueda a un formato especifico (ej. Notebook, Procesador).</p>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="filtro-presupuesto">Presupuesto</label>
+            <select class="form-select" id="filtro-presupuesto" name="presupuesto">
+              <option value="">Sin filtro</option>
+              {% for option in budget_options %}
+              <option value="{{ option.value }}" {% if selected_filters.presupuesto == option.value %}selected{% endif %}>
+                {{ option.label }}
+              </option>
+              {% endfor %}
+            </select>
+            <p class="form-text">Define un marco de inversion para evaluar la relacion rendimiento-costo.</p>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary" aria-label="Aplicar filtros">Aplicar filtros</button>
+            <a href="{% url 'reco_preferences' %}" class="btn btn-outline-primary">Ajustar preferencias</a>
+          </div>
+          <p class="small text-secondary mt-3">
+            Tip editorial: usa estos filtros como checklist y complementa con las compatibilidades desde cada detalle.
+          </p>
+        </div>
+      </form>
+    </aside>
+
+    <div class="col-12 col-lg-9">
+      {% if products %}
+      <div class="row g-3">
+        {% for product in products %}
+        <div class="col-12">
+          <article class="card reco-card card-hover h-100">
+            <div class="card-body">
+              <div class="d-flex flex-column flex-md-row gap-3 align-items-start">
+                {% with image=product.image|default:'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=400&auto=format&fit=crop' %}
+                <img class="rounded-3 reco-top-card__img"
+                     src="{{ image }}" alt="Imagen de {{ product.name }}"
+                     width="96" height="96" style="width:96px;height:96px;object-fit:contain;">
+                {% endwith %}
+                <div class="flex-grow-1">
+                  <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+                    <div>
+                      <p class="text-secondary small mb-1">{{ product.type_profile.label }}</p>
+                      <h3 class="h6 mb-1">{{ product.name }}</h3>
+                      <div class="text-secondary small">
+                        {% if product.brand %}{{ product.brand }}{% endif %}
+                        {% if product.rating_display %}
+                          {% if product.brand %} - {% endif %}{{ product.rating_display }}
+                          {% if product.review_count %} ({{ product.review_count }}){% endif %}
+                        {% endif %}
+                      </div>
+                      {% if product.min_price_display %}
+                      <div class="fw-semibold small text-success mt-1">Desde {{ product.min_price_display }}</div>
+                      {% endif %}
+                      {% if product.categories_meta %}
+                      <div class="d-flex flex-wrap gap-1 mt-2">
+                        {% for cat in product.categories_meta %}
+                        {% if cat.id %}
+                        <a href="{% url 'reco_explore' %}?categoria={{ cat.id }}"
+                           class="reco-badge reco-badge--link">
+                          {{ cat.name }}
+                        </a>
+                        {% else %}
+                        <span class="reco-badge">{{ cat.name }}</span>
+                        {% endif %}
+                        {% endfor %}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div class="text-end">
+                      <span class="badge reco-badge-match mb-1">Match {{ product.match_score }}%</span>
+                      {% if product.match_pill %}
+                      <p class="small text-secondary mb-0">{{ product.match_pill }}</p>
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <div class="mt-3">
+                    <p class="text-success small fw-semibold mb-1">Razones editoriales</p>
+                    <ul class="reco-top-highlights small text-secondary">
+                      {% for reason in product.reasons|slice:":2" %}
+                      <li>+ {{ reason }}</li>
+                      {% endfor %}
+                    </ul>
+                    {% if product.tradeoffs %}
+                    <div class="mt-2">
+                      <p class="text-warning small fw-semibold mb-1">Trade-offs</p>
+                      <ul class="reco-top-highlights small text-secondary">
+                        {% for trade in product.tradeoffs|slice:":1" %}
+                        <li>- {{ trade }}</li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                    {% endif %}
+                  </div>
+
+                  <div class="reco-top-metrics mt-3">
+                    <details>
+                      <summary>Ver criterios resumidos</summary>
+                      <div class="reco-top-metrics__grid mt-2">
+                        {% for crit in product.criteria %}
+                        <div>
+                          <span class="small text-secondary d-block">{{ crit.label }}</span>
+                          <strong>{{ crit.value }}</strong>
+                        </div>
+                        {% endfor %}
+                      </div>
+                    </details>
+                  </div>
+
+                  <div class="d-flex flex-wrap gap-2 mt-3">
+                    <a href="{{ product.detail_url }}" class="btn btn-sm btn-primary">
+                      Ver detalle
+                    </a>
+                    <a href="{% url 'reco_detail' %}?id={{ product.id }}#compatibles"
+                       class="btn btn-sm btn-outline-primary">
+                      Ver compatibles
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="alert alert-warning mb-0">
+        No encontramos productos con los filtros seleccionados. Ajusta categoria o presupuesto para ampliar resultados.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'recommender/recommender.js' %}"></script>
+{% endblock %}
