@@ -1,4 +1,4 @@
-{% extends "admin_panel/admin_base.html" %}
+﻿{% extends "admin_panel/admin_base.html" %}
 {% load static %}
 
 {% block admin_title %}
@@ -9,7 +9,7 @@
 <div class="row g-3">
   <div class="col-lg-4">
     <div class="card h-100">
-      <div class="card-header">Top 10 más vistos</div>
+      <div class="card-header">Top 10 mas vistos</div>
       <div class="card-body" style="height:360px">
         <canvas id="chartViews"></canvas>
         <div id="emptyViews" class="text-muted small d-none">Sin datos de vistas.</div>
@@ -29,10 +29,10 @@
 
   <div class="col-lg-4">
     <div class="card h-100">
-      <div class="card-header">Mayor variación de precios (spread)</div>
+      <div class="card-header">Mayor variacion de precios (spread)</div>
       <div class="card-body" style="height:360px">
         <canvas id="chartPriceSpread"></canvas>
-        <div id="emptySpread" class="text-muted small d-none">Sin datos de precios por tienda.</div>
+        <div id="emptySpread" class="text-muted small d-none">Sin datos de precios por referencia.</div>
       </div>
     </div>
   </div>

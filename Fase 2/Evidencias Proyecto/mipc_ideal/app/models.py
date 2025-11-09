@@ -19,9 +19,16 @@ class PreferenciaUsuario(models.Model):
     def __str__(self):
         return f"{self.usuario.username} - {self.categoria or self.tipo_producto}"
 class Profile(models.Model):
+    ROLE_CHOICES = [
+        ('usuario', 'Usuario'),
+        ('admin', 'Admin'),
+    ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    profile_type = models.CharField(max_length=50,choices=[('usuario', 'Usuario'), ('tienda', 'Tienda')],default='usuario')
+    profile_type = models.CharField(max_length=50, choices=ROLE_CHOICES, default='usuario')
     is_active = models.BooleanField(default=True)
+    preferred_budget_min = models.PositiveIntegerField(null=True, blank=True)
+    preferred_budget_max = models.PositiveIntegerField(null=True, blank=True)
+    preference_notes = models.TextField(blank=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.profile_type}"
@@ -35,57 +42,6 @@ class ProductosFavoritos(models.Model):
 
     def __str__(self):
         return f"{self.usuario.username} - {self.producto}"
-
-# ==============================
-#     TIENDAS Y SERVICIOS
-# ==============================
-class Tienda(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    nombre_tienda = models.CharField(max_length=100)
-    email_tienda = models.EmailField(unique=True)
-    descripcion_tienda = models.TextField()
-    image_tienda = models.ImageField(upload_to='tiendas/', null=True, blank=True)
-    direccion_tienda = models.CharField(max_length=200)
-    url_tienda = models.URLField(max_length=200, null=True, blank=True, help_text="URL del sitio web de la tienda")
-    is_active = models.BooleanField(default=True)
-
-    def __str__(self):
-        return self.nombre_tienda
-
-class TipoServicio(models.Model):
-    nombre_tipo_servicio = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.nombre_tipo_servicio
-    
-class TiendaServicio(models.Model):
-    tienda = models.ForeignKey(Tienda, on_delete=models.CASCADE)
-    tipo_servicio = models.ForeignKey(TipoServicio, on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ['tienda', 'tipo_servicio']
-
-    def __str__(self):
-        return f"{self.tienda.nombre_tienda} - {self.tipo_servicio.nombre_tipo_servicio}"
-
-class TiendaCategoria(models.Model):
-    tienda = models.ForeignKey('Tienda', on_delete=models.CASCADE)
-    categoria = models.ForeignKey('CategoriaProducto', on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f"{self.tienda} - {self.categoria}"
-
-class TiendaProducto(models.Model):
-    producto = models.ForeignKey('Producto', on_delete=models.CASCADE)
-    tienda = models.ForeignKey('Tienda', on_delete=models.CASCADE)
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
-    url_externa = models.URLField(blank=True, null=True)
-    stock = models.PositiveIntegerField(default=0)
-    nota_tienda = models.CharField(max_length=200, blank=True)
-    class Meta: unique_together = ('tienda','producto')
-
-    def __str__(self):
-        return f"{self.producto} - {self.tienda}"
 
 # ==============================
 #     PRODUCTOS Y CATEGORÍAS
@@ -132,6 +88,25 @@ class Producto(models.Model):
 
     def __str__(self):
         return self.nombre_producto
+
+
+class ProductReference(models.Model):
+    producto = models.ForeignKey('Producto', on_delete=models.CASCADE, related_name='referencias')
+    nombre_fuente = models.CharField(max_length=120)
+    url_fuente = models.URLField(max_length=300, blank=True)
+    precio = models.DecimalField(max_digits=12, decimal_places=2)
+    stock = models.PositiveIntegerField(default=0)
+    nota = models.CharField(max_length=200, blank=True)
+    actualizado = models.DateTimeField(auto_now=True)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['nombre_fuente', 'precio']
+        verbose_name = "Referencia de producto"
+        verbose_name_plural = "Referencias de producto"
+
+    def __str__(self):
+        return f"{self.nombre_fuente} - {self.producto} (${self.precio})"
 
 class EspecificacionProducto(models.Model):
     nombre_especificacion = models.CharField(max_length=100)
@@ -193,32 +168,26 @@ class ProductReview(models.Model):
     
 class Reporte(models.Model):
     ESTADOS = [
-        ('abierto', 'Abierto'),  # Nuevo reporte sin revisar
-        ('pendiente', 'Pendiente'),  # En espera de acción de la tienda
-        ('resuelto', 'Resuelto'),  # Reporte completamente resuelto
-    ]
-    
-    ACCIONES = [
-        ('info_incorrecta', 'Información incorrecta'),
-        ('spam', 'Spam o contenido engañoso'),
-        ('duplicado', 'Producto duplicado'),
-        ('otro', 'Otro motivo'),
-        # Acciones específicas para tiendas
-        ('servicio_deficiente', 'Servicio deficiente'),
-        ('estafa', 'Posible estafa'),
-        ('incumplimiento', 'Incumplimiento de entrega'),
+        ('abierto', 'Abierto'),
+        ('pendiente', 'Pendiente'),
+        ('resuelto', 'Resuelto'),
     ]
 
-    target_type = models.CharField(max_length=20, choices=[('producto', 'Producto'), ('tienda', 'Tienda')])
+    ACCIONES = [
+        ('info_incorrecta', 'Informaci?n incorrecta'),
+        ('spam', 'Spam o contenido enga?oso'),
+        ('duplicado', 'Producto duplicado'),
+        ('otro', 'Otro motivo'),
+    ]
+
+    target_type = models.CharField(max_length=20, choices=[('producto', 'Producto')], default='producto')
     producto = models.ForeignKey('Producto', null=True, blank=True, on_delete=models.CASCADE)
-    tienda = models.ForeignKey('Tienda', null=True, blank=True, on_delete=models.CASCADE)
     reporter = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='reportes_creados')
     motivo = models.CharField(max_length=50, choices=ACCIONES)
     detalle = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     estado = models.CharField(max_length=20, choices=ESTADOS, default='abierto')
-    
-    # Nuevos campos
+
     accion_admin = models.TextField(blank=True, help_text="Notas/instrucciones del administrador")
     fecha_accion = models.DateTimeField(null=True, blank=True)
     admin_actor = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='reportes_moderados')
@@ -230,37 +199,4 @@ class Reporte(models.Model):
         verbose_name = 'Reporte'
         verbose_name_plural = 'Reportes'
 
-class Notificacion(models.Model):
-    TIPOS_NOTIFICACION = [
-        ('reporte_producto', 'Reporte de Producto'),
-        ('producto_eliminado', 'Producto Eliminado'),
-        ('info_incorrecta', 'Información Incorrecta'),
-        ('otro', 'Otro'),
-    ]
-    
-    tienda = models.ForeignKey('Tienda', on_delete=models.CASCADE)
-    tipo = models.CharField(max_length=50, choices=TIPOS_NOTIFICACION, help_text="Tipo de notificación")
-    mensaje = models.TextField()
-    producto = models.ForeignKey('Producto', null=True, blank=True, on_delete=models.SET_NULL)
-    created_at = models.DateTimeField(auto_now_add=True)
-    leida = models.BooleanField(default=False)
-
-    class Meta:
-        ordering = ['-created_at']
-        verbose_name = 'Notificación'
-        verbose_name_plural = 'Notificaciones'
-
 # MODELO PARA RESEÑAS DE TIENDAS
-class StoreReview(models.Model):
-    tienda = models.ForeignKey(Tienda, on_delete=models.CASCADE, related_name='reviews')
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
-    comment = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ['tienda', 'user']
-
-    def __str__(self):
-        return f"Review de {self.user.username} para {self.tienda.nombre_tienda}"

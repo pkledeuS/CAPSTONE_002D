@@ -53,10 +53,12 @@
               <li>{{ trade }}</li>
               {% endfor %}
             </ul>
-            <h3 class="small text-uppercase text-secondary mb-2">Filtros sugeridos</h3>
+            <h3 class="small text-uppercase text-secondary mb-2">Explora filtros sugeridos</h3>
             <div class="d-flex flex-wrap gap-2">
               {% for filter in selected_guide.filters %}
-              <span class="reco-badge reco-badge--link">{{ filter|title }}</span>
+              <a class="reco-badge reco-badge--link" href="{{ filter.url }}">{{ filter.label }}</a>
+              {% empty %}
+              <span class="reco-badge">Sin filtros sugeridos</span>
               {% endfor %}
             </div>
             {% if selected_guide.spec_focus %}

@@ -20,6 +20,9 @@
   --reco-panel-gradient: radial-gradient(circle at 25% 20%, rgba(95, 233, 199, 0.18), transparent 50%), radial-gradient(circle at 80% 0%, rgba(255, 136, 99, 0.18), transparent 45%), rgba(12, 20, 36, 0.96);
   --reco-card-shadow: 0 25px 50px rgba(4, 6, 18, 0.55);
   --reco-card-shadow-soft: 0 16px 30px rgba(4, 6, 18, 0.35);
+  --reco-chip-bg: rgba(255, 255, 255, 0.06);
+  --reco-chip-border: rgba(255, 255, 255, 0.18);
+  --reco-chip-text: #e6eeff;
 }
 
 .theme-light {
@@ -44,6 +47,9 @@
   --reco-panel-gradient: radial-gradient(circle at 25% 20%, rgba(31, 156, 141, 0.22), transparent 50%), radial-gradient(circle at 80% -10%, rgba(255, 122, 90, 0.22), transparent 45%), rgba(247, 249, 255, 0.95);
   --reco-card-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
   --reco-card-shadow-soft: 0 12px 28px rgba(15, 23, 42, 0.12);
+  --reco-chip-bg: rgba(15, 23, 42, 0.04);
+  --reco-chip-border: rgba(15, 23, 42, 0.12);
+  --reco-chip-text: #0f172a;
 }
 
 .reco-container {
@@ -61,6 +67,51 @@ body.reco-app.theme-light {
   background: radial-gradient(circle at 20% 10%, rgba(30, 136, 255, 0.12), transparent 55%),
               radial-gradient(circle at 80% 0%, rgba(255, 111, 97, 0.12), transparent 45%),
               var(--reco-panel-gradient);
+}
+
+.reco-app .form-control,
+.reco-app .form-select,
+.reco-app textarea {
+  background: rgba(10, 16, 28, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f4f8ff;
+  border-radius: .65rem;
+  min-height: 44px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.reco-app .form-control:focus,
+.reco-app .form-select:focus,
+.reco-app textarea:focus {
+  border-color: rgba(110, 211, 255, 0.65);
+  box-shadow: 0 0 0 .15rem rgba(110, 211, 255, 0.2);
+  background: rgba(12, 20, 36, 0.95);
+  color: #f4f8ff;
+}
+
+.reco-app .form-control::placeholder,
+.reco-app textarea::placeholder {
+  color: rgba(244, 248, 255, 0.55);
+}
+
+.reco-app .form-text {
+  color: rgba(248, 251, 255, 0.65);
+}
+
+.reco-app .table {
+  color: #f4f8ff;
+  background: transparent;
+}
+
+.reco-app .table th,
+.reco-app .table td {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.reco-app .table thead th {
+  color: rgba(255, 255, 255, 0.75);
+  border-bottom-color: rgba(255, 255, 255, 0.18);
 }
 
 .theme-light .reco-hero {
@@ -92,13 +143,55 @@ body.reco-app.theme-light {
 }
 
 .theme-light .reco-badge {
-  background: rgba(15, 23, 42, 0.06);
-  color: #0f172a;
+  background: var(--reco-chip-bg);
+  border-color: var(--reco-chip-border);
+  color: var(--reco-chip-text);
 }
 
 .theme-light .reco-badge--link {
   border-color: rgba(30, 136, 255, 0.35);
   color: #1e88ff;
+}
+
+.theme-light .form-control,
+.theme-light .form-select,
+.theme-light textarea {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.02);
+}
+
+.theme-light .form-control:focus,
+.theme-light .form-select:focus,
+.theme-light textarea:focus {
+  border-color: rgba(30, 136, 255, 0.45);
+  box-shadow: 0 0 0 .15rem rgba(30, 136, 255, 0.18);
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.theme-light .form-control::placeholder,
+.theme-light textarea::placeholder {
+  color: rgba(16, 24, 40, 0.55);
+}
+
+.theme-light .form-text {
+  color: rgba(16, 24, 40, 0.65) !important;
+}
+
+.theme-light .table {
+  color: #0f172a;
+}
+
+.theme-light .table th,
+.theme-light .table td {
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.theme-light .table thead th {
+  color: rgba(16, 24, 40, 0.75);
+  border-bottom-color: rgba(15, 23, 42, 0.12);
 }
 
 .theme-light .reco-badge--positive {
@@ -307,7 +400,7 @@ body.reco-app.theme-light {
 }
 
 .reco-section {
-  background: rgba(251, 249, 255, 0.9);
+  background: linear-gradient(115deg, rgba(75, 51, 240, 0.08), rgba(34, 203, 211, 0.08));
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 1.5rem;
   padding: 1.5rem;
@@ -568,8 +661,9 @@ body.reco-app.theme-light {
   font-size: .75rem;
   font-weight: 600;
   letter-spacing: .01em;
-  background: var(--reco-primary-soft);
-  color: var(--reco-muted);
+  background: var(--reco-chip-bg);
+  color: var(--reco-chip-text);
+  border: 1px solid var(--reco-chip-border);
 }
 
 a.reco-badge {
@@ -577,12 +671,12 @@ a.reco-badge {
 }
 
 .reco-badge--link {
-  border: 1px solid rgba(41, 28, 86, 0.25);
+  border-color: rgba(110, 211, 255, 0.35);
 }
 
 .reco-badge--link:hover,
 .reco-badge--link:focus {
-  background: rgba(41, 28, 86, 0.08);
+  background: rgba(110, 211, 255, 0.15);
   color: var(--reco-primary);
 }
 
@@ -599,6 +693,32 @@ a.reco-badge {
 .reco-badge--accent {
   background: var(--reco-accent-soft);
   color: var(--reco-accent-contrast);
+}
+
+.reco-save-form {
+  display: inline-flex;
+  margin: 0;
+}
+
+.reco-save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  min-width: 7rem;
+  font-weight: 600;
+  border-radius: 999px;
+}
+
+.reco-save-btn.is-active {
+  background: var(--reco-accent);
+  color: var(--reco-accent-contrast);
+  border-color: transparent;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+}
+
+.theme-light .reco-save-btn.is-active {
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.15);
 }
 
 .reco-criteria {
@@ -828,18 +948,25 @@ a.reco-badge {
   margin: 2px;
 }
 
-.reco-rating-picker {
+.reco-rating-stars {
   display: inline-flex;
-  gap: .25rem;
-  font-size: 1.25rem;
-  cursor: pointer;
+  gap: .2rem;
   color: var(--reco-muted);
 }
 
-.reco-rating-picker span {
+.reco-rating-stars span {
   transition: color .2s ease;
 }
 
-.reco-rating-picker span.is-filled {
+.reco-rating-stars span.is-filled {
   color: var(--reco-accent);
+}
+
+.reco-rating-picker {
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.reco-rating-static {
+  font-size: 1rem;
 }

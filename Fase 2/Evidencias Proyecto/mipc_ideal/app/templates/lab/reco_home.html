@@ -146,7 +146,7 @@
 
                 <p class="reco-alt-hint mb-3">{{ item.educational_hint }}</p>
 
-                <div class="d-flex flex-wrap gap-2">
+                <div class="d-flex flex-wrap gap-2 align-items-center">
                   <a href="{{ item.detail_url }}" class="btn btn-sm btn-outline-primary"
                      data-reco-track="view-detail" aria-label="Ver detalle de {{ item.name }}">
                     Ver detalle
@@ -182,6 +182,31 @@
                   <a href="{% url 'reco_explore' %}" class="btn btn-sm btn-outline-secondary"
                      data-reco-track="view-alternatives" aria-label="Explorar alternativas para {{ item.name }}">
                     Explorar mas
+                  </a>
+                  {% endif %}
+                  {% if request.user.is_authenticated %}
+                  <form method="post" action="{% url 'reco_toggle_favorite' %}" class="reco-save-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="product_id" value="{{ item.id }}">
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    {% if item.is_favorite %}
+                    <input type="hidden" name="mode" value="remove">
+                    <button type="submit" class="btn btn-sm btn-outline-primary reco-save-btn is-active"
+                            aria-pressed="true" data-reco-track="favorite-remove">
+                      Guardado
+                    </button>
+                    {% else %}
+                    <button type="submit" class="btn btn-sm btn-outline-primary reco-save-btn"
+                            aria-pressed="false" data-reco-track="favorite-add">
+                      Guardar
+                    </button>
+                    {% endif %}
+                  </form>
+                  {% else %}
+                  <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}"
+                     class="btn btn-sm btn-outline-primary reco-save-btn"
+                     data-reco-track="favorite-login" role="button">
+                    Guardar
                   </a>
                   {% endif %}
                 </div>

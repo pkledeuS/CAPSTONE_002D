@@ -74,26 +74,14 @@
                     </button>
                     <ul class="dropdown-menu site-dropdown">
                         {% if user.is_authenticated %}
-                            {% if user.is_staff or user.is_superuser %}
-                                <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}">Panel de administracion</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                            {% elif perfil and perfil.profile_type == 'admin' %}
-                                <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}">Panel de administracion</a></li>
+                            {% if user.is_staff or user.is_superuser or perfil and perfil.profile_type == 'admin' %}
+                                <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}">Panel de administración</a></li>
                                 <li><hr class="dropdown-divider"></li>
                             {% endif %}
-                            {% if perfil and perfil.profile_type == 'usuario' %}
-                                <li><a class="dropdown-item" href="{% url 'edit_profile' %}">Editar perfil</a></li>
-                                <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesion</a></li>
-                            {% elif perfil and perfil.profile_type == 'tienda' %}
-                                <li><a class="dropdown-item" href="{% url 'edit_profile' %}">Editar perfil</a></li>
-                                <li><a class="dropdown-item" href="{% url 'store_offer_new' %}">Crear producto</a></li>
-                                <li><a class="dropdown-item" href="{% url 'store_offers_list' %}">Mis productos</a></li>
-                                <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesion</a></li>
-                            {% else %}
-                                <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesion</a></li>
-                            {% endif %}
+                            <li><a class="dropdown-item" href="{% url 'edit_profile' %}">Editar perfil</a></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesión</a></li>
                         {% else %}
-                            <li><a class="dropdown-item" href="{% url 'login' %}">Iniciar sesion</a></li>
+                            <li><a class="dropdown-item" href="{% url 'login' %}">Iniciar sesión</a></li>
                             <li><a class="dropdown-item" href="{% url 'register' %}">Registrarse</a></li>
                         {% endif %}
                     </ul>

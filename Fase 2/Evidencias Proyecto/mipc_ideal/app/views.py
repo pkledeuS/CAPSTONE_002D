@@ -16,14 +16,19 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.text import slugify
 from django.views.decorators.http import require_POST
-from .models import StoreReview, TiendaServicio
-from .forms import StoreReviewForm
-
-from .forms import RegisterForm, ExistingProductOfferForm, ProductReviewForm, model_key
+from .forms import RegisterForm, ProductReviewForm
 from .models import (
-    Notificacion, Producto, CategoriaProducto, Reporte, TipoProducto,
-    TipoServicio, PreferenciaUsuario, TiendaCategoria, Tienda, Profile,
-    ChatSession, ChatTurn, EspecificacionProducto, TiendaProducto, MarcaProducto,
+    Producto,
+    CategoriaProducto,
+    Reporte,
+    TipoProducto,
+    PreferenciaUsuario,
+    Profile,
+    ChatSession,
+    ChatTurn,
+    EspecificacionProducto,
+    MarcaProducto,
+    ProductReference,
     ProductReview,
 )
 from .services.llm_provider import LLMClient
@@ -255,12 +260,9 @@ def _specs_canon_sorted(prod: Producto):
     return ordered, tipo
 
 def _price_stats(prod: Producto):
-    agg = TiendaProducto.objects.filter(producto=prod).aggregate(
+    agg = ProductReference.objects.filter(producto=prod).aggregate(
         pmin=Min('precio'), pmax=Max('precio'), stock=Sum('stock')
     )
-    if agg.get("pmax") is None:
-        pvals = list(TiendaProducto.objects.filter(producto=prod).values_list("precio", flat=True))
-        agg["pmax"] = max(pvals) if pvals else None
     return agg.get('pmin'), agg.get('pmax'), agg.get('stock') or 0
 
 def _review_stats(prod: Producto):
@@ -500,35 +502,6 @@ def _make_compare_payload(prod_a: Producto, prod_b: Producto, request):
         "rows": rows
     }
 
-def _get_or_create_tienda_for_user(user):
-    tienda = Tienda.objects.filter(user=user).first()
-    if tienda:
-        return tienda
-    local = slugify(user.username) or f"user{user.id}"
-    placeholder_email = f"{local}@placeholder.local"
-    tienda = Tienda.objects.create(
-        user=user,
-        nombre_tienda=(user.get_full_name() or user.username).strip(),
-        email_tienda=placeholder_email,
-        descripcion_tienda="",
-        direccion_tienda=""
-    )
-    return tienda
-
-# ===== RERANKING INTELIGENTE =====
-_GPU_TIERS = {
-    r"rtx\s*4090": 10, r"rtx\s*4080": 9, r"rtx\s*4070": 8,
-    r"rtx\s*4060": 7,  r"rtx\s*4050": 6, r"rtx\s*3060": 5,
-    r"rtx\s*3050": 4,
-    r"rx\s*7700": 7, r"rx\s*7600": 6, r"rx\s*6800": 6,
-}
-_CPU_TIERS = {
-    r"i9-1[3-5]\d{3}": 9, r"i7-1[2-5]\d{3}": 8, r"i5-1[2-5]\d{3}": 6,
-    r"i9-10\d{3}": 7, r"i7-10\d{3}": 6, r"i5-10\d{3}": 5,
-    r"ryzen\s*9\s*7": 8, r"ryzen\s*7\s*7": 7, r"ryzen\s*5\s*7": 6,
-    r"ryzen\s*9\s*5": 7, r"ryzen\s*7\s*5": 6, r"ryzen\s*5\s*5": 5,
-}
-_HZ_BONUS = [(240, 2.0), (165, 1.5), (144, 1.2)]
 
 def _text_blob_for_product(p):
     parts = [p.nombre_producto or "", p.modelo_producto or ""]
@@ -614,10 +587,11 @@ def _intent_mejor(text: str) -> bool:
 def home(request):
     productos_vistos = Producto.objects.filter(is_active=True).order_by('-vistas')[:6]
     productos_recientes = Producto.objects.filter(is_active=True).order_by('-fecha_creacion')[:6]
+    categorias = CategoriaProducto.objects.all()
     return render(request, 'home.html', {
         'productos_vistos': productos_vistos,
         'productos_recientes': productos_recientes,
-        'tiendas': Tienda.objects.all()
+        'categorias': categorias,
     })
 
 def info(request):
@@ -644,8 +618,8 @@ def products(request):
         )
 
     productos = productos.annotate(
-        min_price=Min('tiendaproducto__precio'),
-        total_stock=Sum('tiendaproducto__stock'),
+        min_price=Min('referencias__precio'),
+        total_stock=Sum('referencias__stock'),
     )
 
     if tipo_id:
@@ -694,8 +668,7 @@ def product_detail(request, producto_id):
         producto.save(update_fields=['vistas'])
         request.session[session_key] = True
 
-    ofertas = TiendaProducto.objects.filter(producto=producto)\
-        .select_related('tienda').order_by('precio')
+    referencias = ProductReference.objects.filter(producto=producto).order_by('precio')
 
     agg = producto.reviews.aggregate(avg=Avg('rating'), total=Count('id'))
     avg_rating = agg['avg'] or 0
@@ -729,7 +702,7 @@ def product_detail(request, producto_id):
 
     return render(request, 'product-detail.html', {
         'producto': producto,
-        'ofertas': ofertas,
+        'referencias': referencias,
         'avg_rating': avg_rating,
         'avg_int': avg_int,
         'total_reviews': total_reviews,
@@ -760,17 +733,6 @@ def reportar_producto(request, producto_id):
 
 @login_required
 @require_POST
-def reportar_tienda(request, tienda_id):
-    motivo = (request.POST.get('motivo') or '').strip()
-    detalle= (request.POST.get('detalle') or '').strip()
-    t = get_object_or_404(Tienda, id=tienda_id)
-    Reporte.objects.create(
-        target_type='tienda', tienda=t,
-        reporter=request.user, motivo=motivo, detalle=detalle
-    )
-    messages.success(request, "Gracias, tu reporte fue enviado.")
-    return redirect('store_public_detail', tienda_id=tienda_id)
-
 def products_by_category(request, categoria_id):
     categoria = get_object_or_404(CategoriaProducto, id=categoria_id)
     tipo_id = request.GET.get('tipo') or ''
@@ -782,8 +744,8 @@ def products_by_category(request, categoria_id):
     productos = (Producto.objects
                 .filter(categoria_producto=categoria, is_active=True)
                 .select_related('marca_producto','categoria_producto','tipo_producto')
-                .annotate(min_price=Min('tiendaproducto__precio'),
-                        total_stock=Sum('tiendaproducto__stock')))
+                .annotate(min_price=Min('referencias__precio'),
+                        total_stock=Sum('referencias__stock')))
 
     if tipo_id:
         productos = productos.filter(tipo_producto_id=tipo_id)
@@ -831,8 +793,8 @@ def products_by_type(request, tipo_id):
     productos = (Producto.objects
                 .filter(tipo_producto=tipo, is_active=True)
                 .select_related('marca_producto','categoria_producto','tipo_producto')
-                .annotate(min_price=Min('tiendaproducto__precio'),
-                        total_stock=Sum('tiendaproducto__stock')))
+                .annotate(min_price=Min('referencias__precio'),
+                        total_stock=Sum('referencias__stock')))
 
     if q:
         productos = productos.filter(
@@ -866,7 +828,7 @@ def products_by_type(request, tipo_id):
     productos = productos.order_by('categoria_producto__nombre_categoria', 'nombre_producto')
     productos_recientes = Producto.objects.order_by('-fecha_creacion')[:6]
 
-    return render(request, 'products-view.html', {
+    return render(request, 'reco_explore.html', {
         'tipo': tipo,
         'productos': productos,
         'productos_recientes': productos_recientes,
@@ -941,416 +903,38 @@ def logout(request):
 @login_required
 def edit_profile(request):
     user = request.user
-    profile = Profile.objects.get(user=user)
-    context = {'user': user, 'profile_type': profile.profile_type}
+    profile, _ = Profile.objects.get_or_create(user=user, defaults={"profile_type": "admin" if user.is_staff else "usuario"})
 
-    # --- PERFIL USUARIO ---
-    if profile.profile_type == 'usuario':
-        categorias = CategoriaProducto.objects.all()
-        tipos = TipoProducto.objects.all()
+    if request.method == 'POST':
+        username = (request.POST.get('username') or '').strip()
+        new_email = (request.POST.get('new_email') or '').strip()
+        new_password = (request.POST.get('new_password') or '').strip()
 
-        if request.method == 'POST':
-            username = request.POST.get('username')
-            new_email = request.POST.get('new_email')
-            new_password = request.POST.get('new_password')
+        if username:
+            user.username = username
+        if new_email:
+            user.email = new_email
+        if new_password:
+            user.set_password(new_password)
+        user.save()
 
-            if username:
-                user.username = username
-            if new_email:
-                user.email = new_email
-            if new_password:
-                user.set_password(new_password)
-            user.save()
+        messages.success(request, 'Cambios guardados correctamente.')
+        return redirect('edit_profile')
 
-            PreferenciaUsuario.objects.filter(usuario=user).delete()
-            seleccion_categorias = request.POST.getlist('categorias')
-            seleccion_tipos = request.POST.getlist('tipos')
-
-            for categoria_id in seleccion_categorias:
-                PreferenciaUsuario.objects.create(usuario=user, categoria_id=categoria_id)
-            for tipo_id in seleccion_tipos:
-                PreferenciaUsuario.objects.create(usuario=user, tipo_producto_id=tipo_id)
-
-            messages.success(request, "Cambios guardados correctamente.")
-            return redirect('edit_profile')
-        else:
-            seleccionadas = PreferenciaUsuario.objects.filter(usuario=user)
-
-        context.update({
-            'categorias': categorias,
-            'tipos': tipos,
-            'seleccionadas_categorias': list(seleccionadas.values_list('categoria_id', flat=True)),
-            'seleccionadas_tipos': list(seleccionadas.values_list('tipo_producto_id', flat=True))
-        })
-
-    # --- PERFIL TIENDA ---
-    elif profile.profile_type == 'tienda':
-        servicios = TipoServicio.objects.all()
-        categorias = CategoriaProducto.objects.all()
-        tienda = Tienda.objects.filter(user=user).first()
-
-        if request.method == 'POST':
-            username = request.POST.get('username')
-            new_email = request.POST.get('new_email')
-            new_password = request.POST.get('new_password')
-            if username: user.username = username
-            if new_email: user.email = new_email
-            if new_password: user.set_password(new_password)
-            user.save()
-
-            # Limpiar y guardar categorías
-            TiendaCategoria.objects.filter(tienda=tienda).delete()
-            seleccion_categorias = request.POST.getlist('categorias')
-            for categoria_id in seleccion_categorias:
-                TiendaCategoria.objects.create(tienda=tienda, categoria_id=categoria_id)
-
-            # Limpiar y guardar servicios
-            TiendaServicio.objects.filter(tienda=tienda).delete()  # Agregar este modelo si no existe
-            seleccion_servicios = request.POST.getlist('servicios')
-            for servicio_id in seleccion_servicios:
-                TiendaServicio.objects.create(tienda=tienda, tipo_servicio_id=servicio_id)
-
-            nombre_tienda      = (request.POST.get('nombre_tienda') or '').strip()
-            descripcion_tienda = (request.POST.get('descripcion_tienda') or '').strip()
-            direccion_tienda   = (request.POST.get('direccion_tienda') or '').strip()
-            url_tienda        = (request.POST.get('url_tienda') or '').strip()
-            img                = request.FILES.get('image_tienda')
-
-            if nombre_tienda:
-                tienda.nombre_tienda = nombre_tienda
-            tienda.descripcion_tienda = descripcion_tienda
-            tienda.direccion_tienda   = direccion_tienda
-            tienda.url_tienda        = url_tienda
-            if img:
-                tienda.image_tienda = img
-
-            tienda.save()
-
-            messages.success(request, "Cambios de tienda guardados correctamente.")
-            return redirect('edit_profile')
-        else:
-            seleccionadas_categorias = TiendaCategoria.objects.filter(tienda=tienda).values_list('categoria_id', flat=True)
-            seleccionados_servicios = TiendaServicio.objects.filter(tienda=tienda).values_list('tipo_servicio_id', flat=True)
-
-        context.update({
-            'servicios': servicios,
-            'categorias': categorias,
-            'seleccionadas_categorias': list(seleccionadas_categorias),
-            'seleccionados_servicios': list(seleccionados_servicios),
-            'tienda': tienda,
-        })
-
+    context = {
+        'user': user,
+        'profile_type': profile.profile_type,
+    }
     return render(request, 'edit-profile.html', context)
 
-def _require_store_profile(request):
-    profile = Profile.objects.get(user=request.user)
-    if profile.profile_type != 'tienda':
-        messages.error(request, "Debes tener perfil de tienda para acceder.")
-        return None
-    return profile
 
-@login_required
-def store_offers_list(request):
-    """Vista de listado de productos de la tienda"""
-    profile = _require_store_profile(request)
-    if not profile:
-        return redirect('home')
-        
-    tienda = get_object_or_404(Tienda, user=request.user)
-    
-    # Obtener ofertas con notificaciones pendientes
-    ofertas = TiendaProducto.objects.filter(tienda=tienda).select_related('producto')
-    
-    # Obtener notificaciones no leídas y agruparlas por tipo
-    notificaciones = (Notificacion.objects
-        .filter(tienda=tienda, leida=False)
-        .order_by('-created_at'))
-    
-    # Agrupar notificaciones por producto y por tipo
-    notif_por_producto = {}
-    for notif in notificaciones:
-        if notif.producto:
-            if notif.producto.id not in notif_por_producto:
-                notif_por_producto[notif.producto.id] = []
-            notif_por_producto[notif.producto.id].append({
-                'id': notif.id,
-                'tipo': notif.get_tipo_display(),
-                'mensaje': notif.mensaje,
-                'fecha': notif.created_at,
-                'leida': notif.leida
-            })
-    
-    return render(request, 'store/offers_list.html', {
-        'ofertas': ofertas,
-        'notificaciones': notificaciones,
-        'notif_por_producto': notif_por_producto,
-    })
 
-@login_required
-def store_offer_new(request):
-    profile = _require_store_profile(request)
-    if not profile:
-        return redirect('home')
 
-    tienda = _get_or_create_tienda_for_user(request.user)
 
-    if request.method == 'POST':
-        mode = request.POST.get('mode', 'existing')  # 'existing' | 'new'
 
-        # ---- EXISTENTE
-        if mode == 'existing':
-            form_existing = ExistingProductOfferForm(request.POST)
-            form_new = NewProductAndOfferForm()  # vacío
-            if form_existing.is_valid():
-                producto = form_existing.cleaned_data['producto']
-                precio = form_existing.cleaned_data['precio']
-                url_externa = form_existing.cleaned_data.get('url_externa') or None
-                stock = form_existing.cleaned_data.get('stock') or 0
-                nota = form_existing.cleaned_data.get('nota_tienda') or ""
 
-                oferta, created = TiendaProducto.objects.get_or_create(
-                    tienda=tienda, producto=producto,
-                    defaults={'precio': precio, 'url_externa': url_externa, 'stock': stock, 'nota_tienda': nota}
-                )
-                if not created:
-                    oferta.precio = precio
-                    oferta.url_externa = url_externa
-                    oferta.stock = stock
-                    oferta.nota_tienda = nota
-                    oferta.save()
-
-                messages.success(request, "Oferta guardada correctamente.")
-                return redirect('store_offers_list')
-
-        # ---- NUEVO + OFERTA
-        else:
-            form_existing = ExistingProductOfferForm()
-            form_new = NewProductAndOfferForm(request.POST, request.FILES)
-            if form_new.is_valid():
-                marca = form_new.cleaned_data['marca_producto']
-                categoria = form_new.cleaned_data['categoria_producto']
-                tipo = form_new.cleaned_data['tipo_producto']
-
-                modelo_disp   = (form_new.cleaned_data.get('modelo_producto') or "").strip()
-                nombre_manual = (form_new.cleaned_data.get('nombre_producto') or "").strip()
-                descripcion   = form_new.cleaned_data.get('descripcion_producto') or ""
-                imagen        = form_new.cleaned_data.get('imagen_producto')
-
-                modelo_key_val = getattr(form_new, "_modelo_key", None)
-                modelo_display = getattr(form_new, "_modelo_display", None)
-                nombre_autogen = getattr(form_new, "_nombre_autogen", None)
-
-                if not modelo_disp and modelo_display:
-                    modelo_disp = modelo_display
-
-                if nombre_manual:
-                    nombre_final = nombre_manual
-                elif nombre_autogen:
-                    nombre_final = nombre_autogen
-                else:
-                    nombre_final = f"{marca.nombre_marca} {modelo_disp}".strip()
-
-                precio = form_new.cleaned_data['precio']
-                url_externa = form_new.cleaned_data.get('url_externa') or None
-                stock = form_new.cleaned_data.get('stock') or 0
-                nota = form_new.cleaned_data.get('nota_tienda') or ""
-
-                candidatos = Producto.objects.filter(marca_producto=marca)
-                producto = None
-                if modelo_key_val:
-                    from .forms import model_key as _model_key
-                    for p in candidatos:
-                        try:
-                            if _model_key(p.modelo_producto) == modelo_key_val:
-                                producto = p
-                                break
-                        except Exception:
-                            continue
-                if not producto and modelo_disp:
-                    producto = candidatos.filter(modelo_producto__iexact=modelo_disp).first()
-
-                if not producto:
-                    producto = Producto.objects.create(
-                        nombre_producto=nombre_final,
-                        modelo_producto=modelo_disp,
-                        descripcion_producto=descripcion,
-                        imagen_producto=imagen,
-                        marca_producto=marca,
-                        categoria_producto=categoria,
-                        tipo_producto=tipo
-                    )
-
-                oferta, created = TiendaProducto.objects.get_or_create(
-                    tienda=tienda, producto=producto,
-                    defaults={'precio': precio, 'url_externa': url_externa, 'stock': stock, 'nota_tienda': nota}
-                )
-                if not created:
-                    oferta.precio = precio
-                    oferta.url_externa = url_externa
-                    oferta.stock = stock
-                    oferta.nota_tienda = nota
-                    oferta.save()
-
-                names = request.POST.getlist('spec_name[]')
-                vals  = request.POST.getlist('spec_value[]')
-                if names and vals:
-                    for n, v in zip(names, vals):
-                        n = _canonize_spec_name((n or '').strip())
-                        v = (v or '').strip()
-                        if n and v:
-                            EspecificacionProducto.objects.create(
-                                producto=producto,
-                                nombre_especificacion=n,
-                                valor_especificacion=v
-                            )
-
-                messages.success(request, "Producto y oferta guardados correctamente.")
-                return redirect('store_offers_list')
-
-        # Si algo no valida, re-render con errores
-        return render(request, 'store/offer_form.html', {
-            'form_existing': form_existing,
-            'form_new': form_new,
-            'tienda': tienda,
-            'tiposproductos': TipoProducto.objects.all(),
-        })
-
-    # GET
-    form_existing = ExistingProductOfferForm()
-    form_new = NewProductAndOfferForm()
-    return render(request, 'store/offer_form.html', {
-        'form_existing': form_existing,
-        'form_new': form_new,
-        'tienda': tienda,
-        'tiposproductos': TipoProducto.objects.all(),
-    })
-
-@login_required
-def store_offer_edit(request, oferta_id):
-    profile = _require_store_profile(request)
-    if not profile:
-        return redirect('home')
-
-    tienda = Tienda.objects.filter(user=request.user).first()
-    oferta = get_object_or_404(TiendaProducto, id=oferta_id, tienda=tienda)
-
-    if request.method == 'POST':
-        try:
-            precio = request.POST.get('precio')
-            stock = request.POST.get('stock', 0)
-            url_externa = request.POST.get('url_externa', '')
-            nota_tienda = request.POST.get('nota_tienda', '')
-            
-            oferta.precio = precio
-            oferta.stock = stock
-            oferta.url_externa = url_externa
-            oferta.nota_tienda = nota_tienda
-            oferta.save()
-            
-            messages.success(request, "Oferta actualizada correctamente")
-            return redirect('store_offers_list')
-        except Exception as e:
-            messages.error(request, f"No se pudo actualizar la oferta: {str(e)}")
-
-    return render(request, 'store/offer_edit.html', {'oferta': oferta})
-
-@login_required
-def store_offer_delete(request, oferta_id):
-    profile = _require_store_profile(request)
-    if not profile:
-        return redirect('home')
-
-    tienda = Tienda.objects.filter(user=request.user).first()
-    oferta = get_object_or_404(TiendaProducto, id=oferta_id, tienda=tienda)
-
-    if request.method == 'POST':
-        oferta.delete()
-        messages.success(request, "Oferta eliminada.")
-        return redirect('store_offers_list')
-
-    return render(request, 'store/offer_delete_confirm.html', {'oferta': oferta})
-
-@login_required
-@require_POST
-def mark_notification_read(request, notification_id):
-    """Marca una notificación como leída"""
-    notification = get_object_or_404(
-        Notificacion, 
-        id=notification_id,
-        tienda__user=request.user
-    )
-    notification.leida = True
-    notification.save()
-    
-    # Redireccionar a la página anterior
-    next_url = request.POST.get('next', 'store_notifications')
-    return redirect(next_url)
 
 # === Form local: NewProductAndOfferForm (evita choque con import) ===
-class NewProductAndOfferForm(forms.ModelForm):
-    # Oferta
-    precio = forms.DecimalField(
-        max_digits=10, decimal_places=2,
-        widget=forms.NumberInput(attrs={
-            "class": "form-control",
-            "placeholder": "749990",
-            "inputmode": "numeric",
-            "step": "1"
-        })
-    )
-    url_externa = forms.URLField(
-        required=False,
-        widget=forms.URLInput(attrs={
-            "class": "form-control",
-            "placeholder": "https://tu-tienda.cl/producto/...",
-        })
-    )
-    stock = forms.IntegerField(
-        min_value=0,
-        widget=forms.NumberInput(attrs={
-            "class": "form-control",
-            "placeholder": "10",
-            "inputmode": "numeric"
-        })
-    )
-    nota_tienda = forms.CharField(
-        required=False,
-        widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "Ej. Entrega 24h | Garantía 12m",
-        })
-    )
-    # Producto
-    modelo_producto = forms.CharField(
-        widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "Ej. Lenovo LOQ 15IRH8"
-        })
-    )
-    descripcion_producto = forms.CharField(
-        widget=forms.Textarea(attrs={
-            "class": "form-control",
-            "rows": 3,
-            "placeholder": 'Ej. Laptop gamer 15.6" 144 Hz, i5-13420H + RTX 4060, 16 GB RAM, 512 GB SSD'
-        })
-    )
-    imagen_producto = forms.ImageField(
-        required=False,
-        widget=forms.ClearableFileInput(attrs={"class": "form-control"})
-    )
-
-    class Meta:
-        model = Producto
-        fields = (
-            "modelo_producto", "descripcion_producto", "imagen_producto",
-            "marca_producto", "tipo_producto", "categoria_producto",
-        )
-        widgets = {
-            "marca_producto":    forms.Select(attrs={"class": "form-select"}),
-            "tipo_producto":     forms.Select(attrs={"class": "form-select"}),
-            "categoria_producto":forms.Select(attrs={"class": "form-select"}),
-        }
-
 # =========================
 #   CHECKS / PREFERENCIAS
 # =========================
@@ -1632,124 +1216,4 @@ def api_products_by_type_brand(request):
         products.append({'id': p['id'], 'name': name})
     return JsonResponse({'products': products})
 
-@login_required
-def store_notifications(request):
-    """Vista de notificaciones para tiendas"""
-    profile = _require_store_profile(request)
-    if not profile:
-        return redirect('home')
-        
-    tienda = get_object_or_404(Tienda, user=request.user)
-    
-    # Determinar qué notificaciones mostrar
-    show_read = request.GET.get('filter') == 'all'
-    
-    # Consultar notificaciones según el filtro
-    notifications = Notificacion.objects.filter(tienda=tienda)
-    if not show_read:
-        notifications = notifications.filter(leida=False)
-    
-    # Ordenar por fecha descendente
-    notifications = notifications.order_by('-created_at')
-    
-    # Contar no leídas para el badge
-    unread_count = notifications.filter(leida=False).count()
-    
-    return render(request, 'store/notifications.html', {
-        'notifications': notifications,
-        'show_read': show_read,
-        'unread_count': unread_count,
-    })
 
-@login_required
-@require_POST
-def store_offer_quick_edit(request, oferta_id):
-    """Vista para edición rápida desde notificaciones"""
-    profile = _require_store_profile(request)
-    if not profile:
-        return redirect('home')
-        
-    tienda = get_object_or_404(Tienda, user=request.user)
-    oferta = get_object_or_404(TiendaProducto, id=oferta_id, tienda=tienda)
-    
-    # Actualizar información del producto
-    producto = oferta.producto
-    producto.nombre_producto = request.POST.get('nombre', '').strip()
-    producto.modelo_producto = request.POST.get('modelo', '').strip()
-    producto.descripcion_producto = request.POST.get('descripcion', '').strip()
-    producto.save()
-    
-    # Actualizar precio si cambió
-    try:
-        nuevo_precio = float(request.POST.get('precio', '0'))
-        if nuevo_precio > 0:
-            oferta.precio = nuevo_precio
-            oferta.save()
-    except (ValueError, TypeError):
-        pass
-
-    # Marcar notificaciones como leídas
-    Notificacion.objects.filter(
-        tienda=tienda,
-        producto=producto,
-        leida=False
-    ).update(leida=True)
-
-    # Buscar y actualizar el reporte asociado
-    reporte = Reporte.objects.filter(
-        producto=producto,
-        estado='resuelto',
-        notificacion_leida=False
-    ).order_by('-fecha_accion').first()
-
-    if reporte:
-        # Registrar que la tienda atendió el reporte
-        reporte.notificacion_leida = True
-        reporte.fecha_actualizacion = timezone.now()
-        reporte.save()
-
-    messages.success(request, 'Información actualizada correctamente')
-    return redirect('store_offers_list')
-
-def store_detail(request, tienda_id):
-    tienda = get_object_or_404(Tienda, id=tienda_id)
-    
-    # Obtener servicios de la tienda
-    servicios = TipoServicio.objects.filter(tiendaservicio__tienda=tienda)
-    
-    # Obtener categorías de la tienda
-    categorias = CategoriaProducto.objects.filter(tiendacategoria__tienda=tienda)
-    
-    # Obtener reseñas y calcular promedio
-    agg = tienda.reviews.aggregate(avg=Avg('rating'), total=Count('id'))
-    avg_rating = agg['avg'] or 0
-    total_reviews = agg['total'] or 0
-    reviews = tienda.reviews.select_related('user')
-    avg_int = int(avg_rating)
-
-    if request.method == 'POST' and request.user.is_authenticated:
-        form = StoreReviewForm(request.POST)
-        if form.is_valid():
-            rating = form.cleaned_data['rating']
-            comment = form.cleaned_data['comment']
-
-            StoreReview.objects.update_or_create(tienda=tienda, user=request.user, defaults={'rating': rating, 'comment': comment})
-            messages.success(request, '¡Tu reseña fue guardada!')
-            return redirect(reverse('store_detail', args=[tienda.id]) + '#reviews')
-    else:
-        initial = {}
-        if request.user.is_authenticated:
-            my = StoreReview.objects.filter(tienda=tienda, user=request.user).first()
-            if my:
-                initial = {'rating': my.rating, 'comment': my.comment}
-        form = StoreReviewForm(initial=initial)
-
-    return render(request, 'store-detail.html', {
-        'tienda': tienda,
-        'servicios': servicios,
-        'avg_rating': avg_rating,
-        'avg_int': avg_int,
-        'total_reviews': total_reviews,
-        'reviews': reviews,
-        'form_review': form,
-    })

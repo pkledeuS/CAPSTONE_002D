@@ -34,19 +34,30 @@
     <h1 class="h4 mb-0">Explorar recomendaciones</h1>
     <div class="d-flex gap-2 flex-wrap">
       <a class="btn btn-outline-secondary btn-sm {% if selected_filters.sort == 'match' %}active{% endif %}"
-         href="?{% if selected_filters.categoria %}categoria={{ selected_filters.categoria }}&{% endif %}{% if selected_filters.tipo %}tipo={{ selected_filters.tipo }}&{% endif %}{% if selected_filters.presupuesto %}presupuesto={{ selected_filters.presupuesto }}&{% endif %}sort=match"
+         href="{{ sort_urls.match }}"
          aria-label="Ordenar por mejor match">Mejor match</a>
       <a class="btn btn-outline-secondary btn-sm {% if selected_filters.sort == 'value' %}active{% endif %}"
-         href="?{% if selected_filters.categoria %}categoria={{ selected_filters.categoria }}&{% endif %}{% if selected_filters.tipo %}tipo={{ selected_filters.tipo }}&{% endif %}{% if selected_filters.presupuesto %}presupuesto={{ selected_filters.presupuesto }}&{% endif %}sort=value"
+         href="{{ sort_urls.value }}"
          aria-label="Ordenar por relacion rendimiento dinero">Rend/$$</a>
       <a class="btn btn-outline-secondary btn-sm {% if selected_filters.sort == 'quiet' %}active{% endif %}"
-         href="?{% if selected_filters.categoria %}categoria={{ selected_filters.categoria }}&{% endif %}{% if selected_filters.tipo %}tipo={{ selected_filters.tipo }}&{% endif %}{% if selected_filters.presupuesto %}presupuesto={{ selected_filters.presupuesto }}&{% endif %}sort=quiet"
+         href="{{ sort_urls.quiet }}"
          aria-label="Ordenar por nivel de silencio">Silencio</a>
       <a class="btn btn-outline-secondary btn-sm {% if selected_filters.sort == 'portable' %}active{% endif %}"
-         href="?{% if selected_filters.categoria %}categoria={{ selected_filters.categoria }}&{% endif %}{% if selected_filters.tipo %}tipo={{ selected_filters.tipo }}&{% endif %}{% if selected_filters.presupuesto %}presupuesto={{ selected_filters.presupuesto }}&{% endif %}sort=portable"
+         href="{{ sort_urls.portable }}"
          aria-label="Ordenar por portabilidad">Portabilidad</a>
     </div>
   </div>
+
+  {% if active_spec_filters %}
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <div class="d-flex flex-wrap gap-2">
+      {% for badge in active_spec_filters %}
+      <span class="reco-badge">{{ badge }}</span>
+      {% endfor %}
+    </div>
+    <a href="{{ clear_spec_filters_url }}" class="btn btn-link btn-sm ms-auto">Limpiar filtros avanzados</a>
+  </div>
+  {% endif %}
 
   {% if compat_notice %}
   <div class="alert alert-{{ compat_notice_level }} mb-4">
@@ -196,7 +207,7 @@
                     </details>
                   </div>
 
-                  <div class="d-flex flex-wrap gap-2 mt-3">
+                  <div class="d-flex flex-wrap gap-2 mt-3 align-items-center">
                     <a href="{{ product.detail_url }}" class="btn btn-sm btn-primary">
                       Ver detalle
                     </a>
@@ -204,6 +215,31 @@
                        class="btn btn-sm btn-outline-primary">
                       Ver compatibles
                     </a>
+                    {% if request.user.is_authenticated %}
+                    <form method="post" action="{% url 'reco_toggle_favorite' %}" class="reco-save-form">
+                      {% csrf_token %}
+                      <input type="hidden" name="product_id" value="{{ product.id }}">
+                      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                      {% if product.is_favorite %}
+                      <input type="hidden" name="mode" value="remove">
+                      <button type="submit" class="btn btn-sm btn-outline-primary reco-save-btn is-active"
+                              aria-pressed="true" data-reco-track="favorite-remove">
+                        Guardado
+                      </button>
+                      {% else %}
+                      <button type="submit" class="btn btn-sm btn-outline-primary reco-save-btn"
+                              aria-pressed="false" data-reco-track="favorite-add">
+                        Guardar
+                      </button>
+                      {% endif %}
+                    </form>
+                    {% else %}
+                    <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}"
+                       class="btn btn-sm btn-outline-primary reco-save-btn"
+                       data-reco-track="favorite-login" role="button">
+                      Guardar
+                    </a>
+                    {% endif %}
                   </div>
                 </div>
               </div>

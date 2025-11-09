@@ -29,6 +29,50 @@
   </div>
 
   {% if saved_cards %}
+  <section class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3 align-items-center">
+        <div class="col-12 col-md-4">
+          <p class="text-secondary small mb-1">Promedio de match</p>
+          <h3 class="h4 mb-0">
+            {% if saved_insights.avg_match %}
+              {{ saved_insights.avg_match }}%
+            {% else %}
+              -
+            {% endif %}
+          </h3>
+          <p class="reco-alt-hint small mb-0">Basado en {{ saved_total }} guardado{% if saved_total != 1 %}s{% endif %}.</p>
+        </div>
+        {% if saved_insights.top_type %}
+        <div class="col-12 col-md-4">
+          <p class="text-secondary small mb-1">Perfil dominante</p>
+          <h6 class="mb-0">{{ saved_insights.top_type.label }}</h6>
+          <p class="reco-alt-hint small mb-0">{{ saved_insights.top_type.count }} producto{% if saved_insights.top_type.count != 1 %}s{% endif %} en esta linea editorial.</p>
+        </div>
+        {% endif %}
+        {% if saved_insights.price_range %}
+        <div class="col-12 col-md-4">
+          <p class="text-secondary small mb-1">Rango de precios de referencia</p>
+          <h6 class="mb-0">{{ saved_insights.price_range }}</h6>
+          <p class="reco-alt-hint small mb-0">Se recalcula con fuentes neutrales cada vez que visitas tus guardados.</p>
+        </div>
+        {% endif %}
+      </div>
+      {% if saved_insights.spotlights %}
+      <div class="mt-3">
+        <p class="text-secondary small mb-1">Destacados del laboratorio</p>
+        <div class="d-flex flex-wrap gap-2">
+          {% for spot in saved_insights.spotlights %}
+          <a href="{{ spot.product.detail_url }}" class="reco-badge reco-badge--accent">
+            {{ spot.title }} · {{ spot.product.name }}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
   <div class="row g-3">
     {% for entry in saved_cards %}
     {% with product=entry.product %}
@@ -60,7 +104,16 @@
                   </div>
                   {% endif %}
                 </div>
-                <span class="badge reco-badge-match">Match {{ product.match }}</span>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge reco-badge-match">Match {{ product.match }}</span>
+                  <form method="post" action="{% url 'reco_saved' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="favorite_id" value="{{ entry.favorite_id }}">
+                    <button type="submit" class="btn btn-link btn-sm text-danger p-0" data-reco-track="remove-favorite">
+                      Quitar
+                    </button>
+                  </form>
+                </div>
               </div>
               <div class="text-secondary small mt-1">
                 {% if product.min_price_display %}
