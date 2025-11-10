@@ -14,12 +14,6 @@
     <form method="post" id="loginForm" novalidate>
         {% csrf_token %}
         
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-info text-center">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-
         <!-- Campo usuario -->
         <div class="form-group">
             <div class="input-group mb-3">

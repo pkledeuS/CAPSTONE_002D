@@ -688,22 +688,103 @@ def _value_profile(min_price: Decimal | None) -> Tuple[str, int]:
     return ("Inversion", 3)
 
 
-def _silence_profile(product: Producto, specs: Dict[str, str], description: str) -> Tuple[str, int]:
+def _value_product(product: Producto, specs: Dict[str, str], price: Decimal | None) -> Tuple[str, int]:
+    """
+    Determina el valor/precio específico para cada tipo de producto.
+    Ranking: 0 = Económico, 1 = Medio, 2 = Alto, 3 = Premium
+    """
+    if price is None:
+        return ("Pendiente", 3)
     tipo = _norm(product.tipo_producto.nombre_tipo if product.tipo_producto_id else "")
-    if "memoria" in tipo or "almacenamiento" in tipo:
-        return ("Silencioso", 0)
+    price_float = float(price)
+    # Procesadores
+    if "procesador" in tipo:
+        if price_float >= 400000:
+            return ("Premium", 3)
+        elif price_float >= 250000:
+            return ("Alto Rendimiento", 2)
+        elif price_float >= 150000:
+            return ("Gama Media", 1)
+        return ("Básico / Económico", 0)
+    # Placas madre
+    if "placa" in tipo or "motherboard" in tipo:
+        if price_float >= 250000:
+            return ("Premium", 3)
+        elif price_float >= 150000:
+            return ("Alto Rendimiento", 2)
+        elif price_float >= 80000:
+            return ("Gama Media", 1)
+        return ("Básico / Económico", 0)
+    # Memoria RAM
+    if "memoria" in tipo:
+        if price_float >= 100000:
+            return ("Premium", 3)
+        elif price_float >= 60000:
+            return ("Alto Rendimiento", 2)
+        elif price_float >= 35000:
+            return ("Gama Media", 1)
+        return ("Básico / Económico", 0)
+    # Tarjetas gráficas
+    if "tarjeta" in tipo:
+        if price_float >= 800000:
+            return ("Premium", 3)
+        elif price_float >= 400000:
+            return ("Alto Rendimiento", 2)
+        elif price_float >= 200000:
+            return ("Gama Media", 1)
+        return ("Básico / Económico", 0)
+    # Fuentes de poder
     if "fuente" in tipo:
-        return ("Ventilador semi-passive", 1)
-    tdp = _extract_tdp(specs, description)
+        if price_float >= 120000:
+            return ("Premium", 3)
+        elif price_float >= 80000:
+            return ("Alto Rendimiento", 2)
+        elif price_float >= 45000:
+            return ("Gama Media", 1)
+        return ("Básico / Económico", 0)
+    # Notebooks/Laptops
     if "notebook" in tipo or "laptop" in tipo:
-        return ("Balanceado", 1)
-    if tdp is None:
-        return ("Depende del armado", 2)
-    if tdp <= 65:
-        return ("Controlado", 1)
-    if tdp <= 105:
-        return (f"TDP {int(tdp)} W", 2)
-    return (f"TDP {int(tdp)} W", 3)
+        if price_float >= 1100000:
+            return ("Premium", 3)
+        elif price_float >= 700000:
+            return ("Alto Rendimiento", 2)
+        elif price_float >= 400000:
+            return ("Gama Media", 1)
+        return ("Básico / Económico", 0)
+    # All in One
+    if "all in one" in tipo:
+        if price_float >= 1200000:
+            return ("Premium", 3)
+        elif price_float >= 800000:
+            return ("Estándar", 2)
+        elif price_float >= 500000:
+            return ("Medio", 1)
+        return ("Básico / Económico", 0)
+    # Para otros productos usar rangos generales
+    if price_float >= 1000000:
+        return ("Premium", 3)
+    elif price_float >= 600000:
+        return ("Estándar", 2)
+    elif price_float >= 300000:
+        return ("Medio", 1)
+    return ("Básico / Económico", 0)
+
+
+def _ventilation_profile(product: Producto, specs: Dict[str, str], description: str) -> Tuple[str, int]:
+    tipo = _norm(product.tipo_producto.nombre_tipo if product.tipo_producto_id else "")
+    if "procesador" in tipo:
+        return ("Activa (Ventilador)", 2)
+    if "placa" in tipo or "motherboard" in tipo:
+        return ("Pasiva (Disipadores Fijos)", 1)
+    if "memoria" in tipo or "almacenamiento" in tipo:
+        return ("Pasiva (Disipador)", 1)
+    if "tarjeta" in tipo:
+        return ("Activa (Doble/Triple Ventilador)", 2)
+    if "fuente" in tipo:
+        return ("Semi-Pasivo (Ventilador)", 2)
+    if "notebook" in tipo or "all in one" in tipo:
+        return ("Activa (Interna)", 2)
+    return ("No requiere disipación", 0)
 
 
 def _portability_profile(product: Producto, specs: Dict[str, str], description: str) -> Tuple[str, int]:
@@ -713,9 +794,9 @@ def _portability_profile(product: Producto, specs: Dict[str, str], description: 
     if "notebook" in tipo or "laptop" in tipo:
         weight = _extract_weight(specs, description)
         if weight is not None:
-            if weight <= 1.3:
+            if weight <= 1300:
                 return ("Ultraligera", 0)
-            if weight <= 1.8:
+            if weight <= 1800:
                 return ("Ligera", 1)
             return (f"{weight:.1f} g", 2)
         return ("Portatil", 1)
@@ -726,18 +807,21 @@ def _portability_profile(product: Producto, specs: Dict[str, str], description: 
 
 def _thermal_profile(product: Producto, specs: Dict[str, str], description: str) -> Tuple[str, int]:
     tipo = _norm(product.tipo_producto.nombre_tipo if product.tipo_producto_id else "")
-    tdp = _extract_tdp(specs, description)
-    if tdp is not None:
-        if tdp <= 65:
-            return ("Eficiente", 0)
-        if tdp <= 105:
-            return (f"{int(tdp)} W", 1)
-        return (f"{int(tdp)} W", 3)
-    if "notebook" in tipo or "laptop" in tipo:
-        return ("Perfil dual", 1)
+    if "procesador" in tipo:
+        return ("Revisa la pasta térmica y el ventilador.", 2)
+    if "placa" in tipo or "motherboard" in tipo:
+        return ("Permite el paso del aire sobre los chips.", 1)
     if "memoria" in tipo or "almacenamiento" in tipo:
-        return ("Baja disipacion", 0)
-    return ("Requiere flujo", 2)
+        return ("Garantiza aire fresco y estable.", 1)
+    if "tarjeta" in tipo or "fuente" in tipo:
+        return ("Asegura la salida del aire caliente.", 1)
+    if "fuente" in tipo:
+        return ("Evita que aspire aire caliente de la PC.", 2)
+    if "notebook" in tipo or "laptop" in tipo:
+        return ("No lo cubras ni lo dejes cerca de calor extremo.", 1)
+    if "all-in-one" in tipo or "laptop" in tipo:
+        return ("No lo cubras ni lo dejes cerca de calor extremo.", 1)
+    return ("No requiere flujo", 0)
 
 
 def _compute_match(avg_rating: float, review_count: int, view_count: int, min_price: Decimal | None, stock_total: int) -> int:
@@ -795,8 +879,6 @@ def _product_tradeoffs(min_price: Decimal | None, review_count: int, stock_total
 
 
 def _educational_hint(avg_rating: float, review_count: int, min_price: Decimal | None, tipo: str) -> str:
-    if avg_rating and review_count:
-        return f"Promedio {avg_rating:.1f}/5 con {review_count} opiniones; contrasta con tu flujo antes de decidir."
     if min_price:
         price_display = _format_currency(min_price)
         if price_display:
@@ -808,19 +890,19 @@ def _educational_hint(avg_rating: float, review_count: int, min_price: Decimal |
 
 
 def _build_criteria(product: Producto, specs: Dict[str, str], description: str) -> Tuple[List[Dict[str, str]], Dict[str, int]]:
-    value_label, value_rank = _value_profile(product.min_price)
-    silence_label, silence_rank = _silence_profile(product, specs, description)
+    value_label, value_rank = _value_product(product, specs, product.min_price)
+    ventilation_label, ventilation_rank = _ventilation_profile(product, specs, description)
     portability_label, portability_rank = _portability_profile(product, specs, description)
     thermal_label, thermal_rank = _thermal_profile(product, specs, description)
     criteria = [
-        {"label": "Rend/$$", "value": value_label},
-        {"label": "Silencio", "value": silence_label},
+        {"label": "Gama", "value": value_label},
+        {"label": "Disipación", "value": ventilation_label},
         {"label": "Portabilidad", "value": portability_label},
-        {"label": "Termales", "value": thermal_label},
+        {"label": "Temperaturas", "value": thermal_label},
     ]
     ranks = {
         "value": value_rank,
-        "quiet": silence_rank,
+        "quiet": ventilation_rank,
         "portable": portability_rank,
         "thermals": thermal_rank,
     }
@@ -880,8 +962,8 @@ def _build_type_profile(product: Producto, specs: Dict[str, str]) -> Dict[str, L
         if igpu and "no" not in igpu.lower():
             add_highlight(f"iGPU {igpu}")
         add_metric("Socket", _spec_lookup(specs, "Socket"))
+        add_metric("Cores", _spec_lookup(specs, "Nucleos / hilos"))
         add_metric("TDP", _spec_lookup(specs, "TDP"))
-        add_metric("Proceso", _spec_lookup(specs, "Proceso de manufactura"))
         add_metric("Cooler", _spec_lookup(specs, "Cooler"))
 
     elif "notebook" in type_norm:
@@ -908,8 +990,8 @@ def _build_type_profile(product: Producto, specs: Dict[str, str]) -> Dict[str, L
         add_highlight(_spec_lookup(specs, "RAM"))
         add_highlight(_spec_lookup(specs, "Tarjeta de video"))
         add_metric("Pantalla", _spec_lookup(specs, "Pantalla"))
+        add_metric("Procesador", _spec_lookup(specs, "Procesador"))
         add_metric("Almacenamiento", _spec_lookup(specs, "Almacenamiento"))
-        add_metric("Peso", _spec_lookup(specs, "Peso"))
         add_metric("SO", _spec_lookup(specs, "Sistema Operativo"))
 
     elif "tarjeta" in type_norm or "grafica" in type_norm or "gráfica" in type_norm:
@@ -917,7 +999,7 @@ def _build_type_profile(product: Producto, specs: Dict[str, str]) -> Dict[str, L
         add_highlight(_spec_lookup(specs, "Memoria"))
         add_highlight(_spec_lookup(specs, "Frecuencias core (base / boost)"))
         add_metric("Bus", _spec_lookup(specs, "Bus"))
-        add_metric("Conectores", _spec_lookup(specs, "Conectores de poder"))
+        add_metric("Memoria", _spec_lookup(specs, "Memoria"))
         add_metric("Refrigeracion", _spec_lookup(specs, "Refrigeracion"))
         add_metric("Largo", _spec_lookup(specs, "Largo"))
 
@@ -927,8 +1009,8 @@ def _build_type_profile(product: Producto, specs: Dict[str, str]) -> Dict[str, L
         add_highlight(_spec_lookup(specs, "Latencia Cl (CAS)"))
         add_metric("Tipo", _spec_lookup(specs, "Tipo"))
         add_metric("Voltaje", _spec_lookup(specs, "Voltaje"))
-        add_metric("Formato", _spec_lookup(specs, "Formato"))
-        add_metric("ECC", _spec_lookup(specs, "Soporte ECC"))
+        add_metric("Velocidad", _spec_lookup(specs, "Velocidad"))
+        add_metric("Capacidad", _spec_lookup(specs, "Capacidad"))
 
     elif "fuente" in type_norm or "power" in type_norm:
         add_highlight(_spec_lookup(specs, "Potencia"))
@@ -936,10 +1018,10 @@ def _build_type_profile(product: Producto, specs: Dict[str, str]) -> Dict[str, L
         modular = _spec_lookup(specs, "Modular")
         if modular:
             add_highlight(f"Modular: {modular}")
-        add_metric("PFC activo", _spec_lookup(specs, "PFC activo"))
-        add_metric("Linea 12V", _spec_lookup(specs, "Corriente en la linea de 12 V"))
+        add_metric("Potencia", _spec_lookup(specs, "Potencia"))
+        add_metric("Modular", _spec_lookup(specs, "Modular"))
+        add_metric("Tamaño", _spec_lookup(specs, "Tamano"))
         add_metric("Conectores", _spec_lookup(specs, "Conectores de energia"))
-        add_metric("Tamano", _spec_lookup(specs, "Tamano"))
 
     elif "placa" in type_norm or "mother" in type_norm:
         socket = _spec_lookup(specs, "Socket")
@@ -950,10 +1032,10 @@ def _build_type_profile(product: Producto, specs: Dict[str, str]) -> Dict[str, L
             add_highlight(socket or chipset)
         add_highlight(_spec_lookup(specs, "Formato"))
         add_highlight(_spec_lookup(specs, "Soporte RGB"))
+        add_metric("Socket", _spec_lookup(specs, "Socket"))
         add_metric("Slots RAM", _spec_lookup(specs, "Slots memorias"))
-        add_metric("M.2", _spec_lookup(specs, "Conectores"))
-        add_metric("Puertos traseros", _spec_lookup(specs, "Puertos"))
-        add_metric("Alimentacion", _spec_lookup(specs, "Puertos de energia"))
+        add_metric("Canales memoria", _spec_lookup(specs, "Canales memoria"))
+        add_metric("Puertos de video", _spec_lookup(specs, "Puertos de video"))
 
     if not profile["highlights"]:
         for value in list(specs.values())[:3]:
@@ -1519,7 +1601,6 @@ def _product_payload(product: Producto) -> Dict[str, object]:
         "type_profile": type_profile,
         "type_highlights": type_profile["highlights"][:2],
         "type_metrics": type_profile["metrics"][:4],
-        "rating_display": f"{avg_rating:.1f}/5" if review_count else None,
         "supports_compatibility": _supports_compatibility(type_name),
     }
     payload["_spec_map"] = specs
@@ -1740,10 +1821,10 @@ def reco_explore(request):
         payload["match_score"] = payload["match"]
         payload["match_pill"] = payload.get("match_summary") or payload.get("educational_hint")
         payload["criteria"] = [
-            {"label": "Rend/$$", "value": payload["criteria"][0]["value"]},
-            {"label": "Silencio", "value": payload["criteria"][1]["value"]},
+            {"label": "Gama", "value": payload["criteria"][0]["value"]},
+            {"label": "Disipación", "value": payload["criteria"][1]["value"]},
             {"label": "Portabilidad", "value": payload["criteria"][2]["value"]},
-            {"label": "Termales", "value": payload["criteria"][3]["value"]},
+            {"label": "Temperaturas", "value": payload["criteria"][3]["value"]},
         ]
 
     selected = {
@@ -1906,10 +1987,10 @@ def reco_detail(request):
     payload["is_favorite"] = product.id in favorite_ids
     specs = payload.pop("_spec_map", specs)
     payload["criteria"] = [
-        {"label": "Rend/$$", "value": payload["criteria"][0]["value"]},
-        {"label": "Silencio", "value": payload["criteria"][1]["value"]},
+        {"label": "Gama", "value": payload["criteria"][0]["value"]},
+        {"label": "Disipación", "value": payload["criteria"][1]["value"]},
         {"label": "Portabilidad", "value": payload["criteria"][2]["value"]},
-        {"label": "Termales", "value": payload["criteria"][3]["value"]},
+        {"label": "Temperaturas", "value": payload["criteria"][3]["value"]},
     ]
     payload["summary_bullets"] = _detail_summary(payload)
     payload["for_whom"] = _for_whom_text(product)

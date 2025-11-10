@@ -853,27 +853,6 @@ def register(request):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 auth_login(request, user)
-
-            try:
-                profile = Profile.objects.get(user=user)
-                if profile.profile_type == 'tienda':
-                    tienda = _get_or_create_tienda_for_user(user)
-                    nombre_tienda      = (request.POST.get('nombre_tienda') or "").strip()
-                    descripcion_tienda = (request.POST.get('descripcion_tienda') or "").strip()
-                    direccion_tienda   = (request.POST.get('direccion_tienda') or "").strip()
-                    img                = request.FILES.get('image_tienda')
-                    if nombre_tienda:
-                        tienda.nombre_tienda = nombre_tienda
-                    if descripcion_tienda is not None:
-                        tienda.descripcion_tienda = descripcion_tienda
-                    if direccion_tienda is not None:
-                        tienda.direccion_tienda = direccion_tienda
-                    if img:
-                        tienda.image_tienda = img
-                    tienda.save()
-            except Exception as e:
-                messages.warning(request, f"Cuenta creada, pero hubo un detalle al configurar la tienda: {e}")
-
             return redirect('edit_profile')
     else:
         form = RegisterForm()

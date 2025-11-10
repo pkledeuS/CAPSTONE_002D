@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}MiPC Ideal{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'img/logo.png' %}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css">
     {% block css %}{% endblock %}
@@ -17,7 +18,11 @@
     <header class="site-header">
         <div class="site-shell site-header__primary">
             <div class="site-branding">
-                <a class="site-branding__logo" href="{% url 'reco_home' %}">MiPC Ideal</a>
+                <a class="site-branding__logo" href="{% url 'reco_home' %}">
+                    <img src="{% static 'img/logo.png' %}" width="65" height="55" alt="MiPC Ideal Logo" class="logo-header">
+                    {# Si quieres que el texto "MiPC Ideal" aparezca junto al logo, puedes añadirlo aquí: #}
+                    <span>MiPC Ideal</span>
+                </a>
                 <p class="site-branding__meta">Recomendador editorial de hardware</p>
             </div>
             <div class="site-search">

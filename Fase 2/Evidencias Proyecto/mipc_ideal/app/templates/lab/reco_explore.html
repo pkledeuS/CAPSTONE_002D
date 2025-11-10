@@ -38,10 +38,10 @@
          aria-label="Ordenar por mejor match">Mejor match</a>
       <a class="btn btn-outline-secondary btn-sm {% if selected_filters.sort == 'value' %}active{% endif %}"
          href="{{ sort_urls.value }}"
-         aria-label="Ordenar por relacion rendimiento dinero">Rend/$$</a>
+         aria-label="Ordenar por relacion rendimiento dinero">Gama</a>
       <a class="btn btn-outline-secondary btn-sm {% if selected_filters.sort == 'quiet' %}active{% endif %}"
          href="{{ sort_urls.quiet }}"
-         aria-label="Ordenar por nivel de silencio">Silencio</a>
+         aria-label="Ordenar por nivel de disipación">Disipación</a>
       <a class="btn btn-outline-secondary btn-sm {% if selected_filters.sort == 'portable' %}active{% endif %}"
          href="{{ sort_urls.portable }}"
          aria-label="Ordenar por portabilidad">Portabilidad</a>
@@ -143,10 +143,6 @@
                       <h3 class="h6 mb-1">{{ product.name }}</h3>
                       <div class="text-secondary small">
                         {% if product.brand %}{{ product.brand }}{% endif %}
-                        {% if product.rating_display %}
-                          {% if product.brand %} - {% endif %}{{ product.rating_display }}
-                          {% if product.review_count %} ({{ product.review_count }}){% endif %}
-                        {% endif %}
                       </div>
                       {% if product.min_price_display %}
                       <div class="fw-semibold small text-success mt-1">Desde {{ product.min_price_display }}</div>
@@ -168,29 +164,31 @@
                     </div>
                     <div class="text-end">
                       <span class="badge reco-badge-match mb-1">Match {{ product.match_score }}%</span>
-                      {% if product.match_pill %}
-                      <p class="small text-secondary mb-0">{{ product.match_pill }}</p>
-                      {% endif %}
                     </div>
                   </div>
 
                   <div class="mt-3">
-                    <p class="text-success small fw-semibold mb-1">Razones editoriales</p>
-                    <ul class="reco-top-highlights small text-secondary">
-                      {% for reason in product.reasons|slice:":2" %}
-                      <li>+ {{ reason }}</li>
-                      {% endfor %}
-                    </ul>
-                    {% if product.tradeoffs %}
-                    <div class="mt-2">
-                      <p class="text-warning small fw-semibold mb-1">Trade-offs</p>
-                      <ul class="reco-top-highlights small text-secondary">
-                        {% for trade in product.tradeoffs|slice:":1" %}
-                        <li>- {{ trade }}</li>
-                        {% endfor %}
-                      </ul>
+                    <div class="d-flex flex-column flex-md-row gap-3">
+                      <div class="flex-fill">
+                        <p class="text-success small fw-semibold mb-1">Razones editoriales</p>
+                        <ul class="reco-top-highlights small text-secondary mb-0">
+                          {% for reason in product.reasons|slice:":2" %}
+                          <li class="mb-1">+ {{ reason }}</li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+
+                      {% if product.tradeoffs %}
+                      <div class="flex-fill">
+                        <p class="text-warning small fw-semibold mb-1">Trade-offs</p>
+                        <ul class="reco-top-highlights small text-secondary mb-0">
+                          {% for trade in product.tradeoffs|slice:":1" %}
+                          <li class="mb-1">- {{ trade }}</li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+                      {% endif %}
                     </div>
-                    {% endif %}
                   </div>
 
                   <div class="reco-top-metrics mt-3">
