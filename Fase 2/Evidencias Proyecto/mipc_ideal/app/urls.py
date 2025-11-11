@@ -5,7 +5,14 @@ from . import views_admin
 from . import views_reco
 
 urlpatterns = [
-    path('', views.home, name='home'),
+    path('', views_reco.reco_home, name='reco_home'),
+    path('lab/reco-explore/', views_reco.reco_explore, name='reco_explore'),
+    path('lab/reco-detail/', views_reco.reco_detail, name='reco_detail'),
+    path('lab/reco-guides/', views_reco.reco_guides, name='reco_guides'),
+    path('lab/reco-preferences/', views_reco.reco_preferences, name='reco_preferences'),
+    path('lab/reco-saved/', views_reco.reco_saved, name='reco_saved'),
+    path('lab/reco-favorite/', views_reco.reco_toggle_favorite, name='reco_toggle_favorite'),
+
     path('login/', views.login, name='login'),
     path('register/', views.register, name='register'),
     path('logout/', views.logout, name='logout'),
@@ -51,18 +58,6 @@ urlpatterns = [
     path('admin-panel/reportes/<int:pk>/<str:action>/', views_admin.admin_report_action, name='admin_report_action'),
 
     path('reportar/producto/<int:producto_id>/', views.reportar_producto, name='reportar_producto'),
-    path('lab/reco-home/', views_reco.reco_home, name='reco_home'),
-
-    path('lab/reco-explore/', views_reco.reco_explore, name='reco_explore'),
-
-    path('lab/reco-detail/', views_reco.reco_detail, name='reco_detail'),
-
-    path('lab/reco-guides/', views_reco.reco_guides, name='reco_guides'),
-
-    path('lab/reco-preferences/', views_reco.reco_preferences, name='reco_preferences'),
-
-    path('lab/reco-saved/', views_reco.reco_saved, name='reco_saved'),
-    path('lab/reco-favorite/', views_reco.reco_toggle_favorite, name='reco_toggle_favorite'),
 
 ]
 

@@ -770,15 +770,20 @@ a.reco-badge {
 }
 
 .reco-icon {
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
+  min-width: 60px;
+  min-height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
   border-radius: 12px;
   background: rgba(31, 58, 104, 0.06);
   border: 1px solid rgba(31, 58, 104, 0.15);
   color: var(--reco-primary);
   font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .object-fit-cover {
