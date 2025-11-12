@@ -1,12 +1,11 @@
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Count
 from .models import (
-    CategoriaProducto, 
-    Tienda, 
-    Producto, 
-    TipoProducto, 
-    ProductoVisto, 
-    Profile
+    CategoriaProducto,
+    Producto,
+    TipoProducto,
+    ProductoVisto,
+    Profile,
 )
 
 # Context Processors Globales
@@ -52,8 +51,7 @@ def home(request):
     NOTA: Debería moverse a views.py
     """
     return render(request, 'home.html', {
-        'categorias': CategoriaProducto.objects.all(), 
-        'tiendas': Tienda.objects.all(),
+        'categorias': CategoriaProducto.objects.all(),
         'productos_vistos': (Producto.objects
             .annotate(total_visitas=Count('productovisto'))
             .order_by('-total_visitas')[:6])

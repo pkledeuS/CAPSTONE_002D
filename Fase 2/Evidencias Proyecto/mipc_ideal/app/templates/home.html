@@ -5,29 +5,6 @@
 {% block content %}
     
     <div class="title">
-        <h3>Tiendas asociadas</h3>
-    </div>
-    <div class="carousel-2">
-        {% if tiendas %}
-            {% for tienda in tiendas %}
-                <div class="product-item card product-card h-100">
-                {% if tienda.image_tienda %}
-                    <img src="{{ tienda.image_tienda.url }}" class="card-img-top" alt="{{ tienda.nombre_tienda }}">
-                {% else %}
-                    <img src="{% static 'img/tienda.png' %}" class="card-img-top" alt="{{ tienda.nombre_tienda }}">
-                {% endif %}
-                <div class="card-body">
-                    <h6 class="card-title">{{ tienda.nombre_tienda }}</h6>
-                    <p class="card-text">{{ tienda.descripcion_tienda|default:"Sin descripción." }}</p>
-                    <a href="{% url 'store_detail' tienda.id %}" class="btn btn-sm btn-primary">Ver más</a>
-                </div>
-                </div>
-            {% endfor %}
-        {% else %}
-            <div class="card pd2-empty">Aún no hay tiendas registradas.</div>
-        {% endif %}
-    </div>
-    <div class="title">
         <h3>Categorias</h3>
     </div>
     <div class="cards-popular">

@@ -1,26 +1,31 @@
 import re
 import unicodedata
-from collections import defaultdict
+from collections import Counter, defaultdict
 from decimal import Decimal
 from typing import Dict, List, Tuple
+from urllib.parse import urlencode
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Count, DecimalField, IntegerField, Max, Min, Prefetch, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from django.http import Http404
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from .models import (
     CategoriaProducto,
     EspecificacionProducto,
     Producto,
+    ProductReference,
     ProductReview,
     PreferenciaUsuario,
     ProductosFavoritos,
-    TiendaProducto,
     TipoProducto,
+    Profile,
 )
+from .forms import ProductReviewForm
 from .views import SPEC_CANON, SPEC_TEMPLATES, _norm_key
 
 
@@ -72,6 +77,150 @@ def _categories_with_inventory():
         .filter(prod_count__gt=0)
     )
 
+
+def _favorite_ids_for(user) -> set[int]:
+    if not user.is_authenticated:
+        return set()
+    return set(
+        ProductosFavoritos.objects.filter(usuario=user).values_list("producto_id", flat=True)
+    )
+
+
+def _format_budget_label(min_value: int | None, max_value: int | None) -> str | None:
+    if not min_value and not max_value:
+        return None
+    if min_value and max_value:
+        return f"{_format_currency(Decimal(str(min_value)))} - {_format_currency(Decimal(str(max_value)))}"
+    if min_value:
+        return f"Desde {_format_currency(Decimal(str(min_value)))}"
+    if max_value:
+        return f"Hasta {_format_currency(Decimal(str(max_value)))}"
+    return None
+
+
+def _user_preference_context(user) -> Dict[str, object]:
+    context = {
+        "categories": [],
+        "category_ids": set(),
+        "types": [],
+        "type_ids": set(),
+        "budget_min": None,
+        "budget_max": None,
+        "budget_label": None,
+        "notes": "",
+        "has_prefs": False,
+    }
+    if not user.is_authenticated:
+        return context
+
+    pref_entries = PreferenciaUsuario.objects.filter(usuario=user)
+    category_ids = {pref.categoria_id for pref in pref_entries if pref.categoria_id}
+    type_ids = {pref.tipo_producto_id for pref in pref_entries if pref.tipo_producto_id}
+
+    if category_ids:
+        categories = list(
+            CategoriaProducto.objects.filter(id__in=category_ids)
+            .values("id", "nombre_categoria")
+            .order_by("nombre_categoria")
+        )
+        context["categories"] = categories
+        context["category_ids"] = {cat["id"] for cat in categories}
+    if type_ids:
+        types = list(
+            TipoProducto.objects.filter(id__in=type_ids)
+            .values("id", "nombre_tipo")
+            .order_by("nombre_tipo")
+        )
+        context["types"] = types
+        context["type_ids"] = {tipo["id"] for tipo in types}
+
+    profile = Profile.objects.filter(user=user).first()
+    if profile:
+        context["budget_min"] = profile.preferred_budget_min
+        context["budget_max"] = profile.preferred_budget_max if profile.preferred_budget_max else None
+        context["budget_label"] = _format_budget_label(profile.preferred_budget_min, profile.preferred_budget_max)
+        context["notes"] = profile.preference_notes or ""
+
+    context["has_prefs"] = bool(context["categories"] or context["types"] or context["budget_label"] or context["notes"])
+    return context
+
+
+def _apply_preference_match(payload: Dict[str, object], pref_ctx: Dict[str, object]) -> None:
+    if not pref_ctx or not pref_ctx.get("has_prefs"):
+        payload["match_summary"] = None
+        payload["sort_match"] = -payload.get("match", 0)
+        return
+
+    base_match = payload.get("match", 0)
+    bonus = 0
+    factors: List[str] = []
+    category_label = None
+    type_label = None
+    budget_caption = None
+    categories = pref_ctx.get("category_ids") or set()
+    if categories:
+        product_categories = set(payload.get("category_all_ids") or [])
+        if product_categories & categories:
+            bonus += 4
+            category_label = next(
+                (cat["nombre_categoria"] for cat in pref_ctx.get("categories", []) if cat["id"] in product_categories),
+                None,
+            )
+            if category_label:
+                factors.append(f"Categoria preferida: {category_label}")
+        else:
+            factors.append("Fuera de tus categorias principales")
+            bonus -= 1
+
+    types = pref_ctx.get("type_ids") or set()
+    if types:
+        if payload.get("type_id") in types:
+            bonus += 3
+            type_label = next(
+                (tipo["nombre_tipo"] for tipo in pref_ctx.get("types", []) if tipo["id"] == payload.get("type_id")),
+                None,
+            )
+            if type_label:
+                factors.append(f"Formato que sigues: {type_label}")
+        else:
+            factors.append("Formato distinto a tus preferencias")
+
+    min_budget = pref_ctx.get("budget_min")
+    max_budget = pref_ctx.get("budget_max")
+    price_value = payload.get("min_price_value")
+    if price_value is not None and (min_budget or max_budget):
+        within = True
+        if min_budget and price_value < min_budget:
+            within = False
+        if max_budget and price_value > max_budget:
+            within = False
+        if within:
+            bonus += 3
+            factors.append("En tu rango de inversion")
+        else:
+            bonus -= 2
+            factors.append("Revisa rango de inversion")
+    elif min_budget or max_budget:
+        factors.append("Sin precio para comparar con tu inversion")
+
+    avg_rating = payload.get("avg_rating")
+    review_count = payload.get("review_count", 0)
+    if avg_rating and review_count:
+        factors.append(f"Valorado {avg_rating:.1f}/5 ({review_count} reseñas)")
+
+    payload["match"] = max(75, min(99, base_match + bonus))
+    caption_parts: List[str] = []
+    if category_label:
+        caption_parts.append(category_label)
+    if type_label:
+        caption_parts.append(type_label)
+    budget_label = pref_ctx.get("budget_label")
+    if budget_label:
+        caption_parts.append(budget_label)
+
+    payload["match_summary"] = "; ".join(factors)
+    payload["match_caption"] = " · ".join(caption_parts) if caption_parts else None
+    payload["sort_match"] = -payload["match"]
 
 def _norm(text: str) -> str:
     text = (text or "").strip().lower()
@@ -147,6 +296,385 @@ def _extract_tdp(spec_map: Dict[str, str], description: str) -> float | None:
     return None
 
 
+def _safe_float(value: str | None) -> float | None:
+    if value is None:
+        return None
+    try:
+        return float(str(value).replace(",", "."))
+    except ValueError:
+        return None
+
+
+def _convert_capacity_unit(value: float | None, unit: str) -> float | None:
+    if value is None:
+        return None
+    unit = unit.lower()
+    if unit == "tb":
+        return value * 1024
+    if unit == "mb":
+        return value / 1024
+    return value
+
+
+def _parse_capacity_gb(text: str | None) -> float | None:
+    if not text:
+        return None
+    sample = text.lower()
+    unit_hint = "gb"
+    if "tb" in sample:
+        unit_hint = "tb"
+    elif "mb" in sample:
+        unit_hint = "mb"
+    multi = re.search(r"(\d+(?:[\.,]\d+)?)\s*x\s*(\d+(?:[\.,]\d+)?)", sample)
+    if multi:
+        qty = _safe_float(multi.group(1))
+        size = _safe_float(multi.group(2))
+        if qty is not None and size is not None:
+            return _convert_capacity_unit(qty * size, unit_hint)
+    match = re.search(r"(\d+(?:[\.,]\d+)?)\s*(tb|gb|mb)", sample)
+    if match:
+        value = _safe_float(match.group(1))
+        return _convert_capacity_unit(value, match.group(2))
+    return None
+
+
+def _parse_weight_grams(text: str | None) -> float | None:
+    if not text:
+        return None
+    match = re.search(r"(\d+(?:[\.,]\d+)?)\s*(kg|g)", text.lower())
+    if not match:
+        return None
+    value = _safe_float(match.group(1))
+    if value is None:
+        return None
+    unit = match.group(2)
+    if unit == "kg":
+        return value * 1000
+    return value
+
+
+def _parse_battery_wh(text: str | None) -> float | None:
+    if not text:
+        return None
+    match = re.search(r"(\d+(?:[\.,]\d+)?)\s*(wh|mwh)", text.lower())
+    if not match:
+        return None
+    value = _safe_float(match.group(1))
+    if value is None:
+        return None
+    if match.group(2) == "mwh":
+        return value / 1000
+    return value
+
+
+def _parse_watts(text: str | None) -> float | None:
+    if not text:
+        return None
+    match = re.search(r"(\d+(?:[\.,]\d+)?)\s*w", text.lower())
+    if not match:
+        return None
+    return _safe_float(match.group(1))
+
+
+def _parse_threads(text: str | None) -> float | None:
+    if not text:
+        return None
+    sample = text.lower()
+    match = re.search(r"(\d+)\s*(?:hilos|threads)", sample)
+    if match:
+        return _safe_float(match.group(1))
+    match = re.search(r"/\s*(\d+)", sample)
+    if match:
+        return _safe_float(match.group(1))
+    return None
+
+
+def _parse_resolution_width(text: str | None) -> int | None:
+    if not text:
+        return None
+    match = re.search(r"(\d+)\s*[x×]\s*(\d+)", text.lower())
+    if not match:
+        return None
+    try:
+        first = int(match.group(1))
+        second = int(match.group(2))
+    except ValueError:
+        return None
+    return max(first, second)
+
+
+def _parse_gpu_bus_version(text: str | None) -> float | None:
+    if not text:
+        return None
+    match = re.search(r"pci(?:e| express)?\s*(\d+(?:\.\d+)?)", text.lower())
+    if not match:
+        return None
+    return _safe_float(match.group(1))
+
+
+def _spec_value_contains(spec_map: Dict[str, str], term: str) -> bool:
+    needle = _norm(term)
+    if not needle:
+        return False
+    for value in spec_map.values():
+        if needle in _norm(value):
+            return True
+    return False
+
+
+def _required_bus_version(token: str) -> float | None:
+    match = re.search(r"(\d+(?:[\.,]\d+)?)", token.lower())
+    if not match:
+        return None
+    return _safe_float(match.group(1))
+
+
+SPEC_FILTER_QUERY_KEYS = {
+    "ram_min",
+    "storage_min",
+    "storage",
+    "gpu_bus",
+    "socket_hint",
+    "psu_w_min",
+    "battery_wh_min",
+    "weight_max",
+    "display_resolution",
+    "gpu_mem_min",
+    "port_hint",
+    "threads_min",
+}
+
+SPEC_FILTER_ORDER = [
+    "ram_min",
+    "storage_min",
+    "storage",
+    "gpu_mem_min",
+    "gpu_bus",
+    "socket_hint",
+    "psu_w_min",
+    "battery_wh_min",
+    "weight_max",
+    "display_resolution",
+    "port_hint",
+    "threads_min",
+]
+
+NUMERIC_SPEC_FILTERS = (
+    "ram_min",
+    "storage_min",
+    "gpu_mem_min",
+    "battery_wh_min",
+    "weight_max",
+    "psu_w_min",
+    "threads_min",
+)
+
+STRING_SPEC_FILTERS = ("storage", "gpu_bus", "socket_hint", "port_hint", "display_resolution")
+
+STORAGE_SPEC_KEYS = ["Almacenamiento", "Memoria interna", "Almacenamiento interno", "Almacenamiento total"]
+BATTERY_SPEC_KEYS = ["Batería", "Bateria"]
+WEIGHT_SPEC_KEYS = ["Peso"]
+DISPLAY_SPEC_KEYS = ["Pantalla", "Display"]
+
+
+def _extract_spec_filters(params) -> Dict[str, object]:
+    filters: Dict[str, object] = {}
+    for key in NUMERIC_SPEC_FILTERS:
+        raw_value = params.get(key)
+        if not raw_value:
+            continue
+        try:
+            filters[key] = int(float(raw_value))
+        except (TypeError, ValueError):
+            continue
+    for key in STRING_SPEC_FILTERS:
+        raw_value = params.get(key)
+        if not raw_value:
+            continue
+        if key == "socket_hint":
+            filters[key] = raw_value.upper()
+        else:
+            filters[key] = raw_value.lower()
+    return filters
+
+
+def _format_spec_filter_badges(raw_params: Dict[str, str]) -> List[str]:
+    badges: List[str] = []
+    for key in SPEC_FILTER_ORDER:
+        value = raw_params.get(key)
+        if not value:
+            continue
+        if key == "ram_min":
+            badges.append(f"RAM ≥ {value} GB")
+        elif key == "storage_min":
+            badges.append(f"Almacenamiento ≥ {value} GB")
+        elif key == "storage":
+            val = value.lower()
+            if val == "nvme":
+                badges.append("Solo NVMe")
+            elif val == "ssd":
+                badges.append("Solo SSD/NVMe")
+            else:
+                badges.append(f"Almacenamiento {value}")
+        elif key == "gpu_mem_min":
+            badges.append(f"VRAM ≥ {value} GB")
+        elif key == "gpu_bus":
+            bus_version = _required_bus_version(value) or value
+            if isinstance(bus_version, float):
+                badges.append(f"PCIe {bus_version:g}")
+            else:
+                badges.append(f"Bus {value.upper()}")
+        elif key == "socket_hint":
+            badges.append(f"Socket {value.upper()}")
+        elif key == "psu_w_min":
+            badges.append(f"Fuente ≥ {value} W")
+        elif key == "battery_wh_min":
+            badges.append(f"Batería ≥ {value} Wh")
+        elif key == "weight_max":
+            try:
+                grams = float(value)
+            except ValueError:
+                badges.append(f"Peso ≤ {value}")
+            else:
+                if grams >= 1000:
+                    kg = grams / 1000
+                    badges.append(f"Peso ≤ {kg:.1f} kg")
+                else:
+                    badges.append(f"Peso ≤ {int(grams)} g")
+        elif key == "display_resolution":
+            label_map = {
+                "fhd": "Resolución FHD+",
+                "2k": "Resolución 2K+",
+                "qhd": "Resolución QHD",
+                "4k": "Resolución 4K",
+                "uhd": "Resolución UHD",
+            }
+            badges.append(label_map.get(value.lower(), f"Resolución {value.upper()}"))
+        elif key == "port_hint":
+            badges.append(f"Conector {value.upper()}")
+        elif key == "threads_min":
+            badges.append(f"{value}+ hilos")
+    return badges
+
+
+def _matches_spec_filters(product: Producto, specs: Dict[str, str], filters: Dict[str, object]) -> bool:
+    if not filters:
+        return True
+    type_name = _norm(product.tipo_producto.nombre_tipo if product.tipo_producto_id else "")
+    description = product.descripcion_producto or ""
+
+    if "ram_min" in filters:
+        ram_text = _spec_value(specs, ["RAM", "Memoria RAM"])
+        if not ram_text and ("memoria" in type_name or "ram" in type_name):
+            ram_text = _spec_value(specs, "Capacidad")
+        ram_gb = _parse_capacity_gb(ram_text)
+        if ram_gb is None or ram_gb < filters["ram_min"]:
+            return False
+
+    if "threads_min" in filters:
+        threads_text = _spec_value(specs, ["Núcleos / hilos", "Nucleos / hilos"])
+        if not threads_text:
+            threads_text = _spec_contains(specs, "hilos")
+        threads = _parse_threads(threads_text)
+        if threads is None or threads < filters["threads_min"]:
+            return False
+
+    storage_text = None
+    if "storage_min" in filters or "storage" in filters:
+        storage_text = _spec_value(specs, STORAGE_SPEC_KEYS)
+        if not storage_text:
+            storage_text = _spec_contains(specs, "almacenamiento")
+        if not storage_text:
+            return False
+
+    if "storage_min" in filters:
+        storage_gb = _parse_capacity_gb(storage_text)
+        if storage_gb is None or storage_gb < filters["storage_min"]:
+            return False
+
+    if "storage" in filters:
+        storage_kind = filters["storage"]
+        sample = (storage_text or "").lower()
+        if storage_kind == "nvme":
+            if "nvme" not in sample:
+                return False
+        elif storage_kind == "ssd":
+            if "ssd" not in sample and "nvme" not in sample:
+                return False
+
+    if "gpu_mem_min" in filters:
+        vram_text = _spec_value(specs, "Memoria")
+        vram_gb = _parse_capacity_gb(vram_text)
+        if vram_gb is None or vram_gb < filters["gpu_mem_min"]:
+            return False
+
+    if "gpu_bus" in filters:
+        bus_text = _spec_value(specs, "Bus")
+        if not bus_text:
+            bus_text = _spec_value(specs, "Expansiones")
+        if not bus_text:
+            return False
+        bus_version = _parse_gpu_bus_version(bus_text)
+        required = _required_bus_version(filters["gpu_bus"])
+        if required is not None:
+            if bus_version is None or bus_version + 1e-6 < required:
+                return False
+        elif filters["gpu_bus"] not in bus_text.lower():
+            return False
+
+    if "socket_hint" in filters:
+        socket_text = _spec_value(specs, "Socket")
+        if not socket_text or filters["socket_hint"] not in socket_text.upper():
+            return False
+
+    if "psu_w_min" in filters:
+        potencia_text = _spec_value(specs, "Potencia")
+        if not potencia_text:
+            potencia_text = _spec_contains(specs, "potencia")
+        watts = _parse_watts(potencia_text)
+        if watts is None or watts < filters["psu_w_min"]:
+            return False
+
+    if "battery_wh_min" in filters:
+        battery_text = _spec_value(specs, BATTERY_SPEC_KEYS)
+        if not battery_text:
+            battery_text = _spec_contains(specs, "bateria")
+        battery_wh = _parse_battery_wh(battery_text)
+        if battery_wh is None or battery_wh < filters["battery_wh_min"]:
+            return False
+
+    if "weight_max" in filters:
+        weight_text = _spec_value(specs, WEIGHT_SPEC_KEYS)
+        grams = _parse_weight_grams(weight_text)
+        if grams is None:
+            grams = _parse_weight_grams(description)
+        if grams is None or grams > filters["weight_max"]:
+            return False
+
+    if "display_resolution" in filters:
+        display_text = _spec_value(specs, DISPLAY_SPEC_KEYS)
+        if not display_text:
+            display_text = _spec_contains(specs, "pantalla")
+        width = _parse_resolution_width(display_text)
+        if width is None:
+            return False
+        thresholds = {
+            "fhd": 1900,
+            "2k": 2000,
+            "qhd": 2500,
+            "4k": 3800,
+            "uhd": 3800,
+        }
+        goal = thresholds.get(filters["display_resolution"], 0)
+        if width < goal:
+            return False
+
+    if "port_hint" in filters and not _spec_value_contains(specs, filters["port_hint"]):
+        return False
+
+    return True
+
+
 def _value_profile(min_price: Decimal | None) -> Tuple[str, int]:
     if min_price is None:
         return ("Pendiente", 3)
@@ -160,22 +688,103 @@ def _value_profile(min_price: Decimal | None) -> Tuple[str, int]:
     return ("Inversion", 3)
 
 
-def _silence_profile(product: Producto, specs: Dict[str, str], description: str) -> Tuple[str, int]:
+def _value_product(product: Producto, specs: Dict[str, str], price: Decimal | None) -> Tuple[str, int]:
+    """
+    Determina el valor/precio específico para cada tipo de producto.
+    Ranking: 0 = Económico, 1 = Medio, 2 = Alto, 3 = Premium
+    """
+    if price is None:
+        return ("Pendiente", 3)
     tipo = _norm(product.tipo_producto.nombre_tipo if product.tipo_producto_id else "")
-    if "memoria" in tipo or "almacenamiento" in tipo:
-        return ("Silencioso", 0)
+    price_float = float(price)
+    # Procesadores
+    if "procesador" in tipo:
+        if price_float >= 400000:
+            return ("Premium", 3)
+        elif price_float >= 250000:
+            return ("Alto Rendimiento", 2)
+        elif price_float >= 150000:
+            return ("Gama Media", 1)
+        return ("Básico / Económico", 0)
+    # Placas madre
+    if "placa" in tipo or "motherboard" in tipo:
+        if price_float >= 250000:
+            return ("Premium", 3)
+        elif price_float >= 150000:
+            return ("Alto Rendimiento", 2)
+        elif price_float >= 80000:
+            return ("Gama Media", 1)
+        return ("Básico / Económico", 0)
+    # Memoria RAM
+    if "memoria" in tipo:
+        if price_float >= 100000:
+            return ("Premium", 3)
+        elif price_float >= 60000:
+            return ("Alto Rendimiento", 2)
+        elif price_float >= 35000:
+            return ("Gama Media", 1)
+        return ("Básico / Económico", 0)
+    # Tarjetas gráficas
+    if "tarjeta" in tipo:
+        if price_float >= 800000:
+            return ("Premium", 3)
+        elif price_float >= 400000:
+            return ("Alto Rendimiento", 2)
+        elif price_float >= 200000:
+            return ("Gama Media", 1)
+        return ("Básico / Económico", 0)
+    # Fuentes de poder
     if "fuente" in tipo:
-        return ("Ventilador semi-passive", 1)
-    tdp = _extract_tdp(specs, description)
+        if price_float >= 120000:
+            return ("Premium", 3)
+        elif price_float >= 80000:
+            return ("Alto Rendimiento", 2)
+        elif price_float >= 45000:
+            return ("Gama Media", 1)
+        return ("Básico / Económico", 0)
+    # Notebooks/Laptops
     if "notebook" in tipo or "laptop" in tipo:
-        return ("Balanceado", 1)
-    if tdp is None:
-        return ("Depende del armado", 2)
-    if tdp <= 65:
-        return ("Controlado", 1)
-    if tdp <= 105:
-        return (f"TDP {int(tdp)} W", 2)
-    return (f"TDP {int(tdp)} W", 3)
+        if price_float >= 1100000:
+            return ("Premium", 3)
+        elif price_float >= 700000:
+            return ("Alto Rendimiento", 2)
+        elif price_float >= 400000:
+            return ("Gama Media", 1)
+        return ("Básico / Económico", 0)
+    # All in One
+    if "all in one" in tipo:
+        if price_float >= 1200000:
+            return ("Premium", 3)
+        elif price_float >= 800000:
+            return ("Estándar", 2)
+        elif price_float >= 500000:
+            return ("Medio", 1)
+        return ("Básico / Económico", 0)
+    # Para otros productos usar rangos generales
+    if price_float >= 1000000:
+        return ("Premium", 3)
+    elif price_float >= 600000:
+        return ("Estándar", 2)
+    elif price_float >= 300000:
+        return ("Medio", 1)
+    return ("Básico / Económico", 0)
+
+
+def _ventilation_profile(product: Producto, specs: Dict[str, str], description: str) -> Tuple[str, int]:
+    tipo = _norm(product.tipo_producto.nombre_tipo if product.tipo_producto_id else "")
+    if "procesador" in tipo:
+        return ("Activa (Ventilador)", 2)
+    if "placa" in tipo or "motherboard" in tipo:
+        return ("Pasiva (Disipadores Fijos)", 1)
+    if "memoria" in tipo or "almacenamiento" in tipo:
+        return ("Pasiva (Disipador)", 1)
+    if "tarjeta" in tipo:
+        return ("Activa (Doble/Triple Ventilador)", 2)
+    if "fuente" in tipo:
+        return ("Semi-Pasivo (Ventilador)", 2)
+    if "notebook" in tipo or "all in one" in tipo:
+        return ("Activa (Interna)", 2)
+    return ("No requiere disipación", 0)
 
 
 def _portability_profile(product: Producto, specs: Dict[str, str], description: str) -> Tuple[str, int]:
@@ -185,11 +794,11 @@ def _portability_profile(product: Producto, specs: Dict[str, str], description: 
     if "notebook" in tipo or "laptop" in tipo:
         weight = _extract_weight(specs, description)
         if weight is not None:
-            if weight <= 1.3:
+            if weight <= 1300:
                 return ("Ultraligera", 0)
-            if weight <= 1.8:
+            if weight <= 1800:
                 return ("Ligera", 1)
-            return (f"{weight:.1f} kg", 2)
+            return (f"{weight:.1f} g", 2)
         return ("Portatil", 1)
     if "all-in-one" in tipo:
         return ("Movible", 2)
@@ -198,18 +807,21 @@ def _portability_profile(product: Producto, specs: Dict[str, str], description: 
 
 def _thermal_profile(product: Producto, specs: Dict[str, str], description: str) -> Tuple[str, int]:
     tipo = _norm(product.tipo_producto.nombre_tipo if product.tipo_producto_id else "")
-    tdp = _extract_tdp(specs, description)
-    if tdp is not None:
-        if tdp <= 65:
-            return ("Eficiente", 0)
-        if tdp <= 105:
-            return (f"{int(tdp)} W", 1)
-        return (f"{int(tdp)} W", 3)
-    if "notebook" in tipo or "laptop" in tipo:
-        return ("Perfil dual", 1)
+    if "procesador" in tipo:
+        return ("Revisa la pasta térmica y el ventilador.", 2)
+    if "placa" in tipo or "motherboard" in tipo:
+        return ("Permite el paso del aire sobre los chips.", 1)
     if "memoria" in tipo or "almacenamiento" in tipo:
-        return ("Baja disipacion", 0)
-    return ("Requiere flujo", 2)
+        return ("Garantiza aire fresco y estable.", 1)
+    if "tarjeta" in tipo or "fuente" in tipo:
+        return ("Asegura la salida del aire caliente.", 1)
+    if "fuente" in tipo:
+        return ("Evita que aspire aire caliente de la PC.", 2)
+    if "notebook" in tipo or "laptop" in tipo:
+        return ("No lo cubras ni lo dejes cerca de calor extremo.", 1)
+    if "all-in-one" in tipo or "laptop" in tipo:
+        return ("No lo cubras ni lo dejes cerca de calor extremo.", 1)
+    return ("No requiere flujo", 0)
 
 
 def _compute_match(avg_rating: float, review_count: int, view_count: int, min_price: Decimal | None, stock_total: int) -> int:
@@ -267,8 +879,6 @@ def _product_tradeoffs(min_price: Decimal | None, review_count: int, stock_total
 
 
 def _educational_hint(avg_rating: float, review_count: int, min_price: Decimal | None, tipo: str) -> str:
-    if avg_rating and review_count:
-        return f"Promedio {avg_rating:.1f}/5 con {review_count} opiniones; contrasta con tu flujo antes de decidir."
     if min_price:
         price_display = _format_currency(min_price)
         if price_display:
@@ -280,19 +890,19 @@ def _educational_hint(avg_rating: float, review_count: int, min_price: Decimal |
 
 
 def _build_criteria(product: Producto, specs: Dict[str, str], description: str) -> Tuple[List[Dict[str, str]], Dict[str, int]]:
-    value_label, value_rank = _value_profile(product.min_price)
-    silence_label, silence_rank = _silence_profile(product, specs, description)
+    value_label, value_rank = _value_product(product, specs, product.min_price)
+    ventilation_label, ventilation_rank = _ventilation_profile(product, specs, description)
     portability_label, portability_rank = _portability_profile(product, specs, description)
     thermal_label, thermal_rank = _thermal_profile(product, specs, description)
     criteria = [
-        {"label": "Rend/$$", "value": value_label},
-        {"label": "Silencio", "value": silence_label},
+        {"label": "Gama", "value": value_label},
+        {"label": "Disipación", "value": ventilation_label},
         {"label": "Portabilidad", "value": portability_label},
-        {"label": "Termales", "value": thermal_label},
+        {"label": "Temperaturas", "value": thermal_label},
     ]
     ranks = {
         "value": value_rank,
-        "quiet": silence_rank,
+        "quiet": ventilation_rank,
         "portable": portability_rank,
         "thermals": thermal_rank,
     }
@@ -352,8 +962,8 @@ def _build_type_profile(product: Producto, specs: Dict[str, str]) -> Dict[str, L
         if igpu and "no" not in igpu.lower():
             add_highlight(f"iGPU {igpu}")
         add_metric("Socket", _spec_lookup(specs, "Socket"))
+        add_metric("Cores", _spec_lookup(specs, "Nucleos / hilos"))
         add_metric("TDP", _spec_lookup(specs, "TDP"))
-        add_metric("Proceso", _spec_lookup(specs, "Proceso de manufactura"))
         add_metric("Cooler", _spec_lookup(specs, "Cooler"))
 
     elif "notebook" in type_norm:
@@ -380,8 +990,8 @@ def _build_type_profile(product: Producto, specs: Dict[str, str]) -> Dict[str, L
         add_highlight(_spec_lookup(specs, "RAM"))
         add_highlight(_spec_lookup(specs, "Tarjeta de video"))
         add_metric("Pantalla", _spec_lookup(specs, "Pantalla"))
+        add_metric("Procesador", _spec_lookup(specs, "Procesador"))
         add_metric("Almacenamiento", _spec_lookup(specs, "Almacenamiento"))
-        add_metric("Peso", _spec_lookup(specs, "Peso"))
         add_metric("SO", _spec_lookup(specs, "Sistema Operativo"))
 
     elif "tarjeta" in type_norm or "grafica" in type_norm or "gráfica" in type_norm:
@@ -389,7 +999,7 @@ def _build_type_profile(product: Producto, specs: Dict[str, str]) -> Dict[str, L
         add_highlight(_spec_lookup(specs, "Memoria"))
         add_highlight(_spec_lookup(specs, "Frecuencias core (base / boost)"))
         add_metric("Bus", _spec_lookup(specs, "Bus"))
-        add_metric("Conectores", _spec_lookup(specs, "Conectores de poder"))
+        add_metric("Memoria", _spec_lookup(specs, "Memoria"))
         add_metric("Refrigeracion", _spec_lookup(specs, "Refrigeracion"))
         add_metric("Largo", _spec_lookup(specs, "Largo"))
 
@@ -399,8 +1009,8 @@ def _build_type_profile(product: Producto, specs: Dict[str, str]) -> Dict[str, L
         add_highlight(_spec_lookup(specs, "Latencia Cl (CAS)"))
         add_metric("Tipo", _spec_lookup(specs, "Tipo"))
         add_metric("Voltaje", _spec_lookup(specs, "Voltaje"))
-        add_metric("Formato", _spec_lookup(specs, "Formato"))
-        add_metric("ECC", _spec_lookup(specs, "Soporte ECC"))
+        add_metric("Velocidad", _spec_lookup(specs, "Velocidad"))
+        add_metric("Capacidad", _spec_lookup(specs, "Capacidad"))
 
     elif "fuente" in type_norm or "power" in type_norm:
         add_highlight(_spec_lookup(specs, "Potencia"))
@@ -408,10 +1018,10 @@ def _build_type_profile(product: Producto, specs: Dict[str, str]) -> Dict[str, L
         modular = _spec_lookup(specs, "Modular")
         if modular:
             add_highlight(f"Modular: {modular}")
-        add_metric("PFC activo", _spec_lookup(specs, "PFC activo"))
-        add_metric("Linea 12V", _spec_lookup(specs, "Corriente en la linea de 12 V"))
+        add_metric("Potencia", _spec_lookup(specs, "Potencia"))
+        add_metric("Modular", _spec_lookup(specs, "Modular"))
+        add_metric("Tamaño", _spec_lookup(specs, "Tamano"))
         add_metric("Conectores", _spec_lookup(specs, "Conectores de energia"))
-        add_metric("Tamano", _spec_lookup(specs, "Tamano"))
 
     elif "placa" in type_norm or "mother" in type_norm:
         socket = _spec_lookup(specs, "Socket")
@@ -422,10 +1032,10 @@ def _build_type_profile(product: Producto, specs: Dict[str, str]) -> Dict[str, L
             add_highlight(socket or chipset)
         add_highlight(_spec_lookup(specs, "Formato"))
         add_highlight(_spec_lookup(specs, "Soporte RGB"))
+        add_metric("Socket", _spec_lookup(specs, "Socket"))
         add_metric("Slots RAM", _spec_lookup(specs, "Slots memorias"))
-        add_metric("M.2", _spec_lookup(specs, "Conectores"))
-        add_metric("Puertos traseros", _spec_lookup(specs, "Puertos"))
-        add_metric("Alimentacion", _spec_lookup(specs, "Puertos de energia"))
+        add_metric("Canales memoria", _spec_lookup(specs, "Canales memoria"))
+        add_metric("Puertos de video", _spec_lookup(specs, "Puertos de video"))
 
     if not profile["highlights"]:
         for value in list(specs.values())[:3]:
@@ -738,6 +1348,7 @@ def _compatibility_partners(
     product: Producto,
     base_specs: Dict[str, str],
     limit: int = 2,
+    pref_ctx: Dict[str, object] | None = None,
 ) -> List[Dict[str, object]]:
     partners: List[Dict[str, object]] = []
     base_type = product.tipo_producto.nombre_tipo if product.tipo_producto_id else ""
@@ -752,6 +1363,7 @@ def _compatibility_partners(
     )
     for rel in related:
         card = _product_payload(rel)
+        _apply_preference_match(card, pref_ctx or {})
         rel_specs = card.pop("_spec_map", None) or {}
         matches = _compatibility_matches(
             base_type,
@@ -768,6 +1380,7 @@ def _compatibility_partners(
                 "type": card["type"],
                 "detail_url": card["detail_url"],
                 "match": card["match"],
+                "match_caption": card.get("match_caption"),
                 "matches": matches,
                 "category_id": card["category_id"],
             }
@@ -782,6 +1395,7 @@ def _make_alt_card(card: Dict[str, object], summary: str, compat_points: List[st
         "id": card["id"],
         "name": card["name"],
         "match": card["match"],
+        "match_caption": card.get("match_caption"),
         "detail_url": card["detail_url"],
         "summary": summary,
         "type_highlights": card["type_profile"]["highlights"][:2],
@@ -792,7 +1406,11 @@ def _make_alt_card(card: Dict[str, object], summary: str, compat_points: List[st
     }
 
 
-def _build_alternatives_payload(product: Producto, base_signature: Dict[str, str]) -> Dict[str, List[Dict[str, object]]]:
+def _build_alternatives_payload(
+    product: Producto,
+    base_signature: Dict[str, str],
+    pref_ctx: Dict[str, object] | None = None,
+) -> Dict[str, List[Dict[str, object]]]:
     specs = _build_spec_map(product)
     related_products = _fetch_related_products(product, specs, per_type_limit=3, include_same_type=True)
     similar: List[Dict[str, object]] = []
@@ -804,6 +1422,7 @@ def _build_alternatives_payload(product: Producto, base_signature: Dict[str, str
         if alt.id in seen_ids:
             continue
         card = _product_payload(alt)
+        _apply_preference_match(card, pref_ctx or {})
         alt_specs = card.pop("_spec_map", {})
         similarity = _compare_signatures(base_signature, _build_similarity_signature(alt, alt_specs))
         compat_matches = _compatibility_matches(
@@ -884,18 +1503,23 @@ def _base_product_queryset():
                 to_attr="prefetched_specs",
             ),
             "categorias_extra",
+            Prefetch(
+                "referencias",
+                queryset=ProductReference.objects.all(),
+                to_attr="prefetched_references",
+            ),
         )
         .annotate(
             avg_rating=Avg("reviews__rating"),
             review_count=Count("reviews", distinct=True),
-            min_price=Min("tiendaproducto__precio"),
+            min_price=Min("referencias__precio"),
             max_price=Coalesce(
-                Max("tiendaproducto__precio"),
+                Max("referencias__precio"),
                 Value(Decimal("0")),
                 output_field=DecimalField(max_digits=12, decimal_places=2),
             ),
             stock_total=Coalesce(
-                Sum("tiendaproducto__stock"),
+                Sum("referencias__stock"),
                 Value(0),
                 output_field=IntegerField(),
             ),
@@ -947,10 +1571,12 @@ def _product_payload(product: Producto) -> Dict[str, object]:
         "image": product.imagen_producto.url if product.imagen_producto else None,
         "image_alt": product.nombre_producto,
         "match": match_score,
+        "type_name": type_name,
         "reasons": _product_reasons(product, min_price, avg_rating, review_count),
         "tradeoffs": _product_tradeoffs(min_price, review_count, stock_total),
         "criteria": criteria,
         "min_price_display": _format_currency(min_price),
+        "min_price_value": float(min_price) if min_price is not None else None,
         "avg_rating": avg_rating,
         "review_count": review_count,
         "brand": product.marca_producto.nombre_marca if product.marca_producto_id else "",
@@ -975,21 +1601,26 @@ def _product_payload(product: Producto) -> Dict[str, object]:
         "type_profile": type_profile,
         "type_highlights": type_profile["highlights"][:2],
         "type_metrics": type_profile["metrics"][:4],
-        "rating_display": f"{avg_rating:.1f}/5" if review_count else None,
         "supports_compatibility": _supports_compatibility(type_name),
     }
     payload["_spec_map"] = specs
     return payload
 
 
-def _build_home_compatibility_pairs(top_cards: List[Dict[str, object]], products_by_id: Dict[int, Producto]) -> List[Dict[str, object]]:
+def _build_home_compatibility_pairs(
+    top_cards: List[Dict[str, object]],
+    products_by_id: Dict[int, Producto],
+    favorite_ids: set[int] | None = None,
+    pref_ctx: Dict[str, object] | None = None,
+) -> List[Dict[str, object]]:
+    favorite_ids = favorite_ids or set()
     pairs: List[Dict[str, object]] = []
     for card in top_cards:
         product = products_by_id.get(card["id"])
         if not product:
             continue
         specs = card.get("_spec_map") or _build_spec_map(product)
-        partners = _compatibility_partners(product, specs, limit=2)
+        partners = _compatibility_partners(product, specs, limit=2, pref_ctx=pref_ctx)
         if not partners:
             continue
         focus_points: List[str] = []
@@ -1005,8 +1636,16 @@ def _build_home_compatibility_pairs(top_cards: List[Dict[str, object]], products
                     "match": card["match"],
                     "detail_url": card["detail_url"],
                     "highlights": card.get("type_highlights", []),
+                    "is_favorite": card.get("is_favorite", False),
+                    "match_caption": card.get("match_caption"),
                 },
-                "partners": partners,
+                "partners": [
+                    {
+                        **partner,
+                        "is_favorite": partner["id"] in favorite_ids,
+                    }
+                    for partner in partners
+                ],
                 "focus_points": focus_points,
                 "cta": f"{reverse('reco_explore')}?compat_with={card['id']}",
             }
@@ -1018,6 +1657,8 @@ def _build_home_compatibility_pairs(top_cards: List[Dict[str, object]], products
 
 def reco_home(request):
     categorias = _categories_with_inventory().order_by("-prod_count", "nombre_categoria")[:6]
+    favorite_ids = _favorite_ids_for(request.user)
+    preference_context = _user_preference_context(request.user)
     perfiles = [
         {
             "name": cat.nombre_categoria,
@@ -1036,11 +1677,18 @@ def reco_home(request):
     products_by_id: Dict[int, Producto] = {}
     for prod in products_qs:
         payload = _product_payload(prod)
+        payload["is_favorite"] = payload["id"] in favorite_ids
+        _apply_preference_match(payload, preference_context)
         product_cards.append(payload)
         products_by_id[prod.id] = prod
     product_cards.sort(key=lambda p: (p["sort_match"], p["sort_value"]))
     top_recommendations = _select_top_recommendations(product_cards, limit=6, per_type=2)
-    compatibility_pairs = _build_home_compatibility_pairs(top_recommendations, products_by_id)
+    compatibility_pairs = _build_home_compatibility_pairs(
+        top_recommendations,
+        products_by_id,
+        favorite_ids,
+        preference_context,
+    )
     for card in product_cards:
         card.pop("_spec_map", None)
 
@@ -1059,6 +1707,7 @@ def reco_home(request):
         "top_recommendations": top_recommendations,
         "guides": guides,
         "compatibility_pairs": compatibility_pairs,
+        "preference_context": preference_context,
     }
     return render(request, "lab/reco_home.html", context)
 
@@ -1082,9 +1731,9 @@ def _apply_filters(request, queryset):
             low = int(low_str) if low_str else None
             high = int(high_str) if high_str else None
             if low is not None:
-                queryset = queryset.filter(tiendaproducto__precio__gte=low)
+                queryset = queryset.filter(referencias__precio__gte=low)
             if high is not None:
-                queryset = queryset.filter(tiendaproducto__precio__lte=high)
+                queryset = queryset.filter(referencias__precio__lte=high)
         except ValueError:
             pass
     if search:
@@ -1093,7 +1742,8 @@ def _apply_filters(request, queryset):
             Q(modelo_producto__icontains=search) |
             Q(descripcion_producto__icontains=search)
         )
-    return queryset
+    spec_filters = _extract_spec_filters(request.GET)
+    return queryset, spec_filters
 
 
 def reco_explore(request):
@@ -1101,6 +1751,8 @@ def reco_explore(request):
     tipos = TipoProducto.objects.annotate(
         prod_count=Count("producto", filter=Q(producto__is_active=True))
     ).filter(prod_count__gt=0).order_by("nombre_tipo")
+    favorite_ids = _favorite_ids_for(request.user)
+    preference_context = _user_preference_context(request.user)
 
     compat_with = request.GET.get("compat_with")
     compat_source = None
@@ -1108,6 +1760,8 @@ def reco_explore(request):
     compat_notice_level = "info"
     compat_results = False
     products: List[Dict[str, object]] = []
+    parsed_spec_filters: Dict[str, object] = {}
+    raw_spec_params = {key: request.GET.get(key) for key in SPEC_FILTER_QUERY_KEYS if request.GET.get(key)}
 
     if compat_with and compat_with.isdigit():
         compat_source = _base_product_queryset().filter(pk=int(compat_with)).first()
@@ -1121,7 +1775,12 @@ def reco_explore(request):
                 compatibility_only=True,
             )
             if compat_products:
-                products = [_product_payload(prod) for prod in compat_products]
+                products = []
+                for prod in compat_products:
+                    payload = _product_payload(prod)
+                    _apply_preference_match(payload, preference_context)
+                    payload["is_favorite"] = payload["id"] in favorite_ids
+                    products.append(payload)
                 compat_notice = f"Mostrando productos compatibles con {compat_source.nombre_producto}"
                 compat_results = True
             else:
@@ -1129,8 +1788,22 @@ def reco_explore(request):
                 compat_notice_level = "warning"
 
     if not products:
-        products_qs = _apply_filters(request, _base_product_queryset())
-        products = [_product_payload(prod) for prod in products_qs[:50]]
+        products_qs, parsed_spec_filters = _apply_filters(request, _base_product_queryset())
+        fetch_limit = 200 if parsed_spec_filters else 50
+        candidates = list(products_qs[:fetch_limit])
+        if parsed_spec_filters:
+            filtered: List[Producto] = []
+            for prod in candidates:
+                specs = _build_spec_map(prod)
+                if _matches_spec_filters(prod, specs, parsed_spec_filters):
+                    filtered.append(prod)
+            candidates = filtered
+        products = []
+        for prod in candidates[:50]:
+            payload = _product_payload(prod)
+            payload["is_favorite"] = payload["id"] in favorite_ids
+            _apply_preference_match(payload, preference_context)
+            products.append(payload)
 
     sort_param = request.GET.get("sort", "match")
     if sort_param == "value":
@@ -1145,11 +1818,13 @@ def reco_explore(request):
     if not compat_results:
         products = products[:8]
     for payload in products:
+        payload["match_score"] = payload["match"]
+        payload["match_pill"] = payload.get("match_summary") or payload.get("educational_hint")
         payload["criteria"] = [
-            {"label": "Rend/$$", "value": payload["criteria"][0]["value"]},
-            {"label": "Silencio", "value": payload["criteria"][1]["value"]},
+            {"label": "Gama", "value": payload["criteria"][0]["value"]},
+            {"label": "Disipación", "value": payload["criteria"][1]["value"]},
             {"label": "Portabilidad", "value": payload["criteria"][2]["value"]},
-            {"label": "Termales", "value": payload["criteria"][3]["value"]},
+            {"label": "Temperaturas", "value": payload["criteria"][3]["value"]},
         ]
 
     selected = {
@@ -1157,6 +1832,7 @@ def reco_explore(request):
         "tipo": request.GET.get("tipo") or "",
         "presupuesto": request.GET.get("presupuesto") or "",
         "sort": sort_param,
+        "spec": raw_spec_params,
     }
     selected_categoria = None
     selected_tipo = None
@@ -1172,6 +1848,29 @@ def reco_explore(request):
         {"label": "$1.200.000 o mas", "value": "1200000-0"},
     ]
 
+    def _build_sort_url(option: str) -> str:
+        params = request.GET.copy()
+        params["sort"] = option
+        query = params.urlencode()
+        return f"?{query}" if query else f"?sort={option}"
+
+    sort_urls = {
+        "match": _build_sort_url("match"),
+        "value": _build_sort_url("value"),
+        "quiet": _build_sort_url("quiet"),
+        "portable": _build_sort_url("portable"),
+    }
+
+    active_spec_badges = [] if compat_results else _format_spec_filter_badges(raw_spec_params)
+    clear_spec_filters_url = reverse("reco_explore")
+    if raw_spec_params:
+        params_for_clear = request.GET.copy()
+        for key in SPEC_FILTER_QUERY_KEYS:
+            params_for_clear.pop(key, None)
+        remaining = params_for_clear.urlencode()
+        if remaining:
+            clear_spec_filters_url = f"{reverse('reco_explore')}?{remaining}"
+
     context = {
         "categories": categorias,
         "types": tipos,
@@ -1182,6 +1881,11 @@ def reco_explore(request):
         "selected_tipo": selected_tipo,
         "compat_notice": compat_notice,
         "compat_notice_level": compat_notice_level,
+        "compat_results": compat_results,
+        "active_spec_filters": active_spec_badges,
+        "sort_urls": sort_urls,
+        "clear_spec_filters_url": clear_spec_filters_url,
+        "preference_context": preference_context,
     }
     return render(request, "lab/reco_explore.html", context)
 
@@ -1237,16 +1941,17 @@ def reco_detail(request):
     product_id = request.GET.get("id")
     if not product_id or not product_id.isdigit():
         raise Http404("Producto no encontrado.")
+    favorite_ids = _favorite_ids_for(request.user)
 
     spec_prefetch = Prefetch(
         "especificacionproducto_set",
         queryset=EspecificacionProducto.objects.all(),
         to_attr="prefetched_specs",
     )
-    store_prefetch = Prefetch(
-        "tiendaproducto_set",
-        queryset=TiendaProducto.objects.select_related("tienda"),
-        to_attr="prefetched_listings",
+    reference_prefetch = Prefetch(
+        "referencias",
+        queryset=ProductReference.objects.all(),
+        to_attr="prefetched_references",
     )
     review_prefetch = Prefetch(
         "reviews",
@@ -1257,18 +1962,18 @@ def reco_detail(request):
     product_qs = (
         Producto.objects.filter(pk=int(product_id), is_active=True)
         .select_related("marca_producto", "categoria_producto", "tipo_producto")
-        .prefetch_related(spec_prefetch, store_prefetch, review_prefetch)
+        .prefetch_related(spec_prefetch, reference_prefetch, review_prefetch)
         .annotate(
             avg_rating=Avg("reviews__rating"),
             review_count=Count("reviews", distinct=True),
-            min_price=Min("tiendaproducto__precio"),
+            min_price=Min("referencias__precio"),
             max_price=Coalesce(
-                Max("tiendaproducto__precio"),
+                Max("referencias__precio"),
                 Value(Decimal("0")),
                 output_field=DecimalField(max_digits=12, decimal_places=2),
             ),
             stock_total=Coalesce(
-                Sum("tiendaproducto__stock"),
+                Sum("referencias__stock"),
                 Value(0),
                 output_field=IntegerField(),
             ),
@@ -1279,12 +1984,13 @@ def reco_detail(request):
     specs = _build_spec_map(product)
     base_signature = _build_similarity_signature(product, specs)
     payload = _product_payload(product)
+    payload["is_favorite"] = product.id in favorite_ids
     specs = payload.pop("_spec_map", specs)
     payload["criteria"] = [
-        {"label": "Rend/$$", "value": payload["criteria"][0]["value"]},
-        {"label": "Silencio", "value": payload["criteria"][1]["value"]},
+        {"label": "Gama", "value": payload["criteria"][0]["value"]},
+        {"label": "Disipación", "value": payload["criteria"][1]["value"]},
         {"label": "Portabilidad", "value": payload["criteria"][2]["value"]},
-        {"label": "Termales", "value": payload["criteria"][3]["value"]},
+        {"label": "Temperaturas", "value": payload["criteria"][3]["value"]},
     ]
     payload["summary_bullets"] = _detail_summary(payload)
     payload["for_whom"] = _for_whom_text(product)
@@ -1292,15 +1998,18 @@ def reco_detail(request):
     payload["key_specs"] = _key_specs(product, specs)
     payload["image"] = payload["image"] or None
 
-    listings = getattr(product, "prefetched_listings", [])
+    references = sorted(
+        getattr(product, "prefetched_references", []),
+        key=lambda ref: ref.precio or Decimal("0"),
+    )
     stores = []
-    for listing in listings:
+    for reference in references:
         stores.append(
             {
-                "name": listing.tienda.nombre_tienda,
-                "price": _format_currency(listing.precio),
-                "url": listing.url_externa,
-                "note": listing.nota_tienda,
+                "name": reference.nombre_fuente,
+                "price": _format_currency(reference.precio),
+                "url": reference.url_fuente,
+                "note": reference.nota,
             }
         )
 
@@ -1314,6 +2023,43 @@ def reco_detail(request):
                 "comment": review.comment,
             }
         )
+
+    user_review = None
+    if request.user.is_authenticated:
+        user_review = ProductReview.objects.filter(producto=product, user=request.user).first()
+    user_has_review = bool(user_review)
+
+    show_review_form = False
+    if request.method == "POST":
+        if not request.user.is_authenticated:
+            login_url = f"{reverse('login')}?next={request.get_full_path()}"
+            return redirect(login_url)
+        form_review = ProductReviewForm(request.POST)
+        show_review_form = True
+        if form_review.is_valid():
+            ProductReview.objects.update_or_create(
+                producto=product,
+                user=request.user,
+                defaults={
+                    "rating": form_review.cleaned_data["rating"],
+                    "comment": form_review.cleaned_data["comment"],
+                },
+            )
+            messages.success(request, "Tu reseña fue guardada.")
+            detail_url = f"{reverse('reco_detail')}?id={product.id}#reco-reviews"
+            return redirect(detail_url)
+        if not user_has_review and ProductReview.objects.filter(producto=product, user=request.user).exists():
+            user_has_review = True
+    else:
+        initial = {}
+        if user_has_review and user_review:
+            initial = {"rating": user_review.rating, "comment": user_review.comment}
+        form_review = ProductReviewForm(initial=initial)
+        show_review_form = False
+    if request.method != "POST":
+        form_review_errors = None
+    else:
+        form_review_errors = form_review.errors if form_review else None
 
     alternatives = _build_alternatives_payload(product, base_signature)
     similar_alts = alternatives["similar"]
@@ -1368,27 +2114,164 @@ def reco_detail(request):
         "alternatives_similar_link": similar_more_link,
         "alternatives_compatible_link": compatible_more_link,
         "compatibility_story": compatibility_story,
+        "form_review": form_review,
+        "show_review_form": show_review_form,
+        "user_has_review": user_has_review,
     }
     return render(request, "lab/reco_detail.html", context)
 
 
-def reco_guides(request):
-    categorias = _categories_with_inventory().order_by("-prod_count", "nombre_categoria")[:6]
-    guides = []
-    for cat in categorias:
-        guides.append(
+_GUIDE_BLUEPRINTS = {   'diseno': {   'checklist': [   'Busca resoluciones 2K+ (2360x1640) y cobertura sRGB/AdobeRGB.',
+                                   'GPUs de 8 GB GDDR6 con bus PCIe 4.0 x8 aseguran aceleracion en '
+                                   'render.',
+                                   'Placas con multiples DisplayPort/HDMI y headers ARGB facilitan '
+                                   'estaciones calibradas.'],
+                  'filters': [   {'label': 'Pantalla 2K+', 'params': {'display_resolution': '2k'}},
+                                 {'label': 'GPU 8 GB', 'params': {'gpu_mem_min': '8'}},
+                                 {   'label': 'Dual DisplayPort',
+                                     'params': {'port_hint': 'displayport'}}],
+                  'persona': 'Creativos que usan suites Adobe/Autodesk y exigen color consistente.',
+                  'spec_focus': [   'Pantalla/Resolucion',
+                                    'Memoria GPU',
+                                    'Bus PCIe',
+                                    'Salidas de video'],
+                  'themes': ['Pantalla/resolucion', 'Memoria GPU', 'Salidas de video'],
+                  'tradeoffs': [   'Pantallas de alta resolucion consumen mas bateria en '
+                                   'tablets/notebooks.',
+                                   'GPUs profesionales elevan TDP y requieren fuentes 700 W 80+ '
+                                   'Bronze o superiores.']},
+    'estudio': {   'checklist': [   'Notebooks/tablets con baterias >50 Wh y peso <1.5 kg.',
+                                    'Pantallas FHD de 11-14 pulgadas equilibran consumo.',
+                                    'Almacenamiento minimo de 256 GB para material de estudio.'],
+                   'filters': [   {'label': 'Bateria 50 Wh+', 'params': {'battery_wh_min': '50'}},
+                                  {'label': 'Peso < 1.5 kg', 'params': {'weight_max': '1500'}},
+                                  {   'label': '256 GB de almacenamiento',
+                                      'params': {'storage_min': '256'}}],
+                   'persona': 'Estudiantes que priorizan autonomia, peso y conectividad sencilla.',
+                   'spec_focus': ['Bateria (Wh)', 'Peso', 'Pantalla', 'Almacenamiento'],
+                   'themes': ['Bateria', 'Peso', 'Almacenamiento minimo'],
+                   'tradeoffs': [   'Tablets sin conectividad celular dependen del WiFi del '
+                                    'campus.',
+                                    'Chasis ultradelgados limitan ventilacion y upgrades.']},
+    'gamer': {   'checklist': [   'Cruza memoria y bus de la GPU (8 GB GDDR6, PCIe 4.0 x8) con los '
+                                  'slots de tu placa.',
+                                  'Sincroniza CPU (frecuencia turbo y nucleos/hilos) con sockets '
+                                  'LGA/AM4 para evitar cuellos de botella.',
+                                  'Asegura fuentes de 650 W+ con conectores 6+2/8 pines para '
+                                  'graficas actuales.'],
+                 'filters': [   {'label': 'Bus PCIe 4.0', 'params': {'gpu_bus': 'pcie4'}},
+                                {'label': 'Socket AM', 'params': {'socket_hint': 'AM'}},
+                                {'label': 'Socket LGA', 'params': {'socket_hint': 'LGA'}},
+                                {'label': 'Fuente 650W+', 'params': {'psu_w_min': '650'}}],
+                 'persona': 'Jugadores que requieren fps estables y compatibilidad con monitores '
+                            '144/240 Hz.',
+                 'spec_focus': ['GPU Bus', 'Conectores 8 pines', 'Nucleos/Hilos', 'TDP'],
+                 'themes': ['GPU y bus PCIe', 'Refrigeracion', 'Fuente dedicada'],
+                 'tradeoffs': [   'Tarjetas con TDP alto elevan ruido y temperatura si el gabinete '
+                                  'no respira bien.',
+                                  'Placas con pocos headers RGB o slots M.2 limitan upgrades '
+                                  'esteticos y de almacenamiento.']},
+    'hogar': {   'checklist': [   'Mantente en 16 GB de RAM DDR4/DDR5 para multitarea familiar.',
+                                  'Prefiere SSD SATA o NVMe para reducir tiempos de arranque y '
+                                  'copias.',
+                                  'Confirma que la fuente incluya conectores SATA/Molex para NAS y '
+                                  'perifericos.'],
+                 'filters': [   {'label': 'RAM >= 16 GB', 'params': {'ram_min': '16'}},
+                                {'label': 'Solo SSD/NVMe', 'params': {'storage': 'ssd'}},
+                                {'label': 'Puertos USB/RJ-45', 'params': {'port_hint': 'usb'}}],
+                 'persona': 'Usuarios que combinan tareas de oficina ligera, clases en linea y uso '
+                            'compartido.',
+                 'spec_focus': ['RAM', 'Almacenamiento', 'Puertos', 'Potencia PSU'],
+                 'themes': ['RAM base', 'SSD obligatorio', 'Conectores domesticos'],
+                 'tradeoffs': [   'Gabinetes micro limitan bahias o ranuras M.2 para futuros '
+                                  'upgrades.',
+                                  'Fuentes genericas sin certificacion pueden fallar con UPS '
+                                  'domesticos.']},
+    'trabajo': {   'checklist': [   'Busca procesadores con al menos 6 P-cores y 12 hilos.',
+                                    'Incluye SSD NVMe de 512 GB+ para datasets locales y backups '
+                                    'rapidos.',
+                                    'Elige notebooks/all-in-one con RJ-45 y multiples '
+                                    'USB-C/DisplayPort.'],
+                   'filters': [   {'label': '12 hilos o mas', 'params': {'threads_min': '12'}},
+                                  {'label': 'RJ-45 + USB-C', 'params': {'port_hint': 'rj-45'}},
+                                  {'label': 'SSD NVMe', 'params': {'storage': 'nvme'}}],
+                   'persona': 'Profesionales que alternan Excel/PowerBI, videollamadas y edicion '
+                              'ligera.',
+                   'spec_focus': ['Nucleos/Hilos', 'RAM', 'SSD NVMe', 'Puertos RJ-45 / USB-C'],
+                   'themes': ['CPU con P-cores', 'SSD NVMe', 'Red cableada'],
+                   'tradeoffs': [   'Ultrabooks reducen puertos fisicos y dependen de hubs.',
+                                    'All-in-one simplifican cableado pero encarecen upgrades de '
+                                    'RAM/SSD.']}}
+
+def _guide_payload(cat: CategoriaProducto) -> Dict[str, object]:
+    key = cat.nombre_categoria.lower()
+    blueprint = None
+    for slug, data in _GUIDE_BLUEPRINTS.items():
+        if slug in key:
+            blueprint = data
+            break
+    if blueprint is None:
+        blueprint = {
+            "persona": _short_text(cat.descripcion_categoria, 120),
+            "themes": ["Compatibilidad", "Budget", "Garantia"],
+            "checklist": [
+                "Define requisitos de uso antes de ver precios.",
+                "Revisa trade-offs en terminos de ruido, calor y upgrades.",
+                "Valida disponibilidad real en tiendas neutrales.",
+            ],
+            "tradeoffs": [
+                "Productos economicos suelen sacrificar soporte.",
+                "Componentes de alto rendimiento consumen mas energia.",
+            ],
+            "filters": ["categoria", "tipo_producto", "presupuesto"],
+            "spec_focus": ["Compatibilidad", "Budget", "Garantia"],
+        }
+    explore_base = reverse("reco_explore")
+    filter_links = []
+    for filter_cfg in blueprint["filters"]:
+        if isinstance(filter_cfg, dict):
+            label = filter_cfg.get("label") or "Filtro sugerido"
+            params = {"categoria": cat.id}
+            params.update(filter_cfg.get("params", {}))
+        else:
+            label = str(filter_cfg).title()
+            params = {"categoria": cat.id}
+        filter_links.append(
             {
-                "title": f"{cat.nombre_categoria}: claves de seleccion",
-                "summary": _short_text(cat.descripcion_categoria, 160),
-                "bullets": [
-                    "Checklist editorial previo a decidir.",
-                    "Trade-offs frecuentes segun uso real.",
-                    "Referencias neutras para comparar tiendas.",
-                ],
-                "url": f"{reverse('reco_explore')}?categoria={cat.id}",
+                "label": label,
+                "url": f"{explore_base}?{urlencode(params, doseq=True)}",
+                "params": params,
             }
         )
-    context = {"guides": guides}
+    return {
+        "id": cat.id,
+        "title": cat.nombre_categoria,
+        "summary": _short_text(cat.descripcion_categoria, 180),
+        "persona": blueprint["persona"],
+        "themes": blueprint["themes"],
+        "checklist": blueprint["checklist"],
+        "tradeoffs": blueprint["tradeoffs"],
+        "filters": filter_links,
+        "spec_focus": blueprint.get("spec_focus", []),
+        "cta_url": f"{explore_base}?categoria={cat.id}",
+    }
+
+
+def reco_guides(request):
+    categorias = _categories_with_inventory().order_by("-prod_count", "nombre_categoria")[:8]
+    cards = [_guide_payload(cat) for cat in categorias]
+
+    selected_id = request.GET.get("categoria")
+    selected_card = None
+    if selected_id and selected_id.isdigit():
+        selected_card = next((card for card in cards if card["id"] == int(selected_id)), None)
+    if not selected_card and cards:
+        selected_card = cards[0]
+
+    context = {
+        "selected_guide": selected_card,
+        "guide_cards": cards,
+    }
     return render(request, "lab/reco_guides.html", context)
 
 
@@ -1428,7 +2311,57 @@ def reco_preferences(request):
 
 
 @login_required
+def reco_toggle_favorite(request):
+    if request.method != "POST":
+        return redirect("reco_saved")
+    product_id = request.POST.get("product_id")
+    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("reco_home")
+    if not url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        next_url = reverse("reco_home")
+    if not product_id or not product_id.isdigit():
+        messages.error(request, "No pudimos identificar el producto a guardar.")
+        return redirect(next_url)
+    product = (
+        Producto.objects.filter(pk=int(product_id), is_active=True)
+        .only("id")
+        .first()
+    )
+    if not product:
+        messages.error(request, "El producto seleccionado ya no esta disponible.")
+        return redirect(next_url)
+    mode = request.POST.get("mode", "add")
+    if mode == "remove":
+        removed, _ = ProductosFavoritos.objects.filter(usuario=request.user, producto=product).delete()
+        if removed:
+            messages.info(request, "Producto eliminado de tus guardados.")
+        else:
+            messages.info(request, "Este producto ya no estaba en tus guardados.")
+    else:
+        favorite, created = ProductosFavoritos.objects.get_or_create(
+            usuario=request.user,
+            producto=product,
+        )
+        if created:
+            messages.success(request, "Guardamos este producto para que lo revises con calma.")
+        else:
+            messages.success(request, "Ya tenias este producto guardado.")
+    return redirect(next_url)
+
+
+@login_required
 def reco_saved(request):
+    if request.method == "POST":
+        fav_id = request.POST.get("favorite_id")
+        if fav_id and fav_id.isdigit():
+            deleted, _ = ProductosFavoritos.objects.filter(id=int(fav_id), usuario=request.user).delete()
+            if deleted:
+                messages.success(request, "Producto eliminado de tus guardados.")
+            return redirect("reco_saved")
+
     favoritos = list(
         ProductosFavoritos.objects.filter(usuario=request.user)
         .select_related("producto")
@@ -1436,24 +2369,98 @@ def reco_saved(request):
     )
     product_ids = [fav.producto_id for fav in favoritos]
     products_by_id = {}
+    raw_products = {}
     if product_ids:
         products = _base_product_queryset().filter(id__in=product_ids)
-        products_by_id = {prod.id: _product_payload(prod) for prod in products}
+        for prod in products:
+            raw_products[prod.id] = prod
+            products_by_id[prod.id] = _product_payload(prod)
 
     saved_cards = []
+    type_counter: Counter[str] = Counter()
+    category_counter: Counter[str] = Counter()
+    match_values: list[int] = []
+    price_values: list[float] = []
+    price_labels: list[str] = []
+
     for fav in favoritos:
         payload = products_by_id.get(fav.producto_id)
         if not payload:
             continue
+        type_counter[payload.get("type")] += 1
+        if payload.get("match") is not None:
+            match_values.append(payload["match"])
+        if payload.get("min_price_value") is not None:
+            price_values.append(payload["min_price_value"])
+            price_labels.append(payload.get("min_price_display") or "")
+        for cat in payload.get("categories_meta", []):
+            label = cat.get("name")
+            if label:
+                category_counter[label] += 1
+
         saved_cards.append(
             {
+                "favorite_id": fav.id,
                 "product": payload,
                 "note": "Revisa trade-offs y criterios actualizados antes de decidir.",
             }
         )
 
+    insights = {
+        "total": len(saved_cards),
+        "avg_match": round(sum(match_values) / len(match_values), 1) if match_values else None,
+        "top_type": None,
+        "top_category": None,
+        "price_range": None,
+        "spotlights": [],
+    }
+
+    if type_counter:
+        top_type, count = type_counter.most_common(1)[0]
+        insights["top_type"] = {
+            "label": top_type,
+            "count": count,
+        }
+    if category_counter:
+        top_cat, count = category_counter.most_common(1)[0]
+        insights["top_category"] = {
+            "label": top_cat,
+            "count": count,
+        }
+    if price_values:
+        low = min(price_values)
+        high = max(price_values)
+        low_fmt = _format_currency(Decimal(str(low)))
+        high_fmt = _format_currency(Decimal(str(high)))
+        label = low_fmt if low == high else f"{low_fmt} - {high_fmt}"
+        insights["price_range"] = label
+
+    if saved_cards:
+        best_match_entry = max(saved_cards, key=lambda entry: entry["product"].get("match", 0))
+        insights["spotlights"].append(
+            {
+                "title": "Mejor match",
+                "product": best_match_entry["product"],
+                "favorite_id": best_match_entry["favorite_id"],
+            }
+        )
+        value_candidates = [
+            entry for entry in saved_cards if entry["product"].get("min_price_value") is not None
+        ]
+        if value_candidates:
+            best_value_entry = min(value_candidates, key=lambda entry: entry["product"]["min_price_value"])
+            if not insights["spotlights"] or insights["spotlights"][0]["favorite_id"] != best_value_entry["favorite_id"]:
+                insights["spotlights"].append(
+                    {
+                        "title": "Mejor valor",
+                        "product": best_value_entry["product"],
+                        "favorite_id": best_value_entry["favorite_id"],
+                    }
+                )
+
     context = {
         "saved_cards": saved_cards,
         "saved_total": len(saved_cards),
+        "saved_insights": insights,
     }
     return render(request, "lab/reco_saved.html", context)

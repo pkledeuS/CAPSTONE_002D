@@ -10,18 +10,10 @@
     <!-- Filtros mejorados -->
     <form class="row g-3 mb-4" method="get">
       <div class="col-12 col-md-4">
-        <label class="form-label small text-muted">Filtrar por objetivo</label>
-        <select name="target" class="form-select form-select-sm">
-          <option value="todos" {% if request.GET.target == 'todos' or not request.GET.target %}selected{% endif %}>Todos los objetivos</option>
-          <option value="productos" {% if request.GET.target == 'productos' %}selected{% endif %}>Solo productos</option>
-          <option value="tiendas" {% if request.GET.target == 'tiendas' %}selected{% endif %}>Solo tiendas</option>
-        </select>
-      </div>
-      <div class="col-12 col-md-4">
         <label class="form-label small text-muted">Filtrar por estado</label>
         <select name="estado" class="form-select form-select-sm">
           <option value="abiertos" {% if request.GET.estado == 'abiertos' or not request.GET.estado %}selected{% endif %}>Nuevos reportes</option>
-          <option value="pendientes" {% if request.GET.estado == 'pendientes' %}selected{% endif %}>Pendientes de tienda</option>
+          <option value="pendientes" {% if request.GET.estado == 'pendientes' %}selected{% endif %}>Pendientes</option>
           <option value="resueltos" {% if request.GET.estado == 'resueltos' %}selected{% endif %}>Resueltos</option>
           <option value="todos" {% if request.GET.estado == 'todos' %}selected{% endif %}>Todos los estados</option>
         </select>

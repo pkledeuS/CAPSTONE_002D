@@ -1,24 +1,29 @@
 from django.contrib import admin
-from django.db.models import Count
 from .models import (
-    Profile, PreferenciaUsuario, ProductosFavoritos,
-    Tienda, TipoServicio, TiendaCategoria, TiendaProducto,
-    Producto, CategoriaProducto, MarcaProducto, TipoProducto,
-    EspecificacionProducto, ProductoVisto,
-    # Si quieres administrar el chat también:
-    # ChatSession, ChatTurn,
+    Profile,
+    PreferenciaUsuario,
+    ProductosFavoritos,
+    Producto,
+    CategoriaProducto,
+    MarcaProducto,
+    TipoProducto,
+    EspecificacionProducto,
+    ProductoVisto,
+    ProductReference,
 )
+
 
 class EspecificacionProductoInline(admin.TabularInline):
     model = EspecificacionProducto
-    extra = 20  # muestra 3 filas vacías por defecto
+    extra = 20
     fields = ("nombre_especificacion", "valor_especificacion")
 
-class TiendaProductoInline(admin.TabularInline):
-    model = TiendaProducto
+
+class ProductReferenceInline(admin.TabularInline):
+    model = ProductReference
     extra = 1
-    fields = ("tienda", "precio")
-    autocomplete_fields = ("tienda",)
+    fields = ("nombre_fuente", "precio", "stock", "url_fuente", "nota")
+
 
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
@@ -27,20 +32,24 @@ class ProductoAdmin(admin.ModelAdmin):
     search_fields = ("nombre_producto", "modelo_producto")
     list_filter = ("categoria_producto", "tipo_producto", "marca_producto")
     list_per_page = 20
-    inlines = [EspecificacionProductoInline, TiendaProductoInline]
+    inlines = [EspecificacionProductoInline, ProductReferenceInline]
     autocomplete_fields = ("marca_producto", "categoria_producto", "tipo_producto")
+
 
 @admin.register(MarcaProducto)
 class MarcaProductoAdmin(admin.ModelAdmin):
     search_fields = ("nombre_marca",)
 
+
 @admin.register(CategoriaProducto)
 class CategoriaProductoAdmin(admin.ModelAdmin):
     search_fields = ("nombre_categoria",)
 
+
 @admin.register(TipoProducto)
 class TipoProductoAdmin(admin.ModelAdmin):
     search_fields = ("nombre_tipo",)
+
 
 @admin.register(ProductoVisto)
 class ProductoVistoAdmin(admin.ModelAdmin):
@@ -49,14 +58,7 @@ class ProductoVistoAdmin(admin.ModelAdmin):
     date_hierarchy = "fecha_visto"
     search_fields = ("producto__nombre_producto", "usuario__username")
 
-@admin.register(Tienda)
-class TiendaAdmin(admin.ModelAdmin):
-    search_fields = ("nombre_tienda",)  # ajusta según el nombre del campo en tu modelo
-    list_display = ("nombre_tienda",)
 
-# OJO: evita registrar dos veces el mismo modelo
 admin.site.register(Profile)
 admin.site.register(PreferenciaUsuario)
 admin.site.register(ProductosFavoritos)
-admin.site.register(TipoServicio)
-admin.site.register(TiendaCategoria)

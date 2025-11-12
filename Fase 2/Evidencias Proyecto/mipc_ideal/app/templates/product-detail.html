@@ -250,7 +250,7 @@
   <!-- Sidebar derecha -->
   <aside class="pd2-right">
     <div class="card pd2-side-header">
-      <div class="side-title">Elige tu tienda</div>
+      <div class="side-title">Fuentes de referencia</div>
       <div class="side-sort">
         <label>Ordenar por</label>
         <select id="shop-order" class="form-select form-select-sm">
@@ -260,29 +260,31 @@
       </div>
     </div>
 
-    {% if ofertas %}
+    {% if referencias %}
       <div class="pd2-shops" id="shops-list">
-        {% for o in ofertas %}
+        {% for ref in referencias %}
           <div class="shop-card card"
-              data-precio="{{ o.precio|floatformat:0 }}"
-              data-stock="{{ o.stock|default:'0' }}"
-              {% if o.precio_normal %}data-precio-normal="{{ o.precio_normal|floatformat:0 }}"{% endif %}>
-            <div class="shop-name">{{ o.tienda.nombre_tienda }}</div>
+              data-precio="{{ ref.precio|floatformat:0 }}"
+              data-stock="{{ ref.stock|default:'0' }}">
+            <div class="shop-name">
+              {{ ref.nombre_fuente }}
+              {% if ref.nota %}<div class="text-secondary small">{{ ref.nota }}</div>{% endif %}
+            </div>
 
             <div class="shop-prices">
               <div>
                 <div class="price-label">Precio</div>
-                <div class="price-value">${{ o.precio|floatformat:0 }}</div>
+                <div class="price-value">${{ ref.precio|floatformat:0 }}</div>
               </div>
               <div class="shop-stock">
                 <div class="price-label">Stock</div>
-                <div class="stock-value">{{ o.stock }}</div>
+                <div class="stock-value">{{ ref.stock }}</div>
               </div>
             </div>
 
             <div class="shop-cta">
-              {% if o.url_externa %}
-                <a class="btn-pill" href="{{ o.url_externa }}" target="_blank" rel="nofollow noopener">Ver en tienda</a>
+              {% if ref.url_fuente %}
+                <a class="btn-pill" href="{{ ref.url_fuente }}" target="_blank" rel="nofollow noopener">Ver sitio</a>
               {% else %}
                 <span class="muted">Sin enlace</span>
               {% endif %}
@@ -291,7 +293,7 @@
         {% endfor %}
       </div>
     {% else %}
-      <div class="card pd2-empty">Aún no hay tiendas con este producto.</div>
+      <div class="card pd2-empty">Aún no tenemos referencias para este producto.</div>
     {% endif %}
   </aside>
 </div>

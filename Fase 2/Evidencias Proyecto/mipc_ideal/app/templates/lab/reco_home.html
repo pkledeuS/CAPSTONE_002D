@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block body_class %}reco-app{% endblock %}
+
 {% block css %}
 <link rel="stylesheet" href="{% static 'recommender/recommender.css' %}">
 {% endblock %}
@@ -10,7 +12,7 @@
 
   <!-- HERO editorial -->
   <section class="reco-hero mb-4">
-    <div class="p-4 p-md-5 rounded-4 reco-surface">
+    <div class="p-4 p-md-5 rounded-6 reco-surface">
       <div class="row align-items-center g-3">
         <div class="col-md-7">
           <h1 class="display-6 mb-2">Encuentra tu equipo ideal</h1>
@@ -39,8 +41,7 @@
         <a class="card card-hover h-100 text-decoration-none"
            href="{{ perfil.url }}">
           <div class="card-body">
-            <div class="reco-icon mb-2" aria-hidden="true">{{ perfil.initial }}</div>
-            <div class="fw-semibold">{{ perfil.name }}</div>
+            <div class="reco-icon mb-2" aria-hidden="true">{{ perfil.name }}</div>
             <div class="text-secondary small">{{ perfil.subtitle }}</div>
           </div>
         </a>
@@ -144,7 +145,7 @@
 
                 <p class="reco-alt-hint mb-3">{{ item.educational_hint }}</p>
 
-                <div class="d-flex flex-wrap gap-2">
+                <div class="d-flex flex-wrap gap-2 align-items-center">
                   <a href="{{ item.detail_url }}" class="btn btn-sm btn-outline-primary"
                      data-reco-track="view-detail" aria-label="Ver detalle de {{ item.name }}">
                     Ver detalle
@@ -155,18 +156,18 @@
                   <a href="{% url 'reco_explore' %}?categoria={{ primary.id }}"
                      class="btn btn-sm btn-outline-secondary" data-reco-track="view-alternatives"
                      aria-label="Explorar alternativas para {{ item.name }}">
-                    Ver alternativas
+                    Explorar mas
                   </a>
                   {% elif item.category_id %}
                   <a href="{% url 'reco_explore' %}?categoria={{ item.category_id }}"
                      class="btn btn-sm btn-outline-secondary" data-reco-track="view-alternatives"
                      aria-label="Explorar alternativas para {{ item.name }}">
-                    Ver alternativas
+                    Explorar mas
                   </a>
                   {% else %}
                   <a href="{% url 'reco_explore' %}" class="btn btn-sm btn-outline-secondary"
                      data-reco-track="view-alternatives" aria-label="Explorar alternativas para {{ item.name }}">
-                    Ver alternativas
+                    Explorar mas
                   </a>
                   {% endif %}
                   {% endwith %}
@@ -174,12 +175,37 @@
                   <a href="{% url 'reco_explore' %}?categoria={{ item.category_id }}"
                      class="btn btn-sm btn-outline-secondary" data-reco-track="view-alternatives"
                      aria-label="Explorar alternativas para {{ item.name }}">
-                    Ver alternativas
+                    Explorar mas
                   </a>
                   {% else %}
                   <a href="{% url 'reco_explore' %}" class="btn btn-sm btn-outline-secondary"
                      data-reco-track="view-alternatives" aria-label="Explorar alternativas para {{ item.name }}">
-                    Ver alternativas
+                    Explorar mas
+                  </a>
+                  {% endif %}
+                  {% if request.user.is_authenticated %}
+                  <form method="post" action="{% url 'reco_toggle_favorite' %}" class="reco-save-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="product_id" value="{{ item.id }}">
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    {% if item.is_favorite %}
+                    <input type="hidden" name="mode" value="remove">
+                    <button type="submit" class="btn btn-sm btn-outline-primary reco-save-btn is-active"
+                            aria-pressed="true" data-reco-track="favorite-remove">
+                      Guardado
+                    </button>
+                    {% else %}
+                    <button type="submit" class="btn btn-sm btn-outline-primary reco-save-btn"
+                            aria-pressed="false" data-reco-track="favorite-add">
+                      Guardar
+                    </button>
+                    {% endif %}
+                  </form>
+                  {% else %}
+                  <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}"
+                     class="btn btn-sm btn-outline-primary reco-save-btn"
+                     data-reco-track="favorite-login" role="button">
+                    Guardar
                   </a>
                   {% endif %}
                 </div>

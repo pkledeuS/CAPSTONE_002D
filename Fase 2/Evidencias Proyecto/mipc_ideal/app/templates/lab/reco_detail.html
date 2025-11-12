@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block body_class %}reco-app{% endblock %}
+
 {% block css %}
 <link rel="stylesheet" href="{% static 'recommender/recommender.css' %}">
 {% endblock %}
@@ -67,6 +69,37 @@
               <div class="text-secondary small">{{ product.category }}</div>
               {% endif %}
             </div>
+          </div>
+
+          <div class="d-flex flex-wrap gap-2 mt-3 align-items-center">
+            {% if request.user.is_authenticated %}
+            <form method="post" action="{% url 'reco_toggle_favorite' %}" class="reco-save-form">
+              {% csrf_token %}
+              <input type="hidden" name="product_id" value="{{ product.id }}">
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              {% if product.is_favorite %}
+              <input type="hidden" name="mode" value="remove">
+              <button type="submit" class="btn btn-sm btn-outline-primary reco-save-btn is-active"
+                      aria-pressed="true" data-reco-track="favorite-remove">
+                Guardado
+              </button>
+              {% else %}
+              <button type="submit" class="btn btn-sm btn-outline-primary reco-save-btn"
+                      aria-pressed="false" data-reco-track="favorite-add">
+                Guardar para revisar
+              </button>
+              {% endif %}
+            </form>
+            {% else %}
+            <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}"
+               class="btn btn-sm btn-outline-primary reco-save-btn"
+               data-reco-track="favorite-login" role="button">
+              Guardar para revisar
+            </a>
+            {% endif %}
+            <a href="{% url 'reco_saved' %}" class="btn btn-sm btn-outline-secondary">
+              Ver guardados
+            </a>
           </div>
 
           <div class="row g-3 mt-2">
@@ -239,19 +272,22 @@
       {% endif %}
     </div>
 
-    <!-- Col derecha: Tiendas (neutral) y Valoraciones -->
+    <!-- Col derecha: Referencias neutrales y Valoraciones -->
     <aside class="col-lg-4">
       <div class="card mb-3">
         <div class="card-body">
-          <h2 class="h6">Tiendas (referencia)</h2>
-          <p class="reco-alt-hint mb-3">No patrocinado: se muestran como punto de partida para validar stock y garantia.</p>
+          <h2 class="h6">Fuentes de referencia</h2>
+          <p class="reco-alt-hint mb-3">No patrocinado: solo para validar stock y garant&iacute;a directamente.</p>
           <div class="table-responsive">
             <table class="table table-sm align-middle mb-0">
-              <thead><tr><th>Tienda</th><th class="text-end">Precio</th><th></th></tr></thead>
+              <thead><tr><th>Fuente</th><th class="text-end">Precio</th><th></th></tr></thead>
               <tbody>
                 {% for store in stores %}
                 <tr>
-                  <td>{{ store.name }}</td>
+                  <td>
+                    {{ store.name }}
+                    {% if store.note %}<div class="text-secondary small">{{ store.note }}</div>{% endif %}
+                  </td>
                   <td class="text-end">{{ store.price|default:"Por confirmar" }}</td>
                   <td class="text-end">
                     {% if store.url %}
@@ -273,25 +309,95 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" id="reco-reviews">
         <div class="card-body">
           <h2 class="h6">Valoraciones</h2>
           {% if product.avg_rating %}
-          <div class="small text-secondary mb-2">Promedio: {{ product.avg_rating|floatformat:1 }} de 5 ({{ product.review_count }} resenas).</div>
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <span class="small fw-semibold text-secondary">Promedio</span>
+            <div class="reco-rating-stars reco-rating-static" aria-label="Promedio {{ product.avg_rating|floatformat:1 }} de 5">
+              {% for i in "12345" %}
+              <span class="{% if forloop.counter <= product.avg_rating %}is-filled{% endif %}">&#9733;</span>
+              {% endfor %}
+            </div>
+            <div class="small text-secondary">{{ product.avg_rating|floatformat:1 }} de 5 ({{ product.review_count }} reseñas)</div>
+          </div>
           {% else %}
           <div class="small text-secondary mb-2">Aun recopilamos resenas verificadas para un balance completo.</div>
           {% endif %}
-          <div class="vstack gap-2">
+          <div class="vstack gap-2 mb-3">
             {% for review in reviews %}
             <div class="border rounded-3 p-2 small">
-              <div class="fw-semibold">{{ review.user }}</div>
-              <div>{{ review.rating }} de 5 - <span class="text-secondary">{{ review.date }}</span></div>
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <div class="fw-semibold">{{ review.user }}</div>
+                <span class="text-secondary">{{ review.date }}</span>
+              </div>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <div class="reco-rating-stars reco-rating-static" aria-label="{{ review.rating }} de 5">
+                  {% for i in "12345" %}
+                  <span class="{% if forloop.counter <= review.rating %}is-filled{% endif %}">&#9733;</span>
+                  {% endfor %}
+                </div>
+                <span>{{ review.rating }} de 5</span>
+              </div>
               <div>{{ review.comment }}</div>
             </div>
             {% empty %}
                 <div class="text-secondary small">No hay resenas disponibles para este producto.</div>
             {% endfor %}
           </div>
+          <div class="mb-2 d-flex align-items-center justify-content-between gap-2 flex-wrap">
+            <p class="reco-alt-hint mb-0">Quieres dejar tu reseña?</p>
+            {% if user.is_authenticated %}
+            <button type="button"
+                    id="toggle-review"
+                    class="btn btn-sm btn-outline-primary"
+                    data-label-new="Escribir reseña"
+                    data-label-edit="Editar reseña"
+                    data-label-open="Ocultar formulario"
+                    data-has-review="{{ user_has_review|yesno:'true,false' }}">
+              {% if show_review_form %}
+                Ocultar formulario
+              {% elif user_has_review %}
+                Editar reseña
+              {% else %}
+                Escribir reseña
+              {% endif %}
+            </button>
+            {% else %}
+            <a class="btn btn-sm btn-primary" href="{% url 'login' %}?next={{ request.get_full_path }}#reco-reviews">Inicia sesion</a>
+            {% endif %}
+          </div>
+          {% if user.is_authenticated %}
+          <form method="post" action="{% url 'reco_detail' %}?id={{ product.id }}#reco-reviews"
+                class="{% if not show_review_form %}d-none{% endif %} reco-review-form"
+                id="reco-review-form">
+            {% csrf_token %}
+            <input type="hidden" name="rating" id="reco-rating-input" value="{{ form_review.rating.value|default_if_none:'' }}">
+            <div class="reco-rating-picker reco-rating-stars mb-2" aria-label="Selecciona tu calificacion">
+              {% for i in "12345" %}
+              <span data-value="{{ forloop.counter }}" data-role="reco-star" aria-hidden="true">&#9733;</span>
+              {% endfor %}
+            </div>
+            {% for error in form_review.rating.errors %}
+            <div class="text-danger small mb-2">{{ error }}</div>
+            {% endfor %}
+            {% if form_review.non_field_errors %}
+              {% for error in form_review.non_field_errors %}
+              <div class="text-danger small mb-2">{{ error }}</div>
+              {% endfor %}
+            {% endif %}
+            <label class="form-label small" for="{{ form_review.comment.id_for_label }}">{{ form_review.comment.label }}</label>
+            {{ form_review.comment }}
+            {% for error in form_review.comment.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+            <div class="mt-3 d-flex gap-2">
+              <button type="submit" class="btn btn-primary btn-sm">Guardar reseña</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="cancel-review">Cancelar</button>
+            </div>
+          </form>
+          {% endif %}
         </div>
       </div>
 
@@ -303,4 +409,62 @@
 
 {% block scripts %}
 <script src="{% static 'recommender/recommender.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const toggleBtn = document.getElementById('toggle-review');
+  const cancelBtn = document.getElementById('cancel-review');
+  const form = document.getElementById('reco-review-form');
+  const ratingInput = document.getElementById('reco-rating-input');
+  const stars = document.querySelectorAll('[data-role="reco-star"]');
+
+  const setStars = (val) => {
+    stars.forEach((star) => {
+      const starVal = parseInt(star.dataset.value, 10);
+      star.classList.toggle('is-filled', starVal <= val);
+    });
+  };
+
+  if (ratingInput && ratingInput.value) {
+    setStars(parseInt(ratingInput.value, 10));
+  }
+
+  stars.forEach((star) => {
+    star.addEventListener('click', () => {
+      const val = parseInt(star.dataset.value, 10);
+      ratingInput.value = val;
+      setStars(val);
+    });
+  });
+
+  const toggleForm = (show) => {
+    if (!form || !toggleBtn) return;
+    const baseLabel = toggleBtn.dataset.hasReview === 'true'
+        ? toggleBtn.dataset.labelEdit
+        : toggleBtn.dataset.labelNew;
+    if (show) {
+      form.classList.remove('d-none');
+      toggleBtn.textContent = toggleBtn.dataset.labelOpen;
+    } else {
+      form.classList.add('d-none');
+      toggleBtn.textContent = baseLabel;
+    }
+  };
+
+  if (toggleBtn && form) {
+    toggleBtn.addEventListener('click', () => {
+      const isHidden = form.classList.contains('d-none');
+      toggleForm(isHidden);
+      if (isHidden) {
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  }
+
+  if (cancelBtn && form) {
+    cancelBtn.addEventListener('click', () => {
+      toggleForm(false);
+    });
+  }
+});
+</script>
 {% endblock %}

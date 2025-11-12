@@ -86,7 +86,7 @@ def recommend_products(user, text: str, limit=8, sticky_cats=None, sticky_types=
 
     qs = qs.annotate(
         views_count=Count("productovisto"),
-        min_price=Min("tiendaproducto__precio"),
+        min_price=Min("referencias__precio"),
     )
 
     budget = req["budget"] if req["budget"] is not None else sticky_budget
