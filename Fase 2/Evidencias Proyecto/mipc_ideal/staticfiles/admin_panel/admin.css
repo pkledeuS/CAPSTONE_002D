@@ -1,0 +1,314 @@
+/* Layout wrapper to keep sidebar & content aligned */
+.admin-wrapper {
+  min-height: calc(100vh - 56px);
+}
+
+.admin-shell .main-content {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0;
+}
+
+.admin-shell .site-main {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+/* Sidebar */
+.admin-sidebar {
+  position: sticky;
+  top: 0;
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+  background-color: #ffffff;
+}
+
+.admin-nav .admin-link {
+  padding: 0.5rem 1rem;
+  color: #1f2937;
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  display: block;
+  font-weight: 500;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-nav .admin-link:hover {
+  background-color: #f1f5f9;
+}
+
+.admin-nav .admin-link.active {
+  background-color: #e8f1ff;
+  border-left-color: #0d6efd;
+  color: #0d6efd;
+}
+
+/* Cards / charts */
+.admin-content .card {
+  border-radius: 0.65rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.admin-chart {
+  height: 360px;
+  position: relative;
+}
+
+.admin-chart canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.admin-chart .text-muted {
+  padding: 1rem 0;
+}
+
+/* Tables */
+.table-modern thead th {
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table-modern tbody td {
+  vertical-align: middle;
+  border-color: #f1f5f9;
+}
+
+/* Badges */
+.badge-soft {
+  border-radius: 999px;
+  font-weight: 500;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.65rem;
+}
+
+.badge-soft-info {
+  background-color: rgba(13, 110, 253, 0.12);
+  color: #0d6efd;
+}
+
+.badge-soft-muted {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.badge-soft-success {
+  background-color: rgba(25, 135, 84, 0.15);
+  color: #198754;
+}
+
+.badge-soft-warning {
+  background-color: rgba(255, 193, 7, 0.2);
+  color: #a07900;
+}
+
+/* Helpers */
+.list-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-chip {
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+}
+
+.status-chip.is-active {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: #ffffff;
+}
+
+.status-chip.is-done {
+  border-color: #0d6efd;
+  color: #0d6efd;
+}
+
+/* ===========================
+   Dark theme overrides
+   =========================== */
+.app-theme.theme-dark .admin-wrapper {
+  background: transparent;
+}
+
+.admin-shell .admin-sidebar {
+  background: rgba(9, 14, 26, 0.95);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  color: rgba(248, 251, 255, 0.85);
+}
+
+.admin-shell .admin-nav .admin-link {
+  color: rgba(247, 249, 255, 0.75);
+}
+
+.admin-shell .admin-nav .admin-link:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.admin-shell .admin-nav .admin-link.active {
+  background: rgba(110, 211, 255, 0.12);
+  border-left-color: #6ed3ff;
+  color: #6ed3ff;
+}
+
+.admin-shell .admin-content .card {
+  background: rgba(12, 18, 32, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 25px 50px rgba(4, 6, 18, 0.4);
+  color: #f7f9ff;
+}
+
+.admin-shell .admin-content .form-control,
+.admin-shell .admin-content .form-select {
+  background: rgba(6, 10, 22, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f8fbff;
+}
+
+.admin-shell .admin-content .form-control:focus,
+.admin-shell .admin-content .form-select:focus {
+  border-color: rgba(255, 136, 99, 0.7);
+  box-shadow: 0 0 0 2px rgba(255, 136, 99, 0.18);
+}
+
+.admin-shell .admin-content .input-group-text {
+  background: rgba(6, 10, 22, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(247, 249, 255, 0.7);
+}
+
+.admin-shell .table-modern thead th {
+  color: rgba(244, 248, 255, 0.7);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.admin-shell .table-modern tbody td {
+  border-color: rgba(255, 255, 255, 0.04);
+  color: rgba(247, 249, 255, 0.85);
+}
+
+.admin-shell .admin-content .table {
+  --bs-table-bg: rgba(255, 255, 255, 0.02);
+  --bs-table-striped-bg: rgba(255, 255, 255, 0.04);
+  --bs-table-striped-color: rgba(247, 249, 255, 0.9);
+  --bs-table-hover-bg: rgba(110, 211, 255, 0.12);
+  --bs-table-hover-color: #f8fbff;
+  color: rgba(247, 249, 255, 0.92);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.admin-shell .admin-content .table td,
+.admin-shell .admin-content .table th {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.admin-shell .admin-content .table tbody tr {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.admin-shell .admin-content .table tbody tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.035);
+}
+
+.admin-shell .admin-content .table tbody tr:hover {
+  background-color: rgba(110, 211, 255, 0.1);
+  color: var(--bs-table-hover-color);
+}
+
+.admin-shell .badge-soft-info,
+.admin-shell .badge-soft-success,
+.admin-shell .badge-soft-warning,
+.admin-shell .badge-soft-muted {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f8fbff;
+}
+
+.admin-shell .badge-soft-info {
+  background: rgba(110, 211, 255, 0.18);
+}
+
+.admin-shell .badge-soft-success {
+  background: rgba(95, 233, 199, 0.18);
+}
+
+.admin-shell .badge-soft-warning {
+  background: rgba(255, 176, 140, 0.2);
+}
+
+.admin-shell .badge-soft-muted {
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(247, 249, 255, 0.65);
+}
+
+.admin-shell .status-chip {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(247, 249, 255, 0.75);
+}
+
+.admin-shell .status-chip.is-active {
+  background: linear-gradient(120deg, #6ed3ff, #ff8863);
+  border-color: transparent;
+  color: #04121f;
+}
+
+.admin-shell .status-chip.is-done {
+  border-color: #6ed3ff;
+  color: #6ed3ff;
+}
+
+.app-theme.theme-light.admin-shell .admin-sidebar {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.app-theme.theme-light.admin-shell .admin-nav .admin-link {
+  color: #1f2937;
+}
+
+.app-theme.theme-light.admin-shell .admin-nav .admin-link.active {
+  background: #e8f1ff;
+  border-left-color: #0d6efd;
+  color: #0d6efd;
+}
+
+.app-theme.theme-light.admin-shell .admin-content .card {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+  box-shadow: 0 15px 30px rgba(15, 23, 42, 0.12);
+}
+
+.app-theme.theme-light.admin-shell .admin-content .form-control,
+.app-theme.theme-light.admin-shell .admin-content .form-select {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  color: #0f172a;
+}
+
+.app-theme.theme-light.admin-shell .admin-content .table {
+  --bs-table-bg: #ffffff;
+  --bs-table-striped-bg: rgba(15, 23, 42, 0.04);
+  --bs-table-striped-color: #0f172a;
+  --bs-table-hover-bg: rgba(15, 23, 42, 0.06);
+  --bs-table-hover-color: #0f172a;
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.08);
+}

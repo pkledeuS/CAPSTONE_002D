@@ -1,8 +1,10 @@
 ﻿{% extends 'base.html' %}
 {% load static %}
 
+{% block body_class %}auth-screen{% endblock %}
+
 {% block css %}
-<link rel="stylesheet" href="{% static 'css/edit-form-profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
 {% endblock %}
 
 {% block content %}

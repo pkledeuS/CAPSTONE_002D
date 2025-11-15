@@ -29,12 +29,13 @@ class Profile(models.Model):
     preferred_budget_min = models.PositiveIntegerField(null=True, blank=True)
     preferred_budget_max = models.PositiveIntegerField(null=True, blank=True)
     preference_notes = models.TextField(blank=True)
+    preferred_budget_manual = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user.username} - {self.profile_type}"
 
 # ==============================
-#     PREFERENCIAS DE USUARIO
+#     FAVORITOS
 # ==============================
 class ProductosFavoritos(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -108,6 +109,19 @@ class ProductReference(models.Model):
     def __str__(self):
         return f"{self.nombre_fuente} - {self.producto} (${self.precio})"
 
+
+class ReferenceVisit(models.Model):
+    referencia = models.ForeignKey(ProductReference, on_delete=models.CASCADE, related_name="visitas")
+    usuario = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    clicked_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-clicked_at"]
+
+    def __str__(self):
+        usuario = self.usuario.username if self.usuario else "Anon"
+        return f"{usuario} -> {self.referencia.nombre_fuente} ({self.clicked_at:%Y-%m-%d %H:%M})"
+
 class EspecificacionProducto(models.Model):
     nombre_especificacion = models.CharField(max_length=100)
     valor_especificacion = models.CharField(max_length=200)
@@ -116,6 +130,9 @@ class EspecificacionProducto(models.Model):
     def __str__(self):
         return self.nombre_especificacion
 
+# ==============================
+#     SEGUIMIENTO / STATS
+# ==============================
 class ProductoVisto(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     producto = models.ForeignKey('Producto', on_delete=models.CASCADE)
@@ -123,34 +140,37 @@ class ProductoVisto(models.Model):
 
     def __str__(self):
         return f"{self.usuario} vio {self.producto}"
-    
-# MODELO PARA EL CHATBOT
-class ChatSession(models.Model):
-    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
-    started_at = models.DateTimeField(auto_now_add=True)
-    ended_at = models.DateTimeField(null=True, blank=True)
-    last_activity = models.DateTimeField(auto_now=True)
-    metadata = models.JSONField(null=True, blank=True)
+
+
+class UserViewStat(models.Model):
+    METRIC_BRAND = "brand"
+    METRIC_CATEGORY = "category"
+    METRIC_TYPE = "type"
+    METRIC_PRICE = "price_band"
+    METRIC_CHOICES = [
+        (METRIC_BRAND, "Marca"),
+        (METRIC_CATEGORY, "Categoria"),
+        (METRIC_TYPE, "Tipo de producto"),
+        (METRIC_PRICE, "Rango de precio"),
+    ]
+
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name="view_stats")
+    metric = models.CharField(max_length=20, choices=METRIC_CHOICES)
+    key = models.CharField(max_length=120)
+    count = models.PositiveIntegerField(default=0)
+    last_seen = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("usuario", "metric", "key")
+        verbose_name = "Estadistica de vista"
+        verbose_name_plural = "Estadisticas de vistas"
 
     def __str__(self):
-        return f"ChatSession #{self.id} ({self.user or 'anon'})"
+        return f"{self.usuario} - {self.metric}:{self.key} ({self.count})"
     
-class ChatTurn(models.Model):
-    ROLE_CHOICES = (('user', 'User'), ('assistant', 'Assistant'), ('system', 'System'))
-    session = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name='turns')
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
-    text = models.TextField()
-    filtros_aplicados = models.JSONField(default=dict, blank=True)
-    productos_sugeridos = models.ManyToManyField(Producto, blank=True)
-    tokens_in = models.IntegerField(default=0)
-    tokens_out = models.IntegerField(default=0)
-    latency_ms = models.IntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"[{self.role}] {self.created_at:%Y-%m-%d %H:%M:%S}"
-    
-# MODELO PARA RESEÑAS DE PRODUCTOS
+# ==============================
+#     RESEÑAS Y REPORTES
+# ==============================
 class ProductReview(models.Model):
     producto = models.ForeignKey('Producto', on_delete=models.CASCADE, related_name='reviews')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='product_reviews')
@@ -168,14 +188,14 @@ class ProductReview(models.Model):
     
 class Reporte(models.Model):
     ESTADOS = [
-        ('abierto', 'Abierto'),
-        ('pendiente', 'Pendiente'),
+        ('abierto', 'Nuevo'),
+        ('pendiente', 'En revision'),
         ('resuelto', 'Resuelto'),
     ]
 
     ACCIONES = [
-        ('info_incorrecta', 'Informaci?n incorrecta'),
-        ('spam', 'Spam o contenido enga?oso'),
+        ('info_incorrecta', 'Informacion incorrecta'),
+        ('spam', 'Spam o contenido enganoso'),
         ('duplicado', 'Producto duplicado'),
         ('otro', 'Otro motivo'),
     ]

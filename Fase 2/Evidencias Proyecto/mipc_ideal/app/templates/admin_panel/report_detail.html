@@ -1,123 +1,109 @@
 {% extends "admin_panel/admin_base.html" %}
 
 {% block admin_content %}
-<div class="card">
-  <div class="card-body">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h5 class="card-title mb-0">Detalle del Reporte #{{ reporte.id }}</h5>
-      <div class="btn-group btn-group-sm">
-        {% if reporte.estado != 'resuelto' %}
-          <a href="{% url 'admin_report_action' reporte.id 'resolve' %}?next={{ request.path|urlencode }}" 
-             class="btn btn-outline-success">
-            <i class="bi bi-check-lg"></i> Marcar resuelto
-          </a>
+<div class="card mb-4">
+  <div class="card-body d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3">
+    <div>
+      <p class="text-uppercase text-muted small mb-1">Reporte #{{ reporte.id }}</p>
+      <h2 class="h5 mb-2">{{ reporte.producto.nombre_producto|default:"Producto no disponible" }}</h2>
+      <div class="text-muted small">
+        Motivo: {{ reporte.get_motivo_display }} · Creado {{ reporte.created_at|date:"d/m/Y H:i" }}
+      </div>
+      <div class="d-flex flex-wrap gap-2 mt-2">
+        {% for code, label, step in status_flow %}
+        {% if step < current_step %}
+          <span class="status-chip is-done">{{ label }}</span>
+        {% elif step == current_step %}
+          <span class="status-chip is-active">{{ label }}</span>
         {% else %}
-          <a href="{% url 'admin_report_action' reporte.id 'open' %}?next={{ request.path|urlencode }}" 
-             class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-counterclockwise"></i> Reabrir
-          </a>
+          <span class="status-chip">{{ label }}</span>
         {% endif %}
-        <a href="{% url 'admin_report_action' reporte.id 'delete' %}?next={% url 'admin_reports' %}" 
-           class="btn btn-outline-danger"
-           onclick="return confirm('¿Eliminar este reporte?');">
-          <i class="bi bi-trash"></i> Eliminar
-        </a>
+        {% endfor %}
       </div>
     </div>
-
-    <div class="row mb-4">
-      <div class="col-md-6">
-        <dl>
-          <dt>Tipo</dt>
-          <dd>{{ reporte.get_target_type_display }}</dd>
-          
-          <dt>Objetivo</dt>
-          <dd>
-            {% if reporte.producto %}
-              Producto: {{ reporte.producto.nombre_producto }}
-            {% elif reporte.tienda %}
-              Tienda: {{ reporte.tienda.nombre_tienda }}
-            {% endif %}
-          </dd>
-          
-          <dt>Motivo</dt>
-          <dd>{{ reporte.get_motivo_display }}</dd>
-          
-          <dt>Detalle</dt>
-          <dd>{{ reporte.detalle|default:"--" }}</dd>
-        </dl>
-      </div>
-      
-      <div class="col-md-6">
-        <dl>
-          <dt>Reportado por</dt>
-          <dd>{{ reporte.reporter.username }} ({{ reporte.created_at|date:"d/m/Y H:i" }})</dd>
-          
-          <dt>Estado actual</dt>
-          <dd>
-            {% if reporte.estado == 'resuelto' %}
-              <span class="badge bg-success">Resuelto</span>
-            {% elif reporte.estado == 'pendiente' %}
-              <span class="badge bg-warning">Pendiente de tienda</span>
-            {% else %}
-              <span class="badge bg-info">Nuevo reporte</span>
-            {% endif %}
-          </dd>
-        </dl>
-      </div>
+    <div class="btn-group btn-group-sm">
+      {% if reporte.producto %}
+      <a href="{% url 'admin_product_detail' reporte.producto.id %}" class="btn btn-outline-secondary" title="Ver producto">
+        <i class="bi bi-box-arrow-up-right"></i> Producto
+      </a>
+      {% endif %}
+      <a href="{% url 'admin_report_action' reporte.id 'delete' %}?next={% url 'admin_reports' %}"
+         class="btn btn-outline-danger"
+         onclick="return confirm('Eliminar este reporte?');">
+        <i class="bi bi-trash"></i> Borrar
+      </a>
     </div>
-
-    <!-- Formulario de acción -->
-    {% if reporte.estado != 'resuelto' %}
-    <form method="post" class="border-top pt-4">
-      {% csrf_token %}
-      
-      <div class="row g-3">
-        <div class="col-md-6">
-          <label class="form-label">Acción a tomar</label>
-          <select name="accion" class="form-select" required>
-            <option value="">Seleccione una acción...</option>
-            {% if reporte.target_type == 'producto' %}
-              <option value="info_incorrecta">Solicitar corrección de información</option>
-              <option value="spam_delete">Eliminar producto (Spam)</option>
-              <option value="duplicado_merge">Marcar como duplicado</option>
-            {% else %}
-              <option value="servicio_deficiente">Solicitar mejora de servicio</option>
-              <option value="estafa">Investigar posible estafa</option>
-              <option value="incumplimiento">Incumplimiento de entrega</option>
-            {% endif %}
-          </select>
-        </div>
-        
-        {% if reporte.producto %}
-        <div class="col-md-6">
-          <label class="form-label">Estado del producto</label>
-          <div class="form-check">
-            <input type="checkbox" name="deshabilitar" class="form-check-input" id="deshabilitar">
-            <label class="form-check-label" for="deshabilitar">
-              Deshabilitar producto temporalmente
-            </label>
-          </div>
-        </div>
-        {% endif %}
-        
-        <div class="col-12">
-          <label class="form-label">Mensaje para la(s) tienda(s)</label>
-          <textarea name="mensaje" class="form-control" rows="4" required
-                    placeholder="Explique el problema y las acciones requeridas..."></textarea>
-        </div>
-        
-        <div class="col-12 text-end">
-          <a href="{% url 'admin_reports' %}" class="btn btn-outline-secondary">
-            Cancelar
-          </a>
-          <button type="submit" class="btn btn-primary">
-            Aplicar acción
-          </button>
-        </div>
-      </div>
-    </form>
-    {% endif %}
   </div>
 </div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="border rounded-3 p-3 mb-3">
+      <h5 class="mb-2">Detalle del usuario</h5>
+      <p class="mb-0 text-muted">{{ reporte.detalle|default:"Sin descripcion adicional." }}</p>
+    </div>
+    {% if reporte.accion_admin %}
+    <div class="border rounded-3 p-3">
+      <h6 class="text-muted text-uppercase small mb-2">Notas internas</h6>
+      <p class="mb-0">{{ reporte.accion_admin }}</p>
+    </div>
+    {% endif %}
+  </div>
+  <div class="col-lg-5">
+    <div class="border rounded-3 p-3">
+      <h5 class="mb-2">Reporter</h5>
+      <div class="fw-semibold">{{ reporte.reporter.username|default:"Anon" }}</div>
+      <small class="text-muted d-block mb-3">ID usuario: {{ reporte.reporter.id|default:"-" }}</small>
+      <div class="d-flex flex-column gap-2">
+        <div>
+          <small class="text-muted text-uppercase">Estado actual</small><br>
+          <span class="badge-soft {% if reporte.estado == 'resuelto' %}badge-soft-success{% elif reporte.estado == 'pendiente' %}badge-soft-warning{% else %}badge-soft-muted{% endif %}">
+            {{ reporte.get_estado_display }}
+          </span>
+        </div>
+        {% if reporte.producto %}
+        <div>
+          <small class="text-muted text-uppercase">Producto</small>
+          <p class="mb-0">{{ reporte.producto.marca_producto }} - {{ reporte.producto.modelo_producto }}</p>
+          <small class="text-muted">ID: {{ reporte.producto.id }}</small>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<form method="post" class="card mt-4">
+  {% csrf_token %}
+  <div class="card-body">
+    <h5 class="mb-3">Actualizar seguimiento</h5>
+    <div class="btn-group mb-3" role="group" aria-label="Seleccionar estado">
+      {% for code, label, step in status_flow %}
+        <input type="radio" class="btn-check" name="action" id="state-{{ code }}" value="{{ code }}"
+               {% if reporte.estado == code %}checked{% endif %}>
+        <label class="btn btn-outline-primary" for="state-{{ code }}">{{ step }}. {{ label }}</label>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Notas internas</label>
+      <textarea name="admin_note" class="form-control" rows="4" placeholder="Describe la correccion aplicada o los proximos pasos.">{{ reporte.accion_admin }}</textarea>
+    </div>
+
+    {% if reporte.producto %}
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" name="disable_product" id="disable-product"
+             {% if reporte.producto_deshabilitado %}checked{% endif %}>
+      <label class="form-check-label" for="disable-product">
+        Deshabilitar este producto mientras se corrige
+      </label>
+    </div>
+    {% endif %}
+
+    <div class="d-flex justify-content-between">
+      <a href="{% url 'admin_reports' %}" class="btn btn-light">Volver</a>
+      <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    </div>
+  </div>
+</form>
 {% endblock %}

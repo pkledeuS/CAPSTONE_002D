@@ -1,7 +1,12 @@
 {% extends "admin_panel/admin_base.html" %}
 
 {% block admin_title %}
-<h1 class="h3 mb-3">Productos</h1>
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <h1 class="h3 mb-0">Productos</h1>
+  <a href="{% url 'admin_product_create' %}" class="btn btn-primary btn-sm">
+    <i class="bi bi-plus-circle me-1"></i> Nuevo producto
+  </a>
+</div>
 {% endblock %}
 
 {% block admin_content %}
@@ -13,10 +18,20 @@
       </div>
       <div class="col-12 col-md-3">
         <select name="categoria" class="form-select">
-          <option value="">Categoría (todas)</option>
+          <option value="">Categoria (todas)</option>
           {% for c in categorias %}
           <option value="{{ c.id }}" {% if request.GET.categoria == c.id|stringformat:"s" %}selected{% endif %}>
             {{ c.nombre_categoria }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-3">
+        <select name="tipo" class="form-select">
+          <option value="">Tipo (todos)</option>
+          {% for t in tipos %}
+          <option value="{{ t.id }}" {% if request.GET.tipo == t.id|stringformat:"s" %}selected{% endif %}>
+            {{ t.nombre_tipo }}
           </option>
           {% endfor %}
         </select>
@@ -34,49 +49,65 @@
     </form>
 
     <div class="table-responsive">
-      <table class="table table-sm align-middle">
+      <table class="table table-modern table-sm align-middle">
         <thead>
           <tr>
             <th>Producto</th>
-            <th>Categoría</th>
-            <th>Precio mín.</th>
-            <th>Referencias</th>
-            <th>Activo</th>
+            <th>Inventario</th>
+            <th>Estado</th>
             <th class="text-end">Acciones</th>
           </tr>
         </thead>
         <tbody>
           {% for p in page_obj %}
           <tr>
-              <td>{{ p.nombre_producto }}</td>
-              <td>{{ p.categoria_producto }}</td>
-              <td>${{ p.precio|floatformat:0 }}</td>
-              <td>{{ p.tiendas_count|default:"—" }}</td>
-              <td>
-                  <span class="badge {% if p.is_active %}bg-success{% else %}bg-secondary{% endif %}">
-                      {{ p.is_active|yesno:"Sí,No" }}
-                  </span>
-              </td>
-              <td class="text-end">
-                  <div class="btn-group btn-group-sm">
-                      <a href="{% url 'admin_product_detail' p.id %}" class="btn btn-outline-secondary">
-                          <i class="bi bi-eye"></i> Ver
-                      </a>
-                      <a href="{% url 'admin_product_toggle' p.id %}" 
-                        class="btn btn-outline-warning"
-                        onclick="return confirm('¿{% if p.is_active %}Desactivar{% else %}Activar{% endif %} este producto?');">
-                          <i class="bi bi-power"></i> {{ p.is_active|yesno:"Desactivar,Activar" }}
-                      </a>
-                      <a href="{% url 'admin_product_delete' p.id %}" 
-                        class="btn btn-outline-danger"
-                        onclick="return confirm('¿Eliminar este producto? Esta acción no se puede deshacer.');">
-                          <i class="bi bi-trash"></i> Eliminar
-                      </a>
-                  </div>
-              </td>
+            <td>
+              <div class="fw-semibold">{{ p.nombre_producto }}</div>
+              <div class="text-muted small">{{ p.marca_producto }} - {{ p.modelo_producto }}</div>
+              <div class="d-flex flex-wrap gap-1 mt-1">
+                <span class="badge-soft badge-soft-muted">{{ p.categoria_producto }}</span>
+                <span class="badge-soft badge-soft-info">{{ p.tipo_producto }}</span>
+                <span class="badge-soft badge-soft-warning">
+                  {{ p.tiendas_count|default:0 }} tienda{{ p.tiendas_count|default:0|pluralize }}
+                </span>
+              </div>
+            </td>
+            <td>
+              <div class="fw-semibold">${{ p.precio|default:0|floatformat:0 }}</div>
+              <small class="text-muted">Precio minimo referenciado</small>
+            </td>
+            <td>
+              <span class="badge-soft {% if p.is_active %}badge-soft-success{% else %}badge-soft-muted{% endif %}">
+                {{ p.is_active|yesno:"Activo,Desactivado" }}
+              </span>
+            </td>
+            <td class="text-end">
+              <div class="btn-group btn-group-sm">
+                <a href="{% url 'admin_product_detail' p.id %}" class="btn btn-outline-secondary" title="Ver">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a href="{% url 'admin_product_edit' p.id %}" class="btn btn-outline-primary" title="Editar">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <a href="{% url 'admin_product_toggle' p.id %}"
+                   class="btn btn-outline-warning"
+                   title="{{ p.is_active|yesno:'Desactivar,Activar' }}"
+                   onclick="return confirm('{% if p.is_active %}Desactivar{% else %}Activar{% endif %} este producto?');">
+                  <i class="bi bi-power"></i>
+                </a>
+                <a href="{% url 'admin_product_delete' p.id %}"
+                   class="btn btn-outline-danger"
+                   title="Eliminar"
+                   onclick="return confirm('Eliminar este producto? Esta accion no se puede deshacer.');">
+                  <i class="bi bi-trash"></i>
+                </a>
+              </div>
+            </td>
           </tr>
           {% empty %}
-          <tr><td colspan="6" class="text-center text-muted">Sin productos</td></tr>
+          <tr>
+            <td colspan="4" class="text-center text-muted py-4">Sin productos</td>
+          </tr>
           {% endfor %}
         </tbody>
       </table>

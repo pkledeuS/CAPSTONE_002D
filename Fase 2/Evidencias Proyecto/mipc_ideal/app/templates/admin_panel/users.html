@@ -24,13 +24,11 @@
     </form>
 
     <div class="table-responsive">
-      <table class="table table-sm align-middle">
+      <table class="table table-modern table-sm align-middle">
         <thead>
           <tr>
             <th>Usuario</th>
-            <th>Email</th>
-            <th>Fecha registro</th>
-            <th>Último acceso</th>
+            <th>Actividad</th>
             <th>Preferencias</th>
             <th>Estado</th>
             <th class="text-end">Acciones</th>
@@ -38,51 +36,66 @@
         </thead>
         <tbody>
           {% for user in page_obj %}
+          {% with prefs_count=user.preferenciausuario_set.count %}
           <tr>
-            <td>{{ user.username }}</td>
-            <td>{{ user.email }}</td>
-            <td>{{ user.date_joined|date:"d/m/Y H:i" }}</td>
-            <td>{{ user.last_login|date:"d/m/Y H:i"|default:"—" }}</td>
             <td>
-              {% with prefs=user.preferenciausuario_set.all %}
-                {% if prefs %}
-                  <small class="text-muted">
-                    {{ prefs.count }} preferencia{{ prefs.count|pluralize }}
-                  </small>
-                {% else %}
-                  <small class="text-muted">—</small>
-                {% endif %}
-              {% endwith %}
+              <div class="d-flex align-items-center gap-3">
+                <div>
+                  <div class="fw-semibold">{{ user.username }}</div>
+                  <div class="text-muted small">{{ user.email|default:"-" }}</div>
+                  <div class="d-flex gap-1 mt-1">
+                    <span class="badge-soft badge-soft-muted">
+                      {{ user.profile.profile_type|default_if_none:"usuario"|default:"usuario"|title }}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </td>
             <td>
-              {% if user.is_active %}
-                <span class="badge bg-success">Activo</span>
-              {% else %}
-                <span class="badge bg-secondary">Inactivo</span>
-              {% endif %}
+              <div class="fw-semibold">{{ user.date_joined|date:"d/m/Y" }}</div>
+              <small class="text-muted d-block mb-1">Registro</small>
+              <div class="fw-semibold">
+                {% if user.last_login %}
+                  {{ user.last_login|date:"d/m/Y H:i" }}
+                {% else %}
+                  -
+                {% endif %}
+              </div>
+              <small class="text-muted">Ultimo acceso</small>
+            </td>
+            <td>
+              <div class="fw-semibold">{{ prefs_count }}</div>
+              <small class="text-muted">Preferencias guardadas</small>
+            </td>
+            <td>
+              <span class="badge-soft {% if user.is_active %}badge-soft-success{% else %}badge-soft-muted{% endif %}">
+                {{ user.is_active|yesno:"Activo,Inactivo" }}
+              </span>
             </td>
             <td class="text-end">
               <div class="btn-group btn-group-sm">
-                <a href="{% url 'admin_user_detail' user.id %}" class="btn btn-outline-secondary">
-                  <i class="bi bi-eye"></i> Ver
+                <a href="{% url 'admin_user_detail' user.id %}" class="btn btn-outline-secondary" title="Ver">
+                  <i class="bi bi-eye"></i>
                 </a>
-                <a href="{% url 'admin_user_toggle' user.id %}" 
+                <a href="{% url 'admin_user_toggle' user.id %}"
                    class="btn btn-outline-warning"
-                   onclick="return confirm('¿{% if user.is_active %}Desactivar{% else %}Activar{% endif %} este usuario?');">
-                  <i class="bi bi-power"></i> 
-                  {{ user.is_active|yesno:"Desactivar,Activar" }}
+                   title="{{ user.is_active|yesno:'Desactivar,Activar' }}"
+                   onclick="return confirm('{% if user.is_active %}Desactivar{% else %}Activar{% endif %} este usuario?');">
+                  <i class="bi bi-power"></i>
                 </a>
-                <a href="{% url 'admin_user_delete' user.id %}" 
+                <a href="{% url 'admin_user_delete' user.id %}"
                    class="btn btn-outline-danger"
-                   onclick="return confirm('¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.');">
-                  <i class="bi bi-trash"></i> Eliminar
+                   title="Eliminar"
+                   onclick="return confirm('Estas seguro de eliminar este usuario? Esta accion no se puede deshacer.');">
+                  <i class="bi bi-trash"></i>
                 </a>
               </div>
             </td>
           </tr>
+          {% endwith %}
           {% empty %}
           <tr>
-            <td colspan="7" class="text-center py-3">
+            <td colspan="5" class="text-center py-3">
               <div class="text-muted">No hay usuarios que coincidan con los filtros.</div>
             </td>
           </tr>

@@ -1,101 +1,119 @@
 {% extends "admin_panel/admin_base.html" %}
 
 {% block admin_title %}
-<h1 class="h3 mb-3">Reportes (Moderación)</h1>
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <h1 class="h3 mb-0">Reportes</h1>
+  <div class="d-flex flex-wrap gap-2">
+    <span class="badge-soft badge-soft-muted">Nuevos: {{ status_summary.abierto }}</span>
+    <span class="badge-soft badge-soft-warning">En revision: {{ status_summary.pendiente }}</span>
+    <span class="badge-soft badge-soft-success">Resueltos: {{ status_summary.resuelto }}</span>
+  </div>
+</div>
 {% endblock %}
 
 {% block admin_content %}
 <div class="card">
   <div class="card-body">
-    <!-- Filtros mejorados -->
     <form class="row g-3 mb-4" method="get">
       <div class="col-12 col-md-4">
-        <label class="form-label small text-muted">Filtrar por estado</label>
+        <label class="form-label small text-muted">Estado</label>
         <select name="estado" class="form-select form-select-sm">
-          <option value="abiertos" {% if request.GET.estado == 'abiertos' or not request.GET.estado %}selected{% endif %}>Nuevos reportes</option>
-          <option value="pendientes" {% if request.GET.estado == 'pendientes' %}selected{% endif %}>Pendientes</option>
-          <option value="resueltos" {% if request.GET.estado == 'resueltos' %}selected{% endif %}>Resueltos</option>
-          <option value="todos" {% if request.GET.estado == 'todos' %}selected{% endif %}>Todos los estados</option>
+          <option value="abiertos" {% if estado == 'abiertos' %}selected{% endif %}>Nuevos</option>
+          <option value="pendientes" {% if estado == 'pendientes' %}selected{% endif %}>En revision</option>
+          <option value="resueltos" {% if estado == 'resueltos' %}selected{% endif %}>Resueltos</option>
+          <option value="todos" {% if estado == 'todos' %}selected{% endif %}>Todos</option>
         </select>
       </div>
-      <div class="col-12 col-md-4">
-        <label class="form-label">&nbsp;</label>
+      <div class="col-12 col-md-4 align-self-end">
         <button class="btn btn-primary btn-sm w-100" type="submit">
           <i class="bi bi-funnel-fill me-1"></i> Aplicar filtros
         </button>
       </div>
     </form>
 
-    <!-- Tabla mejorada -->
     <div class="table-responsive">
-      <table class="table table-hover table-sm align-middle">
-        <thead class="table-light">
+      <table class="table table-modern table-sm align-middle">
+        <thead>
           <tr>
-            <th scope="col" style="width: 10%">Tipo</th>
-            <th scope="col" style="width: 15%">Objetivo</th>
-            <th scope="col" style="width: 15%">Motivo</th>
-            <th scope="col" style="width: 20%">Detalle</th>
-            <th scope="col" style="width: 10%">Usuario</th>
-            <th scope="col" style="width: 10%">Fecha</th>
-            <th scope="col" style="width: 10%">Estado</th>
-            <th scope="col" style="width: 10%">Acciones</th>
+            <th>Producto</th>
+            <th>Descripcion</th>
+            <th>Reporte</th>
+            <th>Estado</th>
+            <th class="text-end">Acciones</th>
           </tr>
         </thead>
         <tbody>
-          {% for row in report_rows %}
+          {% for reporte in page_obj %}
           <tr>
-            <td>{{ row.0 }}</td>
-            <td class="fw-medium">{{ row.1|default:"—" }}</td>
-            <td>{{ row.2 }}</td>
-            <td class="text-truncate" style="max-width: 200px">{{ row.3 }}</td>
-            <td>{{ row.4 }}</td>
-            <td class="text-nowrap">{{ row.5 }}</td>
             <td>
-              {% if row.6 == 'Resuelto - Actualizado' %}
-                  <span class="badge bg-success rounded-pill">{{ row.6 }}</span>
-              {% elif row.6 == 'Resuelto - Pendiente' %}
-                  <span class="badge bg-info rounded-pill">{{ row.6 }}</span>
-              {% else %}
-                  <span class="badge bg-warning text-dark rounded-pill">{{ row.6 }}</span>
-              {% endif %}
+              <div class="fw-semibold">{{ reporte.producto.nombre_producto|default:"Sin producto" }}</div>
+              <div class="text-muted small">{{ reporte.get_motivo_display }}</div>
+              <small class="text-muted">#{{ reporte.id }}</small>
+            </td>
+            <td class="text-muted small">
+              {{ reporte.detalle|default:"-"|truncatechars:90 }}
             </td>
             <td>
-                <div class="btn-group btn-group-sm">
-                    {% if row.6 == 'Abierto' %}
-                        <a class="btn btn-outline-success" 
-                          href="{% url 'admin_report_action' row.7 'resolve' %}?next={{ request.get_full_path|urlencode }}" 
-                          title="Marcar resuelto">
-                            <i class="bi bi-check-lg"></i>
-                        </a>
-                    {% else %}
-                        <a class="btn btn-outline-secondary" 
-                          href="{% url 'admin_report_action' row.7 'open' %}?next={{ request.get_full_path|urlencode }}" 
-                          title="Reabrir">
-                            <i class="bi bi-arrow-counterclockwise"></i>
-                        </a>
-                    {% endif %}
-                    <a class="btn btn-outline-info" href="{% url 'admin_report_detail' row.7 %}" title="Ver detalle">
-                        <i class="bi bi-eye"></i>
-                    </a>
-                    <a class="btn btn-outline-danger" 
-                      href="{% url 'admin_report_action' row.7 'delete' %}?next={{ request.get_full_path|urlencode }}" 
-                      onclick="return confirm('¿Eliminar este reporte?');" title="Eliminar">
-                        <i class="bi bi-trash"></i>
-                    </a>
-                </div>
+              <div class="fw-semibold">{{ reporte.reporter.username|default:"Anon" }}</div>
+              <small class="text-muted">{{ reporte.created_at|date:"d/m/Y H:i" }}</small>
+            </td>
+            <td>
+              {% if reporte.estado == 'resuelto' %}
+                <span class="badge-soft badge-soft-success">{{ reporte.get_estado_display }}</span>
+              {% elif reporte.estado == 'pendiente' %}
+                <span class="badge-soft badge-soft-warning">{{ reporte.get_estado_display }}</span>
+              {% else %}
+                <span class="badge-soft badge-soft-muted">{{ reporte.get_estado_display }}</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <div class="btn-group btn-group-sm">
+                {% if reporte.estado == 'abierto' %}
+                  <a class="btn btn-outline-success"
+                     href="{% url 'admin_report_action' reporte.id 'take' %}?next={{ request.get_full_path|urlencode }}"
+                     title="Tomar reporte">
+                    <i class="bi bi-clipboard-check"></i>
+                  </a>
+                {% elif reporte.estado == 'pendiente' %}
+                  <a class="btn btn-outline-primary"
+                     href="{% url 'admin_report_action' reporte.id 'resolve' %}?next={{ request.get_full_path|urlencode }}"
+                     title="Marcar resuelto">
+                    <i class="bi bi-check-lg"></i>
+                  </a>
+                {% elif reporte.estado == 'resuelto' %}
+                  <a class="btn btn-outline-secondary"
+                     href="{% url 'admin_report_action' reporte.id 'open' %}?next={{ request.get_full_path|urlencode }}"
+                     title="Reabrir">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                  </a>
+                {% endif %}
+                <a class="btn btn-outline-info"
+                   href="{% url 'admin_report_detail' reporte.id %}"
+                   title="Detalle">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a class="btn btn-outline-danger"
+                   href="{% url 'admin_report_action' reporte.id 'delete' %}?next={{ request.get_full_path|urlencode }}"
+                   onclick="return confirm('Eliminar este reporte?');"
+                   title="Eliminar">
+                  <i class="bi bi-trash"></i>
+                </a>
+              </div>
             </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="8" class="text-center text-muted py-4">
+            <td colspan="5" class="text-center text-muted py-4">
               <i class="bi bi-inbox h4 d-block"></i>
-              No hay reportes que coincidan con los filtros
+              No hay reportes que coincidan con los filtros.
             </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+
+    {{ pagination_html|safe }}
   </div>
 </div>
 {% endblock %}

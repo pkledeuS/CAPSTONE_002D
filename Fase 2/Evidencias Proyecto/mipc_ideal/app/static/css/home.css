@@ -49,16 +49,23 @@ body.app-theme {
     display: flex;
     flex-direction: column;
     font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    background: radial-gradient(circle at 15% 20%, rgba(110, 211, 255, 0.18), transparent 60%),
-                radial-gradient(circle at 80% 0%, rgba(255, 136, 99, 0.18), transparent 50%),
+    background: radial-gradient(circle at 15% 40%, rgba(110, 211, 255, 0.18), transparent 60%),
+                radial-gradient(circle at 0% 80%, rgba(255, 136, 99, 0.18), transparent 50%),
                 var(--tone-surface);
     color: var(--text-strong);
 }
 
 body.app-theme.theme-light {
-    background: radial-gradient(circle at 20% 10%, rgba(30, 136, 255, 0.18), transparent 55%),
-                radial-gradient(circle at 80% 0%, rgba(255, 111, 97, 0.12), transparent 45%),
-                var(--tone-surface);
+    background-color: #cfdafc;
+    background-image:
+        radial-gradient(circle at 20% 15%, rgba(30, 136, 255, 0.35), transparent 55%),
+        radial-gradient(circle at 90% 15%, rgba(255, 111, 97, 0.25), transparent 55%),
+        radial-gradient(circle at 50% 100%, rgba(120, 150, 255, 0.45), transparent 65%),
+        radial-gradient(circle at 50% 200%, rgba(130, 160, 255, 0.35), transparent 75%),
+        linear-gradient(180deg, #dae4ff 0%, #c8d6ff 50%, #a7bdff 100%);
+    background-attachment: fixed, fixed, fixed, fixed, fixed;
+    background-repeat: no-repeat;
+    background-size: 140% 140%;
 }
 
 a {
@@ -260,6 +267,9 @@ body.app-theme:not(.theme-light) .button-header-icons {
 
 .site-dropdown .dropdown-item {
     color: var(--text-muted);
+    border-radius: 999px;
+    padding: 0.35rem 0.9rem;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .site-dropdown .dropdown-item:hover,
@@ -277,6 +287,7 @@ body.app-theme:not(.theme-light) .button-header-icons {
     flex-wrap: wrap;
     gap: 0.75rem;
     padding: 0.75rem 0;
+    justify-content: flex-start;
 }
 
 .theme-light .site-dropdown {
@@ -324,7 +335,29 @@ body.app-theme:not(.theme-light) .button-header-icons {
 
 .site-main {
     flex: 1;
+    min-height: calc(100vh - 240px);
     padding: 2.5rem 0 3rem;
+    position: relative;
+    overflow: visible;
+    z-index: 0;
+}
+
+.site-main::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 60%;
+    bottom: 0;
+    pointer-events: none;
+    z-index: -1;
+    background: transparent;
+}
+
+.theme-light .site-main::after {
+    background:
+        radial-gradient(circle at 50% 120%, rgba(153, 178, 255, 0.45), transparent 70%),
+        linear-gradient(180deg, rgba(201, 215, 255, 0), rgba(140, 163, 255, 0.7));
 }
 
 .theme-light .site-nav__link {
@@ -351,7 +384,7 @@ body.app-theme:not(.theme-light) .button-header-icons {
 }
 
 .theme-light .main-content {
-    background: #ffffff;
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5ff 65%, #e5eeff 100%);
     border: 1px solid rgba(15, 23, 42, 0.08);
     color: #0f172a;
     box-shadow: 0 25px 45px rgba(15, 23, 42, 0.12);
@@ -546,6 +579,8 @@ footer.site-footer {
     border-top: 1px solid var(--tone-border);
     margin-top: 2rem;
     padding: 2rem 0 1.5rem;
+    position: relative;
+    z-index: 1;
 }
 
 .theme-light .site-footer {

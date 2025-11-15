@@ -1,84 +1,110 @@
 ﻿{% extends "admin_panel/admin_base.html" %}
 {% load static %}
-
 {% block admin_title %}
   <h4 class="mb-3">Analytics</h4>
 {% endblock %}
 
 {% block admin_content %}
-<div class="row g-3">
-  <div class="col-lg-4">
-    <div class="card h-100">
-      <div class="card-header">Top 10 mas vistos</div>
-      <div class="card-body" style="height:360px">
-        <canvas id="chartViews"></canvas>
-        <div id="emptyViews" class="text-muted small d-none">Sin datos de vistas.</div>
-      </div>
-    </div>
-  </div>
 
-  <div class="col-lg-4">
-    <div class="card h-100">
-      <div class="card-header">Top 10 mejor valorados</div>
-      <div class="card-body" style="height:360px">
-        <canvas id="chartRated"></canvas>
-        <div id="emptyRated" class="text-muted small d-none">Sin datos de valoraciones.</div>
+<section class="card mb-4">
+  <div class="card-body">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+      <div>
+        <p class="text-secondary small mb-1">Comportamiento agregado</p>
+        <h2 class="h6 mb-0">Marcas más vistas por tipo</h2>
       </div>
+      {% if type_options %}
+      <form method="get" class="d-flex align-items-center gap-2">
+        <label for="typeSelect" class="text-secondary small mb-0">Tipo de producto</label>
+        <select id="typeSelect" name="type" class="form-select form-select-sm" onchange="this.form.submit()">
+          {% for tipo in type_options %}
+          <option value="{{ tipo.id }}" {% if selected_type_id == tipo.id|stringformat:'s' %}selected{% endif %}>
+            {{ tipo.nombre_tipo }}
+          </option>
+          {% endfor %}
+        </select>
+      </form>
+      {% endif %}
     </div>
+    <div class="admin-chart">
+      <canvas id="chartBrands" aria-label="Grafico de marcas más vistas"></canvas>
+      <div id="emptyBrands" class="text-muted small {% if brand_labels %}d-none{% endif %}">Aún no tenemos vistas suficientes para este tipo.</div>
+    </div>
+    {% if brand_table %}
+    <div class="table-responsive mt-3">
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Marca</th><th class="text-end">Vistas registradas</th></tr></thead>
+        <tbody>
+          {% for label, value in brand_table %}
+          <tr>
+            <td>{{ label }}</td>
+            <td class="text-end">{{ value }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
   </div>
+</section>
 
-  <div class="col-lg-4">
-    <div class="card h-100">
-      <div class="card-header">Mayor variacion de precios (spread)</div>
-      <div class="card-body" style="height:360px">
-        <canvas id="chartPriceSpread"></canvas>
-        <div id="emptySpread" class="text-muted small d-none">Sin datos de precios por referencia.</div>
+<section class="card mb-4">
+  <div class="card-body">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+      <div>
+        <p class="text-secondary small mb-1">Actividad sobre enlaces externos</p>
+        <h2 class="h6 mb-0">Tiendas más consultadas</h2>
       </div>
     </div>
+    <div class="admin-chart">
+      <canvas id="chartStores" aria-label="Grafico de tiendas más consultadas"></canvas>
+      <div id="emptyStores" class="text-muted small {% if store_labels %}d-none{% endif %}">Aún no tenemos visitas registradas.</div>
+    </div>
+    {% if store_table %}
+    <div class="table-responsive mt-3">
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Tienda</th><th class="text-end">Clicks registrados</th></tr></thead>
+        <tbody>
+          {% for label, value in store_table %}
+          <tr>
+            <td>{{ label }}</td>
+            <td class="text-end">{{ value }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
   </div>
-</div>
+</section>
+
+<section class="card mb-4">
+  <div class="card-body">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+      <div>
+        <p class="text-secondary small mb-1">Cruce marcas vs tipos</p>
+        <h2 class="h6 mb-0">Embudo vistas vs clicks</h2>
+      </div>
+    </div>
+    <div class="admin-chart">
+      <canvas id="chartFunnel" aria-label="Embudo vistas vs clicks"></canvas>
+      <div id="emptyFunnel" class="text-muted small {% if funnel_values %}d-none{% endif %}">Aún no tenemos suficientes datos globales.</div>
+    </div>
+    {% if conversion_rate is not None %}
+    <p class="text-secondary small mt-2 mb-0">Conversion aproximada: <strong>{{ conversion_rate }}%</strong></p>
+    {% endif %}
+  </div>
+</section>
 {% endblock %}
 
-{% block extra_js %}
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  {{ top_views_labels|default:"[]"|json_script:"viewsL" }}
-  {{ top_views_values|default:"[]"|json_script:"viewsV" }}
-  {{ top_rated_labels|default:"[]"|json_script:"ratedL" }}
-  {{ top_rated_values|default:"[]"|json_script:"ratedV" }}
-  {{ price_spread_labels|default:"[]"|json_script:"spreadL" }}
-  {{ price_spread_values|default:"[]"|json_script:"spreadV" }}
-
-  <script>
-    const viewsL  = JSON.parse(document.getElementById('viewsL').textContent);
-    const viewsV  = JSON.parse(document.getElementById('viewsV').textContent);
-    const ratedL  = JSON.parse(document.getElementById('ratedL').textContent);
-    const ratedV  = JSON.parse(document.getElementById('ratedV').textContent);
-    const spreadL = JSON.parse(document.getElementById('spreadL').textContent);
-    const spreadV = JSON.parse(document.getElementById('spreadV').textContent);
-
-    function mkBar(canvasId, emptyId, labels, values, label) {
-      const el = document.getElementById(canvasId);
-      const empty = document.getElementById(emptyId);
-      if (!el) return;
-      if (!Array.isArray(labels) || !labels.length) {
-        if (empty) empty.classList.remove('d-none');
-        return;
-      }
-      new Chart(el, {
-        type: 'bar',
-        data: { labels, datasets: [{ label, data: values }] },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: { y: { beginAtZero: true } },
-          plugins: { legend: { display: false } }
-        }
-      });
-    }
-
-    mkBar('chartViews',       'emptyViews',  viewsL,  viewsV,  'Vistas');
-    mkBar('chartRated',       'emptyRated',  ratedL,  ratedV,  'Rating promedio');
-    mkBar('chartPriceSpread', 'emptySpread', spreadL, spreadV, 'Spread (max - min)');
-  </script>
+{% block scripts %}
+  {{ block.super }}
+  <script src="{% static 'vendor/chart.umd.min.js' %}"></script>
+  {{ brand_labels|default:"[]"|json_script:"brandL" }}
+  {{ brand_values|default:"[]"|json_script:"brandV" }}
+  {{ store_labels|default:"[]"|json_script:"storeL" }}
+  {{ store_values|default:"[]"|json_script:"storeV" }}
+  {{ funnel_labels|default:"[]"|json_script:"funnelL" }}
+  {{ funnel_values|default:"[]"|json_script:"funnelV" }}
+  <script src="{% static 'admin_panel/analytics.js' %}"></script>
 {% endblock %}

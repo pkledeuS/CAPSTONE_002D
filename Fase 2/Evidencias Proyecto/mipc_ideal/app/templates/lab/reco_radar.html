@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body_class %}reco-app{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/recommender.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 reco-container">
+
+  <div class="reco-subheader mb-3">
+    <nav class="reco-breadcrumb" aria-label="Ruta estadisticas">
+      <a href="{% url 'reco_home' %}">Inicio recomendaciones</a>
+      <span aria-hidden="true">&gt;</span>
+      <span>Mis estadisticas de busqueda</span>
+    </nav>
+    <p class="text-secondary small mb-0">
+      Estas estadisticas resumen tus visitas recientes para explicar por qué sugerimos ciertos productos. No es un registro comercial, es tu huella editorial en MiPc Ideal.
+    </p>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <p class="text-secondary small mb-1">Visitas registradas</p>
+          <h2 class="h4 mb-0">{{ radar_data.total_views }}</h2>
+          <p class="reco-alt-hint small mb-0">Ultimos {{ radar_data.window_days }} días.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <p class="text-secondary small mb-1">Marcas recurrentes</p>
+          <div class="reco-radar__chips">
+            {% for brand in preference_context.preferred_brands|slice:":3" %}
+            <span class="reco-insight-badge">{{ brand }}</span>
+            {% empty %}
+            <span class="text-secondary small">Visita productos para habilitar este bloque.</span>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <p class="text-secondary small mb-1">Rango de inversión estimado</p>
+          {% if preference_context.budget_label %}
+          <span class="reco-insight-badge">{{ preference_context.budget_label }}</span>
+          {% else %}
+          <span class="text-secondary small">Aun sin datos de inversion.</span>
+          {% endif %}
+          <p class="reco-alt-hint small mt-2 mb-0">Se actualiza con tus visitas y preferencias.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="mb-4">
+    <div class="card card-hover">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+          <div>
+            <p class="text-secondary small mb-1">Actividad reciente</p>
+            <h2 class="h6 mb-0">Linea de tiempo</h2>
+          </div>
+          <span class="reco-insight-badge">Ventana {{ radar_data.window_days }} días</span>
+        </div>
+        {% if radar_data.timeline %}
+        <canvas id="recoTimelineChart" height="120"></canvas>
+        {% else %}
+        <p class="text-secondary small mb-0">Aun no tenemos suficientes vistas para graficar. Explora algunos productos para poblar esta sección.</p>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <section class="mb-4">
+    <div class="row g-3">
+      <div class="col-12 col-lg-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <p class="text-secondary small mb-1">Top marcas</p>
+            <canvas id="recoBrandChart" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <p class="text-secondary small mb-1">Tipos mas vistos</p>
+            <canvas id="recoTypeChart" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <p class="text-secondary small mb-1">Rango de inversión</p>
+            <canvas id="recoPriceChart" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% if brand_focus.top_product %}
+  <section class="mb-4">
+    <div class="row g-3">
+      <div class="col-12 col-lg-5">
+        <div class="card h-100">
+          <div class="card-body">
+            <p class="text-secondary small mb-1">Tu producto foco</p>
+            <h3 class="h6 mb-1">{{ brand_focus.top_product.product.name }}</h3>
+            <p class="text-secondary small mb-2">
+              {{ brand_focus.top_product.views }} vista{% if brand_focus.top_product.views != 1 %}s{% endif %} en los ultimos {{ radar_data.window_days }} días.
+            </p>
+            <div class="d-flex flex-wrap gap-2 mb-2">
+              <span class="reco-insight-badge">{{ brand_focus.top_product.product.brand }}</span>
+            </div>
+            {% if brand_focus.top_product.product.match_summary_list %}
+            <ul class="reco-insight-list mb-3">
+              {% for line in brand_focus.top_product.product.match_summary_list %}
+              <li>{{ line }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+            <a href="{{ brand_focus.top_product.product.detail_url }}" class="btn btn-sm btn-outline-primary">
+              Ver detalle
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-7">
+        <div class="card h-100">
+          <div class="card-body">
+            <p class="text-secondary small mb-2">De la misma marca que has mirado menos</p>
+            {% if brand_focus.less_viewed %}
+            <div class="reco-focus-chip-list">
+              {% for item in brand_focus.less_viewed|slice:":2" %}
+              <a href="{{ item.detail_url }}" class="reco-focus-chip">
+                <div class="reco-focus-chip__head">
+                  <span class="fw-semibold">{{ item.name }}</span>
+                  <span class="text-secondary small">{{ item.view_count_user }} vista{% if item.view_count_user != 1 %}s{% endif %}</span>
+                </div>
+                {% if item.match_summary_list %}
+                <ul class="reco-focus-meta">
+                  {% for line in item.match_summary_list %}
+                  <li>{{ line }}</li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              </a>
+              {% endfor %}
+              {% if brand_focus.less_viewed_total|default:0 > 2 %}
+              <div class="text-secondary small">
+                +{{ brand_focus.less_viewed_total|add:"-2" }} productos adicionales de {{ brand_focus.top_product.product.brand }}.
+              </div>
+              {% endif %}
+            </div>
+            {% else %}
+            <p class="text-secondary small mb-0">Aun no hay otros productos de esta marca con pocas vistas.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="mb-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+      <div>
+        <h2 class="h5 mb-0">Sugerencias afinadas</h2>
+        <p class="text-secondary small mb-0">Productos que siguen la misma linea que has estado investigando.</p>
+      </div>
+      {% if affinity_explore_url %}
+      <a href="{{ affinity_explore_url }}" class="btn btn-sm btn-outline-primary">Explorar afinados</a>
+      {% else %}
+      <a href="{% url 'reco_explore' %}" class="btn btn-sm btn-outline-primary">Explorar todo</a>
+      {% endif %}
+    </div>
+    {% if affinity_cards %}
+    <div class="row g-3">
+      {% for card in affinity_cards %}
+      <div class="col-12 col-md-6 col-lg-3">
+        <article class="card reco-card h-100">
+          <div class="card-body">
+            <div class="d-flex flex-column gap-2">
+              <div>
+                <div class="text-secondary small">{{ card.type }}</div>
+                <h3 class="h6 mb-0">{{ card.name }}</h3>
+              </div>
+              {% if card.insight_label %}
+              <span class="reco-insight-badge">{{ card.insight_label }}</span>
+              {% endif %}
+              <div class="text-secondary small">
+                {% if card.min_price_display %}Desde {{ card.min_price_display }}{% else %}Precio por confirmar{% endif %}
+              </div>
+              <div class="d-flex flex-wrap gap-2">
+                {% for reason in card.reasons|slice:":2" %}
+                <span class="reco-badge reco-badge--positive">+ {{ reason }}</span>
+                {% endfor %}
+              </div>
+              <div class="d-flex flex-wrap gap-2">
+                <a href="{{ card.detail_url }}" class="btn btn-sm btn-outline-primary">Ver detalle</a>
+                <a href="{% url 'reco_detail' %}?id={{ card.id }}#compatibles" class="btn btn-sm btn-outline-secondary">Ver compatibles</a>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+      {% endfor %}
+    </div>
+            {% else %}
+            <div class="card">
+              <div class="card-body text-secondary small">
+                Aun no tenemos suficientes datos de afinidad. Explora productos y vuelve a revisar tus estadisticas.
+              </div>
+    </div>
+    {% endif %}
+  </section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'vendor/chart.umd.min.js' %}"></script>
+{{ timeline_data|json_script:"reco-timeline-data" }}
+{{ brand_chart_data|json_script:"reco-brand-chart" }}
+{{ type_chart_data|json_script:"reco-type-chart" }}
+{{ price_chart_data|json_script:"reco-price-chart" }}
+<script>
+  const timelineData = JSON.parse(document.getElementById('reco-timeline-data').textContent || '[]');
+  const brandChartData = JSON.parse(document.getElementById('reco-brand-chart').textContent || '{"labels":[],"values":[]}');
+  const typeChartData = JSON.parse(document.getElementById('reco-type-chart').textContent || '{"labels":[],"values":[]}');
+  const priceChartData = JSON.parse(document.getElementById('reco-price-chart').textContent || '{"labels":[],"values":[]}');
+
+  function renderLineChart(canvasId, dataset) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || !dataset.length) return;
+    const labels = dataset.map(point => point.label);
+    const values = dataset.map(point => point.value);
+    new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Vistas',
+          data: values,
+          borderColor: '#6ed3ff',
+          backgroundColor: 'rgba(110, 211, 255, 0.2)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true, ticks: { precision:0 } }
+        }
+      }
+    });
+  }
+
+  function renderBarChart(canvasId, dataset, horizontal=false) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || !dataset.labels.length) return;
+    new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: dataset.labels,
+        datasets: [{
+          data: dataset.values,
+          backgroundColor: ['#6ed3ff', '#5fe9c7', '#ffb08c', '#c9b6ff', '#ffa6d0'],
+          borderRadius: 8,
+        }]
+      },
+      options: {
+        indexAxis: horizontal ? 'y' : 'x',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { beginAtZero: true, grid: { display: !horizontal } },
+          y: { beginAtZero: true, grid: { display: horizontal } }
+        }
+      }
+    });
+  }
+
+  function renderDoughnutChart(canvasId, dataset) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || !dataset.labels.length) return;
+    new Chart(canvas.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: dataset.labels,
+        datasets: [{
+          label: 'Porcentaje',
+          data: dataset.values,
+          backgroundColor: ['#6ed3ff', '#5fe9c7', '#ffb08c', '#c9b6ff'],
+          borderWidth: 0,
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { position: 'bottom' },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const label = context.chart.data.labels[context.dataIndex] || '';
+                return `${label}: ${context.parsed}%`;
+              }
+            }
+          }
+        },
+        cutout: '70%'
+      }
+    });
+  }
+
+  renderLineChart('recoTimelineChart', timelineData);
+  renderBarChart('recoBrandChart', brandChartData, true);
+  renderBarChart('recoTypeChart', typeChartData, true);
+  renderDoughnutChart('recoPriceChart', priceChartData);
+</script>
+{% endblock %}

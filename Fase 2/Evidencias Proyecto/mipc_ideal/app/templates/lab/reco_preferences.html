@@ -4,7 +4,7 @@
 {% block body_class %}reco-app{% endblock %}
 
 {% block css %}
-<link rel="stylesheet" href="{% static 'recommender/recommender.css' %}">
+<link rel="stylesheet" href="{% static 'css/recommender.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -16,47 +16,72 @@
 
   <div class="row g-3">
     <div class="col-lg-8">
-      <form class="card" method="get" action="{% url 'reco_explore' %}">
+      <form class="card" method="post" action="{% url 'reco_preferences' %}">
+        {% csrf_token %}
         <div class="card-body">
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label" for="pref-categoria">Categoria preferida</label>
-              <select class="form-select" id="pref-categoria" name="categoria">
-                <option value="">Todas</option>
+              <label class="form-label" for="pref-categoria-select">Categorias preferidas</label>
+              <select class="form-select" id="pref-categoria-select">
+                <option value="">Selecciona una categoria</option>
                 {% for cat in categories %}
-                <option value="{{ cat.id }}" {% if selected_categoria and selected_categoria.id == cat.id %}selected{% endif %}>
+                <option value="{{ cat.id }}" {% if cat.id in selected_categories %}disabled{% endif %}>
                   {{ cat.nombre_categoria }}
                 </option>
                 {% endfor %}
               </select>
-              <p class="form-text">Elige la familia de productos que mas visitas para priorizar coincidencias.</p>
+              <p class="form-text mb-2">Cada seleccion se agregara como chip; tocala para quitarla.</p>
+              <div class="reco-chip-stack" id="pref-categoria-chips" data-name="categorias">
+                {% for cat in categories %}
+                {% if cat.id in selected_categories %}
+                <div class="reco-chip" data-id="{{ cat.id }}">
+                  <span>{{ cat.nombre_categoria }}</span>
+                  <span class="reco-chip__remove" aria-hidden="true">&times;</span>
+                  <input type="hidden" name="categorias" value="{{ cat.id }}">
+                </div>
+                {% endif %}
+                {% endfor %}
+              </div>
             </div>
             <div class="col-md-6">
-              <label class="form-label" for="pref-tipo">Tipo de producto</label>
-              <select class="form-select" id="pref-tipo" name="tipo">
-                <option value="">Todos</option>
+              <label class="form-label" for="pref-tipo-select">Tipos de producto</label>
+              <select class="form-select" id="pref-tipo-select">
+                <option value="">Selecciona un tipo</option>
                 {% for tipo in types %}
-                <option value="{{ tipo.id }}" {% if selected_tipo and selected_tipo.id == tipo.id %}selected{% endif %}>
+                <option value="{{ tipo.id }}" {% if tipo.id in selected_types %}disabled{% endif %}>
                   {{ tipo.nombre_tipo }}
                 </option>
                 {% endfor %}
               </select>
-              <p class="form-text">Restringe las recomendaciones a formatos concretos (ej. Notebook, Procesador).</p>
+              <p class="form-text mb-2">Priorizamos los formatos que agregues a la pila.</p>
+              <div class="reco-chip-stack" id="pref-tipo-chips" data-name="tipos">
+                {% for tipo in types %}
+                {% if tipo.id in selected_types %}
+                <div class="reco-chip" data-id="{{ tipo.id }}">
+                  <span>{{ tipo.nombre_tipo }}</span>
+                  <span class="reco-chip__remove" aria-hidden="true">&times;</span>
+                  <input type="hidden" name="tipos" value="{{ tipo.id }}">
+                </div>
+                {% endif %}
+                {% endfor %}
+              </div>
             </div>
             <div class="col-md-6">
               <label class="form-label" for="pref-presupuesto">Presupuesto de referencia</label>
               <select class="form-select" id="pref-presupuesto" name="presupuesto">
                 <option value="">Sin filtro</option>
                 {% for option in budget_options %}
-                <option value="{{ option.value }}">{{ option.label }}</option>
+                <option value="{{ option.value }}" {% if option.value == selected_budget %}selected{% endif %}>
+                  {{ option.label }}
+                </option>
                 {% endfor %}
               </select>
               <p class="form-text">Define tu rango de inversion para evaluar la relacion rendimiento/$$.</p>
             </div>
             <div class="col-md-6">
               <label class="form-label" for="pref-nota">Notas personales</label>
-              <textarea id="pref-nota" class="form-control" rows="2"
-                        placeholder="Anota requisitos o trade-offs que quieres monitorear."></textarea>
+              <textarea id="pref-nota" class="form-control" rows="2" name="notas"
+                        placeholder="Anota requisitos o trade-offs que quieres monitorear.">{{ selected_notes }}</textarea>
               <p class="form-text">Usalo como checklist al comparar alternativas.</p>
             </div>
           </div>
@@ -64,8 +89,8 @@
           <div class="mt-3 d-flex justify-content-end gap-2 flex-wrap">
             <a href="{% url 'reco_home' %}" class="btn btn-outline-secondary">Volver al inicio</a>
             <button type="submit" class="btn btn-primary"
-                    data-reco-track="apply-preferences" aria-label="Ver recomendaciones segun preferencias">
-              Ver recomendaciones
+                    data-reco-track="save-preferences" aria-label="Guardar preferencias del laboratorio">
+              Guardar preferencias
             </button>
           </div>
         </div>
@@ -79,34 +104,45 @@
           <p class="reco-alt-hint">
             Guardamos esta seleccion para orientar futuras sugerencias sin convertirnos en catalogo.
           </p>
-          <ul class="small mb-3">
-            <li>
-              Categoria preferida:
-              <strong>
-                {% if selected_categoria %}
-                {{ selected_categoria.nombre_categoria }}
-                {% else %}
-                Sin definir
-                {% endif %}
-              </strong>
-            </li>
-            <li>
-              Tipo de producto:
-              <strong>
-                {% if selected_tipo %}
-                {{ selected_tipo.nombre_tipo }}
-                {% else %}
-                Sin definir
-                {% endif %}
-              </strong>
-            </li>
-            <li>
-              Recuerda: puedes ajustar filtros por viaje, presupuesto o silencio desde la vista de explorar.
-            </li>
-          </ul>
-          <a href="{% url 'reco_explore' %}" class="btn btn-sm btn-outline-primary w-100"
+          <div class="mb-3">
+            <p class="text-secondary small mb-1">Categorias guardadas</p>
+            <div class="d-flex flex-wrap gap-1">
+              {% for cat in preference_context.categories %}
+              <span class="reco-badge">{{ cat.nombre_categoria }}</span>
+              {% empty %}
+              <span class="text-secondary small">Sin definir</span>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="mb-3">
+            <p class="text-secondary small mb-1">Tipos guardados</p>
+            <div class="d-flex flex-wrap gap-1">
+              {% for tipo in preference_context.types %}
+              <span class="reco-badge">{{ tipo.nombre_tipo }}</span>
+              {% empty %}
+              <span class="text-secondary small">Sin definir</span>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="mb-3">
+            <p class="text-secondary small mb-1">Rango de inversion</p>
+            {% if preference_context.budget_label %}
+            <span class="reco-insight-badge">{{ preference_context.budget_label }}</span>
+            {% else %}
+            <span class="text-secondary small">Sin definir</span>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <p class="text-secondary small mb-1">Notas guardadas</p>
+            {% if selected_notes %}
+            <p class="small mb-0">{{ selected_notes }}</p>
+            {% else %}
+            <p class="small text-secondary mb-0">Aun no agregas notas.</p>
+            {% endif %}
+          </div>
+          <a href="{{ explore_url }}" class="btn btn-sm btn-outline-primary w-100"
              data-reco-track="quick-explore">
-            Ir a explorar ahora
+            Ir a explorar segun mis preferencias
           </a>
         </div>
       </div>
@@ -117,5 +153,52 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'recommender/recommender.js' %}"></script>
+<script src="{% static 'js/recommender.js' %}"></script>
+<script>
+  function initPrefSelect(selectId, chipsId) {
+    const select = document.getElementById(selectId);
+    const chips = document.getElementById(chipsId);
+    if (!select || !chips) return;
+
+    const registerChip = (chip) => {
+      chip.addEventListener('click', () => {
+        const value = chip.dataset.id;
+        const option = select.querySelector(`option[value="${value}"]`);
+        if (option) option.disabled = false;
+        chip.remove();
+      });
+    };
+
+    chips.querySelectorAll('.reco-chip').forEach(registerChip);
+
+    select.addEventListener('change', () => {
+      const value = select.value;
+      if (!value) return;
+      const option = select.querySelector(`option[value="${value}"]`);
+      const label = option ? option.textContent.trim() : value;
+      if (chips.querySelector(`[data-id="${value}"]`)) {
+        select.value = "";
+        return;
+      }
+      const chip = document.createElement('div');
+      chip.className = 'reco-chip';
+      chip.dataset.id = value;
+      chip.innerHTML = `<span>${label}</span><span class="reco-chip__remove" aria-hidden="true">&times;</span>`;
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = chips.dataset.name;
+      input.value = value;
+      chip.appendChild(input);
+      chips.appendChild(chip);
+      registerChip(chip);
+      if (option) option.disabled = true;
+      select.value = "";
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initPrefSelect('pref-categoria-select', 'pref-categoria-chips');
+    initPrefSelect('pref-tipo-select', 'pref-tipo-chips');
+  });
+</script>
 {% endblock %}

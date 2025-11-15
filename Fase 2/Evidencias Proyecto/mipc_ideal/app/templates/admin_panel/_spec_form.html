@@ -1,0 +1,33 @@
+<div class="col-md-6 spec-card" data-form-prefix="{{ form.prefix }}">
+  <div class="border rounded-3 p-3 h-100">
+    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+    {% if form.DELETE %}
+      <div class="d-none spec-delete-flag">
+        {{ form.DELETE }}
+      </div>
+    {% endif %}
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger py-1 mb-2">
+        {% for error in form.non_field_errors %}{{ error }}<br>{% endfor %}
+      </div>
+    {% endif %}
+    <div class="d-flex justify-content-between align-items-start mb-2">
+      <label class="form-label mb-0">{{ form.nombre_especificacion.label }}</label>
+      {% if can_delete %}
+      <button type="button" class="btn btn-link btn-sm text-danger p-0 spec-remove-btn" data-spec-remove title="Eliminar campo">
+        &times;
+      </button>
+      {% endif %}
+    </div>
+    {{ form.nombre_especificacion }}
+    {% for error in form.nombre_especificacion.errors %}
+      <div class="text-danger small">{{ error }}</div>
+    {% endfor %}
+
+    <label class="form-label mt-3">{{ form.valor_especificacion.label }}</label>
+    {{ form.valor_especificacion }}
+    {% for error in form.valor_especificacion.errors %}
+      <div class="text-danger small">{{ error }}</div>
+    {% endfor %}
+  </div>
+</div>
