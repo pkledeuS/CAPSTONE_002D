@@ -1,0 +1,217 @@
+{% extends "admin_panel/admin_base.html" %}
+{% load static %}
+
+{% block admin_title %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <div>
+    <h1 class="h3 mb-0">
+      {% if is_edit %}Editar producto{% else %}Nuevo producto{% endif %}
+    </h1>
+    {% if is_edit and producto %}
+      <p class="text-muted small mb-0">{{ producto.nombre_producto }}</p>
+    {% endif %}
+  </div>
+  <a href="{% url 'admin_products' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i> Volver al listado
+  </a>
+</div>
+{% endblock %}
+
+{% block admin_content %}
+<form method="post" enctype="multipart/form-data" class="card">
+  <div class="card-body">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {% for error in form.non_field_errors %}{{ error }}<br>{% endfor %}
+      </div>
+    {% endif %}
+
+    <h5 class="mb-3">Informaci&oacute;n general</h5>
+    {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.nombre_producto.id_for_label }}">
+          {{ form.nombre_producto.label }} *
+        </label>
+        {{ form.nombre_producto }}
+        {% for error in form.nombre_producto.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.modelo_producto.id_for_label }}">
+          {{ form.modelo_producto.label }} *
+        </label>
+        {{ form.modelo_producto }}
+        {% for error in form.modelo_producto.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.marca_producto.id_for_label }}">
+          {{ form.marca_producto.label }} *
+        </label>
+        {{ form.marca_producto }}
+        {% for error in form.marca_producto.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.categoria_producto.id_for_label }}">
+          {{ form.categoria_producto.label }} *
+        </label>
+        {{ form.categoria_producto }}
+        {% for error in form.categoria_producto.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.tipo_producto.id_for_label }}">
+          {{ form.tipo_producto.label }} *
+        </label>
+        {{ form.tipo_producto }}
+        {% for error in form.tipo_producto.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.categorias_extra.id_for_label }}">
+          {{ form.categorias_extra.label }}
+        </label>
+        {{ form.categorias_extra }}
+        {% if form.categorias_extra.help_text %}
+          <small class="text-muted d-block">{{ form.categorias_extra.help_text }}</small>
+        {% endif %}
+        {% for error in form.categorias_extra.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="{{ form.descripcion_producto.id_for_label }}">
+          {{ form.descripcion_producto.label }} *
+        </label>
+        {{ form.descripcion_producto }}
+        {% for error in form.descripcion_producto.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.imagen_producto.id_for_label }}">
+          {{ form.imagen_producto.label }}{% if not is_edit %} *{% endif %}
+        </label>
+        {{ form.imagen_producto }}
+        {% for error in form.imagen_producto.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="col-md-6 d-flex align-items-center">
+        <div class="form-check form-switch mt-4">
+          {{ form.is_active }}
+          <label class="form-check-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+        </div>
+        {% for error in form.is_active.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      </div>
+    </div>
+
+    <hr class="my-4">
+
+    <h5 class="mb-3">Referencias (tiendas)</h5>
+    {% if ref_formset.non_form_errors %}
+      <div class="alert alert-danger">
+        {% for error in ref_formset.non_form_errors %}{{ error }}<br>{% endfor %}
+      </div>
+    {% endif %}
+    {{ ref_formset.management_form }}
+    <div class="d-grid gap-3">
+      {% for form in ref_formset.forms %}
+        <div class="border rounded-3 p-3">
+          {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger py-1 mb-3">
+              {% for error in form.non_field_errors %}{{ error }}<br>{% endfor %}
+            </div>
+          {% endif %}
+          <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+              <label class="form-label">{{ form.nombre_fuente.label }}</label>
+              {{ form.nombre_fuente }}
+              {% for error in form.nombre_fuente.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">{{ form.url_fuente.label }}</label>
+              {{ form.url_fuente }}
+              {% for error in form.url_fuente.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">{{ form.precio.label }}</label>
+              {{ form.precio }}
+              {% for error in form.precio.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">{{ form.stock.label }}</label>
+              {{ form.stock }}
+              {% for error in form.stock.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-10">
+              <label class="form-label">{{ form.nota.label }}</label>
+              {{ form.nota }}
+              {% for error in form.nota.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+            {% if ref_formset.can_delete %}
+            <div class="col-md-2 text-md-end">
+              <div class="form-check mt-4 pt-1">
+                {{ form.DELETE }}
+                <label class="form-check-label text-muted small">Eliminar</label>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <p class="text-muted small mt-2">
+      Usa las filas libres para agregar nuevas tiendas. Puedes guardar y volver a editar para sumar m&aacute;s.
+    </p>
+
+    <hr class="my-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+      <h5 class="mb-0">Especificaciones</h5>
+      <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-outline-secondary" id="add-spec-field">
+          <i class="bi bi-plus-circle"></i> Agregar campo
+        </button>
+        <button type="button" class="btn btn-outline-primary" id="apply-spec-template">
+          <i class="bi bi-magic"></i> Aplicar plantilla del tipo
+        </button>
+      </div>
+    </div>
+    {% if spec_formset.non_form_errors %}
+      <div class="alert alert-danger">
+        {% for error in spec_formset.non_form_errors %}{{ error }}<br>{% endfor %}
+      </div>
+    {% endif %}
+    {{ spec_formset.management_form }}
+    <div id="spec-formset" class="row g-3" data-allow-autofill="{% if not is_edit %}1{% else %}0{% endif %}">
+      {% for form in spec_formset.forms %}
+        {% include "admin_panel/_spec_form.html" with form=form can_delete=spec_formset.can_delete %}
+      {% endfor %}
+    </div>
+    <template id="spec-empty-form">
+      {% include "admin_panel/_spec_form.html" with form=spec_formset.empty_form can_delete=spec_formset.can_delete %}
+    </template>
+    <p class="text-muted small mt-2">
+      Completa solo los campos que apliquen. Puedes utilizar la plantilla del tipo para precargar nombres sugeridos.
+    </p>
+
+    <div class="d-flex justify-content-end gap-2 mt-4">
+      <a href="{% url 'admin_products' %}" class="btn btn-light">Cancelar</a>
+      <button class="btn btn-primary" type="submit">
+        {% if is_edit %}Actualizar{% else %}Crear producto{% endif %}
+      </button>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  {{ spec_templates|json_script:"spec-templates-data" }}
+  {{ spec_placeholders|json_script:"spec-placeholders-data" }}
+  <script src="{% static 'admin_panel/product_form.js' %}"></script>
+{% endblock %}

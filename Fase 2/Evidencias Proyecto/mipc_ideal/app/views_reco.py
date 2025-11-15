@@ -1,33 +1,41 @@
+import random
 import re
 import unicodedata
 from collections import Counter, defaultdict
+from datetime import timedelta
 from decimal import Decimal
 from typing import Dict, List, Tuple
 from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Avg, Count, DecimalField, IntegerField, Max, Min, Prefetch, Q, Sum, Value
-from django.db.models.functions import Coalesce
+from django.db.models import Avg, Count, DecimalField, F, IntegerField, Max, Min, Prefetch, Q, Sum, Value
+from django.db.models.functions import Coalesce, TruncDate
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 
 from .models import (
     CategoriaProducto,
     EspecificacionProducto,
     Producto,
+    ProductoVisto,
     ProductReference,
     ProductReview,
     PreferenciaUsuario,
     ProductosFavoritos,
     TipoProducto,
     Profile,
+    UserViewStat,
 )
 from .forms import ProductReviewForm
 from .views import SPEC_CANON, SPEC_TEMPLATES, _norm_key
 
+# ===========================
+# Utilidades / helpers
+# ===========================
 
 def _short_text(text: str, max_len: int = 72) -> str:
     if not text:
@@ -86,6 +94,81 @@ def _favorite_ids_for(user) -> set[int]:
     )
 
 
+PRICE_BANDS = [
+    {"lower": 0, "upper": 400000, "label": "0-400k", "query": "0-400000"},
+    {"lower": 400000, "upper": 800000, "label": "400k-800k", "query": "400000-800000"},
+    {"lower": 800000, "upper": 1200000, "label": "800k-1.2M", "query": "800000-1200000"},
+    {"lower": 1200000, "upper": None, "label": "1.2M+", "query": "1200000-0"},
+]
+
+PREFERENCE_WEIGHTS = {
+    "category": 45,
+    "type": 35,
+    "budget": 20,
+}
+
+
+def _price_band_key(value: Decimal | None) -> str | None:
+    if value is None:
+        return None
+    try:
+        amount = float(value)
+    except (TypeError, ValueError):
+        return None
+    for band in PRICE_BANDS:
+        lower = band["lower"]
+        upper = band["upper"]
+        meets_lower = (lower is None) or (amount >= lower)
+        meets_upper = (upper is None) or (amount < upper)
+        if meets_lower and meets_upper:
+            return band["label"]
+    return PRICE_BANDS[-1]["label"]
+
+
+def _budget_query_value(label: str | None) -> str | None:
+    for band in PRICE_BANDS:
+        if band["label"] == (label or ""):
+            return band["query"]
+    return ""
+
+
+def _price_band_limits(label: str | None) -> Tuple[int | None, int | None]:
+    if not label:
+        return (None, None)
+    for band in PRICE_BANDS:
+        if band["label"] == label:
+            return band["lower"], band["upper"]
+    return (None, None)
+
+
+def _budget_limits_from_value(value: str | None) -> Tuple[int | None, int | None]:
+    if not value:
+        return (None, None)
+    for band in PRICE_BANDS:
+        if band["query"] == value:
+            return band["lower"], band["upper"]
+    parts = value.split("-")
+    if len(parts) == 2:
+        try:
+            low = int(parts[0]) if parts[0] else None
+            high = int(parts[1]) if parts[1] else None
+            if high == 0:
+                high = None
+            return low, high
+        except ValueError:
+            pass
+    return (None, None)
+
+
+def _budget_value_from_limits(min_value: int | None, max_value: int | None) -> str | None:
+    for band in PRICE_BANDS:
+        low_match = (band["lower"] or 0) == (min_value or 0)
+        upper_match = (band["upper"] or 0) == (max_value or 0)
+        if low_match and upper_match:
+            return band["query"]
+    return None
+
+
 def _format_budget_label(min_value: int | None, max_value: int | None) -> str | None:
     if not min_value and not max_value:
         return None
@@ -96,6 +179,195 @@ def _format_budget_label(min_value: int | None, max_value: int | None) -> str | 
     if max_value:
         return f"Hasta {_format_currency(Decimal(str(max_value)))}"
     return None
+
+
+def _increment_user_view_stat(user, metric: str, key: str | None) -> None:
+    if not user.is_authenticated or not key:
+        return
+    obj, created = UserViewStat.objects.get_or_create(
+        usuario=user,
+        metric=metric,
+        key=key,
+        defaults={"count": 1},
+    )
+    if not created:
+        UserViewStat.objects.filter(pk=obj.pk).update(count=F("count") + 1)
+
+
+def _register_user_view(user, product: Producto, min_price: Decimal | None = None) -> None:
+    if not user.is_authenticated:
+        return
+    ProductoVisto.objects.create(usuario=user, producto=product)
+
+    if product.marca_producto_id and product.marca_producto and product.marca_producto.nombre_marca:
+        _increment_user_view_stat(
+            user,
+            UserViewStat.METRIC_BRAND,
+            product.marca_producto.nombre_marca,
+        )
+
+    if product.categoria_producto_id and product.categoria_producto:
+        _increment_user_view_stat(
+            user,
+            UserViewStat.METRIC_CATEGORY,
+            f"{product.categoria_producto_id}:{product.categoria_producto.nombre_categoria}",
+        )
+
+    if product.tipo_producto_id and product.tipo_producto:
+        _increment_user_view_stat(
+            user,
+            UserViewStat.METRIC_TYPE,
+            f"{product.tipo_producto_id}:{product.tipo_producto.nombre_tipo}",
+        )
+
+    price_value = min_price
+    if price_value is None:
+        price_value = getattr(product, "min_price", None)
+    price_band = _price_band_key(price_value)
+    if price_band:
+        _increment_user_view_stat(
+            user,
+            UserViewStat.METRIC_PRICE,
+            price_band,
+        )
+
+
+def _top_view_stats(user, metric: str, limit: int = 3) -> List[Dict[str, object]]:
+    if not user.is_authenticated:
+        return []
+    stats = (
+        UserViewStat.objects.filter(usuario=user, metric=metric)
+        .order_by("-count", "-last_seen")
+    )
+    payload: List[Dict[str, object]] = []
+    for stat in stats:
+        label = stat.key
+        ref_id = None
+        if metric in (UserViewStat.METRIC_CATEGORY, UserViewStat.METRIC_TYPE):
+            if ":" in stat.key:
+                ref_id_str, ref_label = stat.key.split(":", 1)
+                label = ref_label
+                try:
+                    ref_id = int(ref_id_str)
+                except ValueError:
+                    ref_id = None
+        payload.append(
+            {
+                "label": label,
+                "count": stat.count,
+                "ref_id": ref_id,
+            }
+        )
+    return payload
+
+
+def _collect_user_radar_data(user, days: int = 14) -> Dict[str, object]:
+    data = {
+        "timeline": [],
+        "total_views": 0,
+        "window_days": days,
+    }
+    if not user.is_authenticated:
+        return data
+    since = timezone.now() - timedelta(days=days)
+    view_qs = (
+        ProductoVisto.objects.filter(usuario=user, fecha_visto__gte=since)
+        .annotate(day=TruncDate("fecha_visto"))
+        .values("day")
+        .order_by("day")
+        .annotate(total=Count("id"))
+    )
+    timeline: List[Dict[str, object]] = []
+    total = 0
+    for entry in view_qs:
+        day = entry["day"]
+        label = day.strftime("%d %b") if hasattr(day, "strftime") else str(day)
+        timeline.append({"label": label, "value": entry["total"]})
+        total += entry["total"]
+    data["timeline"] = timeline
+    data["total_views"] = total
+    return data
+
+
+def _build_affinity_suggestions(user, pref_ctx: Dict[str, object], limit: int = 4) -> Tuple[List[Dict[str, object]], Dict[str, str]]:
+    suggestions: List[Dict[str, object]] = []
+    seen_ids: set[int] = set()
+    base_qs = _base_product_queryset().order_by("-view_count", "-avg_rating")
+    if user.is_authenticated:
+        base_qs = base_qs.exclude(productovisto__usuario=user)
+
+    view_stats = pref_ctx.get("view_stats", {})
+    brand_stats = view_stats.get("brands") or []
+    price_label = pref_ctx.get("budget_label")
+    min_limit, max_limit = _price_band_limits(price_label)
+
+    def _append_from_brand(brand_name: str):
+        nonlocal suggestions
+        qs = base_qs.filter(marca_producto__nombre_marca__iexact=brand_name)
+        if min_limit:
+            qs = qs.filter(min_price__gte=min_limit)
+        if max_limit:
+            qs = qs.filter(min_price__lt=max_limit)
+        for prod in qs[:limit]:
+            if prod.id in seen_ids:
+                continue
+            payload = _product_payload(prod)
+            _apply_preference_match(payload, pref_ctx)
+            payload.pop("_spec_map", None)
+            label = brand_name
+            if price_label:
+                label = f"{brand_name} · {price_label}"
+            payload["insight_label"] = label
+            suggestions.append(payload)
+            seen_ids.add(prod.id)
+            if len(suggestions) >= limit:
+                break
+
+    fallback_focus = None
+    top_brand = brand_stats[0]["label"] if brand_stats else None
+    if top_brand:
+        _append_from_brand(top_brand)
+        fallback_focus = _brand_focus_payload(user, top_brand, pref_ctx, limit=limit)
+
+    if len(suggestions) < limit and not brand_stats:
+        qs = base_qs
+        if min_limit:
+            qs = qs.filter(min_price__gte=min_limit)
+        if max_limit:
+            qs = qs.filter(min_price__lt=max_limit)
+        label = price_label or "Mas vistos"
+        for prod in qs[:limit]:
+            if prod.id in seen_ids:
+                continue
+            payload = _product_payload(prod)
+            _apply_preference_match(payload, pref_ctx)
+            payload.pop("_spec_map", None)
+            payload["insight_label"] = label
+            suggestions.append(payload)
+            seen_ids.add(prod.id)
+            if len(suggestions) >= limit:
+                break
+
+    if len(suggestions) < limit and fallback_focus:
+        brand_name = top_brand or brand_stats[0]["label"]
+        for entry in fallback_focus.get("less_viewed", []):
+            if entry["id"] in seen_ids:
+                continue
+            payload = entry.copy()
+            payload["insight_label"] = f"{brand_name} · pocas vistas"
+            suggestions.append(payload)
+            seen_ids.add(entry["id"])
+            if len(suggestions) >= limit:
+                break
+
+    suggestions = suggestions[:limit]
+    explore_params = {}
+    if brand_stats:
+        explore_params["marca"] = brand_stats[0]["label"]
+    budget_query = _budget_query_value(pref_ctx.get("budget_label"))
+    if budget_query:
+        explore_params["presupuesto"] = budget_query
+    return suggestions, explore_params
 
 
 def _user_preference_context(user) -> Dict[str, object]:
@@ -117,22 +389,31 @@ def _user_preference_context(user) -> Dict[str, object]:
     category_ids = {pref.categoria_id for pref in pref_entries if pref.categoria_id}
     type_ids = {pref.tipo_producto_id for pref in pref_entries if pref.tipo_producto_id}
 
-    if category_ids:
-        categories = list(
-            CategoriaProducto.objects.filter(id__in=category_ids)
+    manual_categories = []
+    manual_category_ids = set(category_ids)
+    if manual_category_ids:
+        manual_categories = list(
+            CategoriaProducto.objects.filter(id__in=manual_category_ids)
             .values("id", "nombre_categoria")
             .order_by("nombre_categoria")
         )
-        context["categories"] = categories
-        context["category_ids"] = {cat["id"] for cat in categories}
-    if type_ids:
-        types = list(
-            TipoProducto.objects.filter(id__in=type_ids)
+    context["categories"] = manual_categories
+    context["category_ids"] = set(manual_category_ids)
+    context["categories_manual"] = manual_categories
+    context["category_ids_manual"] = manual_category_ids
+
+    manual_types = []
+    manual_type_ids = set(type_ids)
+    if manual_type_ids:
+        manual_types = list(
+            TipoProducto.objects.filter(id__in=manual_type_ids)
             .values("id", "nombre_tipo")
             .order_by("nombre_tipo")
         )
-        context["types"] = types
-        context["type_ids"] = {tipo["id"] for tipo in types}
+    context["types"] = manual_types
+    context["type_ids"] = set(manual_type_ids)
+    context["types_manual"] = manual_types
+    context["type_ids_manual"] = manual_type_ids
 
     profile = Profile.objects.filter(user=user).first()
     if profile:
@@ -140,87 +421,220 @@ def _user_preference_context(user) -> Dict[str, object]:
         context["budget_max"] = profile.preferred_budget_max if profile.preferred_budget_max else None
         context["budget_label"] = _format_budget_label(profile.preferred_budget_min, profile.preferred_budget_max)
         context["notes"] = profile.preference_notes or ""
+        context["budget_value"] = _budget_value_from_limits(
+            profile.preferred_budget_min, profile.preferred_budget_max
+        )
+        context["budget_manual"] = bool(profile.preferred_budget_manual and context["budget_value"])
+    else:
+        context["budget_manual"] = False
+        context["budget_value"] = None
 
-    context["has_prefs"] = bool(context["categories"] or context["types"] or context["budget_label"] or context["notes"])
+    context["manual_pref_active"] = bool(
+        manual_category_ids or manual_type_ids or context["budget_manual"]
+    )
+
+    brand_stats = _top_view_stats(user, UserViewStat.METRIC_BRAND, limit=4)
+    category_stats = _top_view_stats(user, UserViewStat.METRIC_CATEGORY, limit=4)
+    type_stats = _top_view_stats(user, UserViewStat.METRIC_TYPE, limit=4)
+    price_stats = _top_view_stats(user, UserViewStat.METRIC_PRICE, limit=2)
+
+    if not context["categories"] and category_stats:
+        context["categories"] = [
+            {"id": stat["ref_id"], "nombre_categoria": stat["label"]}
+            for stat in category_stats
+            if stat["ref_id"]
+        ]
+        context["category_ids"] = {stat["ref_id"] for stat in category_stats if stat["ref_id"]}
+    if not context["types"] and type_stats:
+        context["types"] = [
+            {"id": stat["ref_id"], "nombre_tipo": stat["label"]}
+            for stat in type_stats
+            if stat["ref_id"]
+        ]
+        context["type_ids"] = {stat["ref_id"] for stat in type_stats if stat["ref_id"]}
+    if not context["budget_label"] and price_stats and not context["budget_manual"]:
+        top_label = price_stats[0]["label"]
+        context["budget_label"] = top_label
+        min_limit, max_limit = _price_band_limits(top_label)
+        context["budget_min"] = min_limit
+        context["budget_max"] = max_limit
+        context["budget_value"] = context.get("budget_value") or _budget_value_from_limits(min_limit, max_limit)
+
+    context["preferred_brands"] = [stat["label"] for stat in brand_stats]
+    context["view_stats"] = {
+        "brands": brand_stats,
+        "categories": category_stats,
+        "types": type_stats,
+        "prices": price_stats,
+    }
+
+    context["has_prefs"] = bool(
+        context["categories"]
+        or context["types"]
+        or context["budget_label"]
+        or context["notes"]
+        or context["preferred_brands"]
+    )
     return context
 
 
+
 def _apply_preference_match(payload: Dict[str, object], pref_ctx: Dict[str, object]) -> None:
-    if not pref_ctx or not pref_ctx.get("has_prefs"):
+    payload.setdefault("match_summary_list", [])
+    payload["_affinity_flags"] = {}
+    manual_enabled = bool(pref_ctx and pref_ctx.get("manual_pref_active"))
+    if not manual_enabled:
         payload["match_summary"] = None
+        payload["match_caption"] = None
         payload["sort_match"] = -payload.get("match", 0)
+        payload["show_match"] = False
+        payload["personal_match"] = None
         return
 
-    base_match = payload.get("match", 0)
-    bonus = 0
+    payload["show_match"] = True
     factors: List[str] = []
     category_label = None
     type_label = None
-    budget_caption = None
-    categories = pref_ctx.get("category_ids") or set()
-    if categories:
-        product_categories = set(payload.get("category_all_ids") or [])
-        if product_categories & categories:
-            bonus += 4
+
+    manual_categories = pref_ctx.get("category_ids_manual") or set()
+    manual_category_meta = pref_ctx.get("categories_manual") or []
+    product_categories = set(payload.get("category_all_ids") or [])
+    category_matched = None
+    if manual_categories:
+        category_matched = bool(product_categories & manual_categories)
+        if category_matched:
             category_label = next(
-                (cat["nombre_categoria"] for cat in pref_ctx.get("categories", []) if cat["id"] in product_categories),
+                (
+                    cat["nombre_categoria"]
+                    for cat in manual_category_meta
+                    if cat["id"] in product_categories
+                ),
                 None,
             )
             if category_label:
-                factors.append(f"Categoria preferida: {category_label}")
+                factors.append(f"Categoria guardada: {category_label}")
         else:
-            factors.append("Fuera de tus categorias principales")
-            bonus -= 1
+            factors.append("Fuera de tus categorias guardadas")
 
-    types = pref_ctx.get("type_ids") or set()
-    if types:
-        if payload.get("type_id") in types:
-            bonus += 3
+    manual_types = pref_ctx.get("type_ids_manual") or set()
+    manual_type_meta = pref_ctx.get("types_manual") or []
+    type_matched = None
+    if manual_types:
+        type_matched = payload.get("type_id") in manual_types
+        if type_matched:
             type_label = next(
-                (tipo["nombre_tipo"] for tipo in pref_ctx.get("types", []) if tipo["id"] == payload.get("type_id")),
+                (
+                    tipo["nombre_tipo"]
+                    for tipo in manual_type_meta
+                    if tipo["id"] == payload.get("type_id")
+                ),
                 None,
             )
             if type_label:
                 factors.append(f"Formato que sigues: {type_label}")
         else:
-            factors.append("Formato distinto a tus preferencias")
+            factors.append("Formato fuera de tus preferencias")
 
-    min_budget = pref_ctx.get("budget_min")
-    max_budget = pref_ctx.get("budget_max")
+    budget_manual = pref_ctx.get("budget_manual")
+    min_budget = pref_ctx.get("budget_min") if budget_manual else None
+    max_budget = pref_ctx.get("budget_max") if budget_manual else None
     price_value = payload.get("min_price_value")
-    if price_value is not None and (min_budget or max_budget):
+    budget_checked = budget_manual and (min_budget is not None or max_budget is not None)
+    budget_matched = None
+    if budget_checked and price_value is not None:
         within = True
-        if min_budget and price_value < min_budget:
+        if min_budget is not None and price_value < min_budget:
             within = False
-        if max_budget and price_value > max_budget:
+        if max_budget is not None and price_value > max_budget:
             within = False
+        budget_matched = within
         if within:
-            bonus += 3
-            factors.append("En tu rango de inversion")
+            factors.append("Dentro de tu rango de inversion")
         else:
-            bonus -= 2
-            factors.append("Revisa rango de inversion")
-    elif min_budget or max_budget:
-        factors.append("Sin precio para comparar con tu inversion")
+            factors.append("Fuera de tu rango de inversion")
+    elif budget_checked:
+        factors.append("Sin precio para comparar con tu presupuesto")
 
     avg_rating = payload.get("avg_rating")
     review_count = payload.get("review_count", 0)
     if avg_rating and review_count:
-        factors.append(f"Valorado {avg_rating:.1f}/5 ({review_count} reseñas)")
+        factors.append(f"Valorado {avg_rating:.1f}/5 ({review_count} resenas)")
 
-    payload["match"] = max(75, min(99, base_match + bonus))
     caption_parts: List[str] = []
     if category_label:
         caption_parts.append(category_label)
     if type_label:
         caption_parts.append(type_label)
-    budget_label = pref_ctx.get("budget_label")
-    if budget_label:
-        caption_parts.append(budget_label)
+    if budget_matched:
+        caption_parts.append("Presupuesto guardado")
 
+    affinity_total = 0
+    affinity_score = 0
+    flags = {"category": None, "type": None, "budget": None}
+    if manual_categories:
+        affinity_total += PREFERENCE_WEIGHTS["category"]
+        if category_matched:
+            affinity_score += PREFERENCE_WEIGHTS["category"]
+            flags["category"] = True
+        else:
+            flags["category"] = False
+    if manual_types:
+        affinity_total += PREFERENCE_WEIGHTS["type"]
+        if type_matched:
+            affinity_score += PREFERENCE_WEIGHTS["type"]
+            flags["type"] = True
+        else:
+            flags["type"] = False
+    if budget_checked and price_value is not None:
+        affinity_total += PREFERENCE_WEIGHTS["budget"]
+        if budget_matched:
+            affinity_score += PREFERENCE_WEIGHTS["budget"]
+            flags["budget"] = True
+        else:
+            flags["budget"] = False
+
+    payload["_affinity_flags"] = flags
+    if affinity_total == 0:
+        payload["match_summary"] = "; ".join(factors)
+        payload["match_summary_list"] = [item.strip() for item in factors if item.strip()]
+        payload["match_caption"] = None
+        payload["sort_match"] = -payload.get("match", 0)
+        payload["personal_match"] = None
+        payload["show_match"] = False
+        return
+
+    personal_match = int(round((affinity_score / affinity_total) * 100))
+    payload["personal_match"] = max(0, min(100, personal_match))
+    payload["match"] = payload["personal_match"]
     payload["match_summary"] = "; ".join(factors)
-    payload["match_caption"] = " · ".join(caption_parts) if caption_parts else None
+    payload["match_summary_list"] = [item.strip() for item in factors if item.strip()]
+    payload["match_caption"] = " - ".join(caption_parts) if caption_parts else None
     payload["sort_match"] = -payload["match"]
+
+def _preference_weight(card: Dict[str, object], pref_ctx: Dict[str, object]) -> float:
+    flags = card.get("_affinity_flags")
+    if not flags:
+        return 0.0
+    weight = 0.0
+    for key, matched in flags.items():
+        if matched is None:
+            continue
+        delta = PREFERENCE_WEIGHTS.get(key, 0)
+        if matched:
+            weight += delta
+        else:
+            weight -= delta * 0.3
+    return weight
+
+def _prioritize_cards(cards: List[Dict[str, object]], pref_ctx: Dict[str, object]) -> List[Dict[str, object]]:
+    if not pref_ctx or not pref_ctx.get("has_prefs"):
+        return cards
+    weighted: List[Tuple[float, Dict[str, object]]] = []
+    for card in cards:
+        score = card.get("match", 0) + _preference_weight(card, pref_ctx)
+        weighted.append((score, card))
+    weighted.sort(key=lambda item: (-item[0], item[1].get("sort_value")))
+    return [card for _, card in weighted]
 
 def _norm(text: str) -> str:
     text = (text or "").strip().lower()
@@ -1602,6 +2016,9 @@ def _product_payload(product: Producto) -> Dict[str, object]:
         "type_highlights": type_profile["highlights"][:2],
         "type_metrics": type_profile["metrics"][:4],
         "supports_compatibility": _supports_compatibility(type_name),
+        "match_base": match_score,
+        "show_match": True,
+        "match_summary_list": [],
     }
     payload["_spec_map"] = specs
     return payload
@@ -1655,6 +2072,9 @@ def _build_home_compatibility_pairs(
     return pairs
 
 
+# ===========================
+# Vistas principales (home / exploración)
+# ===========================
 def reco_home(request):
     categorias = _categories_with_inventory().order_by("-prod_count", "nombre_categoria")[:6]
     favorite_ids = _favorite_ids_for(request.user)
@@ -1671,7 +2091,7 @@ def reco_home(request):
 
     products_qs = list(
         _base_product_queryset()
-        .order_by("-avg_rating", "-review_count", "min_price")[:16]
+        .order_by("-avg_rating", "-review_count", "min_price")[:32]
     )
     product_cards = []
     products_by_id: Dict[int, Producto] = {}
@@ -1681,8 +2101,11 @@ def reco_home(request):
         _apply_preference_match(payload, preference_context)
         product_cards.append(payload)
         products_by_id[prod.id] = prod
-    product_cards.sort(key=lambda p: (p["sort_match"], p["sort_value"]))
-    top_recommendations = _select_top_recommendations(product_cards, limit=6, per_type=2)
+    prioritized_cards = _prioritize_cards(product_cards, preference_context)
+    if not preference_context.get("has_prefs"):
+        rng = random.Random(timezone.now().date().toordinal())
+        rng.shuffle(prioritized_cards)
+    top_recommendations = _select_top_recommendations(prioritized_cards, limit=6, per_type=2)
     compatibility_pairs = _build_home_compatibility_pairs(
         top_recommendations,
         products_by_id,
@@ -1691,6 +2114,7 @@ def reco_home(request):
     )
     for card in product_cards:
         card.pop("_spec_map", None)
+        card.pop("_affinity_flags", None)
 
     guides = []
     for cat in categorias[:3]:
@@ -1713,18 +2137,30 @@ def reco_home(request):
 
 
 def _apply_filters(request, queryset):
-    categoria_id = request.GET.get("categoria") or request.GET.get("perfil")
-    tipo_id = request.GET.get("tipo")
+    categoria_values = request.GET.getlist("categoria")
+    perfil_value = request.GET.get("perfil")
+    if not categoria_values and perfil_value:
+        categoria_values = [perfil_value]
+    tipo_values = request.GET.getlist("tipo")
     presupuesto = request.GET.get("presupuesto")
     search = request.GET.get("q")
+    brand = request.GET.get("marca")
 
-    if categoria_id and categoria_id.isdigit():
-        categoria_pk = int(categoria_id)
+    categoria_ids = []
+    for value in categoria_values:
+        if value.isdigit():
+            categoria_ids.append(int(value))
+    if categoria_ids:
         queryset = queryset.filter(
-            Q(categoria_producto_id=categoria_pk) | Q(categorias_extra__id=categoria_pk)
+            Q(categoria_producto_id__in=categoria_ids) | Q(categorias_extra__id__in=categoria_ids)
         ).distinct()
-    if tipo_id and tipo_id.isdigit():
-        queryset = queryset.filter(tipo_producto_id=int(tipo_id))
+
+    tipo_ids = []
+    for value in tipo_values:
+        if value.isdigit():
+            tipo_ids.append(int(value))
+    if tipo_ids:
+        queryset = queryset.filter(tipo_producto_id__in=tipo_ids)
     if presupuesto:
         try:
             low_str, high_str = presupuesto.split("-", 1)
@@ -1742,8 +2178,10 @@ def _apply_filters(request, queryset):
             Q(modelo_producto__icontains=search) |
             Q(descripcion_producto__icontains=search)
         )
+    if brand:
+        queryset = queryset.filter(marca_producto__nombre_marca__iexact=brand)
     spec_filters = _extract_spec_filters(request.GET)
-    return queryset, spec_filters
+    return queryset, spec_filters, [str(id_) for id_ in categoria_ids], [str(id_) for id_ in tipo_ids]
 
 
 def reco_explore(request):
@@ -1760,7 +2198,10 @@ def reco_explore(request):
     compat_notice_level = "info"
     compat_results = False
     products: List[Dict[str, object]] = []
-    parsed_spec_filters: Dict[str, object] = {}
+    base_queryset = _base_product_queryset()
+    products_qs, parsed_spec_filters, selected_categoria_values, selected_tipo_values = _apply_filters(
+        request, base_queryset
+    )
     raw_spec_params = {key: request.GET.get(key) for key in SPEC_FILTER_QUERY_KEYS if request.GET.get(key)}
 
     if compat_with and compat_with.isdigit():
@@ -1788,7 +2229,6 @@ def reco_explore(request):
                 compat_notice_level = "warning"
 
     if not products:
-        products_qs, parsed_spec_filters = _apply_filters(request, _base_product_queryset())
         fetch_limit = 200 if parsed_spec_filters else 50
         candidates = list(products_qs[:fetch_limit])
         if parsed_spec_filters:
@@ -1828,18 +2268,35 @@ def reco_explore(request):
         ]
 
     selected = {
-        "categoria": request.GET.get("categoria") or "",
-        "tipo": request.GET.get("tipo") or "",
+        "categorias": selected_categoria_values,
+        "tipos": selected_tipo_values,
+        "categoria": selected_categoria_values[0] if selected_categoria_values else "",
+        "tipo": selected_tipo_values[0] if selected_tipo_values else "",
         "presupuesto": request.GET.get("presupuesto") or "",
+        "marca": request.GET.get("marca") or "",
         "sort": sort_param,
         "spec": raw_spec_params,
     }
     selected_categoria = None
     selected_tipo = None
-    if selected["categoria"]:
-        selected_categoria = next((c for c in categorias if str(c.id) == selected["categoria"]), None)
-    if selected["tipo"]:
-        selected_tipo = next((t for t in tipos if str(t.id) == selected["tipo"]), None)
+    categoria_labels: List[str] = []
+    tipo_labels: List[str] = []
+    if selected["categorias"]:
+        for value in selected["categorias"]:
+            cat_obj = next((c for c in categorias if str(c.id) == value), None)
+            if cat_obj:
+                categoria_labels.append(cat_obj.nombre_categoria)
+        if selected["categoria"]:
+            selected_categoria = next((c for c in categorias if str(c.id) == selected["categoria"]), None)
+    if selected["tipos"]:
+        for value in selected["tipos"]:
+            tipo_obj = next((t for t in tipos if str(t.id) == value), None)
+            if tipo_obj:
+                tipo_labels.append(tipo_obj.nombre_tipo)
+        if selected["tipo"]:
+            selected_tipo = next((t for t in tipos if str(t.id) == selected["tipo"]), None)
+    selected["categoria_labels"] = categoria_labels
+    selected["tipo_labels"] = tipo_labels
 
     budget_options = [
         {"label": "Hasta $400.000", "value": "0-400000"},
@@ -1863,13 +2320,25 @@ def reco_explore(request):
 
     active_spec_badges = [] if compat_results else _format_spec_filter_badges(raw_spec_params)
     clear_spec_filters_url = reverse("reco_explore")
-    if raw_spec_params:
+    show_clear_filters = bool(raw_spec_params) or bool(selected["marca"]) or bool(selected["categorias"]) or bool(selected["tipos"])
+    if show_clear_filters:
         params_for_clear = request.GET.copy()
         for key in SPEC_FILTER_QUERY_KEYS:
             params_for_clear.pop(key, None)
+        params_for_clear.pop("categoria", None)
+        params_for_clear.pop("tipo", None)
+        params_for_clear.pop("marca", None)
         remaining = params_for_clear.urlencode()
         if remaining:
             clear_spec_filters_url = f"{reverse('reco_explore')}?{remaining}"
+    if selected["categoria_labels"] and not compat_results:
+        for label in selected["categoria_labels"]:
+            active_spec_badges.append(f"Categoria {label}")
+    if selected["tipo_labels"] and not compat_results:
+        for label in selected["tipo_labels"]:
+            active_spec_badges.append(f"Tipo {label}")
+    if selected["marca"] and not compat_results:
+        active_spec_badges.append(f"Marca {selected['marca']}")
 
     context = {
         "categories": categorias,
@@ -1937,6 +2406,9 @@ def _detail_summary(product_payload: Dict[str, object]) -> List[str]:
     return bullets[:3]
 
 
+# ===========================
+# Detalle, guías y preferencias
+# ===========================
 def reco_detail(request):
     product_id = request.GET.get("id")
     if not product_id or not product_id.isdigit():
@@ -1983,8 +2455,12 @@ def reco_detail(request):
     product = get_object_or_404(product_qs)
     specs = _build_spec_map(product)
     base_signature = _build_similarity_signature(product, specs)
+    if request.user.is_authenticated:
+        _register_user_view(request.user, product, product.min_price)
+    preference_context = _user_preference_context(request.user)
     payload = _product_payload(product)
     payload["is_favorite"] = product.id in favorite_ids
+    _apply_preference_match(payload, preference_context)
     specs = payload.pop("_spec_map", specs)
     payload["criteria"] = [
         {"label": "Gama", "value": payload["criteria"][0]["value"]},
@@ -2010,6 +2486,7 @@ def reco_detail(request):
                 "price": _format_currency(reference.precio),
                 "url": reference.url_fuente,
                 "note": reference.nota,
+                "reference_id": reference.id,
             }
         )
 
@@ -2117,6 +2594,8 @@ def reco_detail(request):
         "form_review": form_review,
         "show_review_form": show_review_form,
         "user_has_review": user_has_review,
+        "preference_notes": preference_context.get("notes", ""),
+        "preference_context": preference_context,
     }
     return render(request, "lab/reco_detail.html", context)
 
@@ -2275,23 +2754,12 @@ def reco_guides(request):
     return render(request, "lab/reco_guides.html", context)
 
 
+@login_required
 def reco_preferences(request):
     categorias = _categories_with_inventory().order_by("nombre_categoria")
     tipos = TipoProducto.objects.annotate(
         prod_count=Count("producto", filter=Q(producto__is_active=True))
     ).filter(prod_count__gt=0).order_by("nombre_tipo")
-
-    selected_categoria = None
-    selected_tipo = None
-    if request.user.is_authenticated:
-        pref = (
-            PreferenciaUsuario.objects.filter(usuario=request.user)
-            .select_related("categoria", "tipo_producto")
-            .first()
-        )
-        if pref:
-            selected_categoria = pref.categoria_id
-            selected_tipo = pref.tipo_producto_id
 
     budget_options = [
         {"label": "Hasta $400.000", "value": "0-400000"},
@@ -2300,14 +2768,139 @@ def reco_preferences(request):
         {"label": "$1.200.000 o mas", "value": "1200000-0"},
     ]
 
+    if request.method == "POST":
+        category_ids = [int(cid) for cid in request.POST.getlist("categorias") if cid.isdigit()]
+        type_ids = [int(tid) for tid in request.POST.getlist("tipos") if tid.isdigit()]
+        budget_value = request.POST.get("presupuesto") or ""
+        notes = (request.POST.get("notas") or "").strip()
+
+        PreferenciaUsuario.objects.filter(usuario=request.user).delete()
+        entries: List[PreferenciaUsuario] = []
+        for cat_id in category_ids:
+            entries.append(PreferenciaUsuario(usuario=request.user, categoria_id=cat_id))
+        for type_id in type_ids:
+            entries.append(PreferenciaUsuario(usuario=request.user, tipo_producto_id=type_id))
+        if entries:
+            PreferenciaUsuario.objects.bulk_create(entries)
+
+        profile, _ = Profile.objects.get_or_create(
+            user=request.user,
+            defaults={"profile_type": "admin" if request.user.is_staff else "usuario"},
+        )
+        min_budget, max_budget = _budget_limits_from_value(budget_value)
+        profile.preferred_budget_min = min_budget
+        profile.preferred_budget_max = max_budget
+        profile.preference_notes = notes
+        profile.preferred_budget_manual = True
+        profile.save()
+
+        messages.success(request, "Preferencias guardadas y sincronizadas con el radar.")
+        return redirect("reco_preferences")
+
+    preference_context = _user_preference_context(request.user)
+    selected_categories = sorted(list(preference_context.get("category_ids") or []))
+    selected_types = sorted(list(preference_context.get("type_ids") or []))
+    selected_budget_value = preference_context.get("budget_value") or ""
+    selected_notes = preference_context.get("notes", "")
+
+    explore_params_list: List[tuple[str, str]] = []
+    for cid in selected_categories:
+        explore_params_list.append(("categoria", str(cid)))
+    for tid in selected_types:
+        explore_params_list.append(("tipo", str(tid)))
+    if selected_budget_value:
+        explore_params_list.append(("presupuesto", selected_budget_value))
+    explore_url = reverse("reco_explore")
+    if explore_params_list:
+        explore_url = f"{explore_url}?{urlencode(explore_params_list, doseq=True)}"
+
     context = {
         "categories": categorias,
         "types": tipos,
         "budget_options": budget_options,
-        "selected_categoria": selected_categoria,
-        "selected_tipo": selected_tipo,
+        "selected_categories": selected_categories,
+        "selected_types": selected_types,
+        "selected_budget": selected_budget_value,
+        "selected_notes": selected_notes,
+        "preference_context": preference_context,
+        "explore_url": explore_url,
     }
     return render(request, "lab/reco_preferences.html", context)
+
+
+@login_required
+# ===========================
+# Endpoints auxiliares / APIs
+# ===========================
+def reco_update_checklist(request):
+    next_url = request.POST.get("next") or reverse("reco_preferences")
+    if request.method != "POST":
+        if url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+            return redirect(next_url)
+        return redirect("reco_preferences")
+
+    notes = (request.POST.get("notes") or "").strip()
+    profile, _ = Profile.objects.get_or_create(
+        user=request.user,
+        defaults={"profile_type": "admin" if request.user.is_staff else "usuario"},
+    )
+    profile.preference_notes = notes
+    profile.save(update_fields=["preference_notes"])
+    messages.success(request, "Actualizamos tu checklist personal.")
+
+    if url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        return redirect(next_url)
+    return redirect("reco_preferences")
+
+
+@login_required
+def reco_radar(request):
+    preference_context = _user_preference_context(request.user)
+    radar_data = _collect_user_radar_data(request.user, days=14)
+    view_stats = preference_context.get("view_stats", {})
+
+    def _chart_payload(items: List[Dict[str, object]]):
+        return {
+            "labels": [item["label"] for item in items],
+            "values": [item["count"] for item in items],
+        }
+
+    brand_chart = _chart_payload(view_stats.get("brands", []))
+    type_chart = _chart_payload(view_stats.get("types", []))
+    price_raw = view_stats.get("prices", [])
+    total_price_views = sum(item["count"] for item in price_raw) or 1
+    price_percentages = [round(entry["count"] * 100 / total_price_views, 1) for entry in price_raw]
+    price_chart = {
+        "labels": [
+            f"{entry['label']} ({percent}%)"
+            for entry, percent in zip(price_raw, price_percentages)
+        ],
+        "values": price_percentages,
+    }
+
+    brand_focus = None
+    if brand_chart["labels"]:
+        brand_focus = _brand_focus_payload(request.user, brand_chart["labels"][0], preference_context, limit=4)
+
+    affinity_cards, affinity_params = _build_affinity_suggestions(request.user, preference_context, limit=4)
+    affinity_explore_url = None
+    if affinity_params:
+        query = urlencode(affinity_params)
+        affinity_explore_url = f"{reverse('reco_explore')}?{query}"
+
+    context = {
+        "preference_context": preference_context,
+        "radar_data": radar_data,
+        "brand_chart_data": brand_chart,
+        "type_chart_data": type_chart,
+        "price_chart_data": price_chart,
+        "timeline_data": radar_data["timeline"],
+        "affinity_cards": affinity_cards,
+        "affinity_params": affinity_params,
+        "affinity_explore_url": affinity_explore_url,
+        "brand_focus": brand_focus or {},
+    }
+    return render(request, "lab/reco_radar.html", context)
 
 
 @login_required
@@ -2367,6 +2960,7 @@ def reco_saved(request):
         .select_related("producto")
         .order_by("-id")
     )
+    preference_context = _user_preference_context(request.user)
     product_ids = [fav.producto_id for fav in favoritos]
     products_by_id = {}
     raw_products = {}
@@ -2374,12 +2968,19 @@ def reco_saved(request):
         products = _base_product_queryset().filter(id__in=product_ids)
         for prod in products:
             raw_products[prod.id] = prod
-            products_by_id[prod.id] = _product_payload(prod)
+            payload = _product_payload(prod)
+            _apply_preference_match(payload, preference_context)
+            products_by_id[prod.id] = payload
 
     saved_cards = []
     type_counter: Counter[str] = Counter()
     category_counter: Counter[str] = Counter()
     match_values: list[int] = []
+    affinity_counters = {
+        "category": {"matched": 0, "total": 0, "label": "categorias guardadas"},
+        "type": {"matched": 0, "total": 0, "label": "formatos guardados"},
+        "budget": {"matched": 0, "total": 0, "label": "rango de inversion"},
+    }
     price_values: list[float] = []
     price_labels: list[str] = []
 
@@ -2388,8 +2989,6 @@ def reco_saved(request):
         if not payload:
             continue
         type_counter[payload.get("type")] += 1
-        if payload.get("match") is not None:
-            match_values.append(payload["match"])
         if payload.get("min_price_value") is not None:
             price_values.append(payload["min_price_value"])
             price_labels.append(payload.get("min_price_display") or "")
@@ -2398,13 +2997,32 @@ def reco_saved(request):
             if label:
                 category_counter[label] += 1
 
+        flags = payload.pop("_affinity_flags", {})
+
+        mismatch_tags: List[str] = []
+        if flags.get("category") is False:
+            mismatch_tags.append("Fuera de tus categorias guardadas")
+        if flags.get("type") is False:
+            mismatch_tags.append("Formato distinto a lo que sigues")
+        if flags.get("budget") is False:
+            mismatch_tags.append("Por fuera de tu rango de inversion")
         saved_cards.append(
             {
                 "favorite_id": fav.id,
                 "product": payload,
                 "note": "Revisa trade-offs y criterios actualizados antes de decidir.",
+                "mismatch_tags": mismatch_tags,
             }
         )
+        if payload.get("show_match") and payload.get("match") is not None:
+            match_values.append(payload["match"])
+        for key, info in affinity_counters.items():
+            flag = flags.get(key)
+            if flag is None:
+                continue
+            info["total"] += 1
+            if flag:
+                info["matched"] += 1
 
     insights = {
         "total": len(saved_cards),
@@ -2413,6 +3031,7 @@ def reco_saved(request):
         "top_category": None,
         "price_range": None,
         "spotlights": [],
+        "match_reason": None,
     }
 
     if type_counter:
@@ -2458,9 +3077,91 @@ def reco_saved(request):
                     }
                 )
 
+    mismatch_notes: List[str] = []
+    for key, info in affinity_counters.items():
+        if info["total"] and info["matched"] < info["total"]:
+            diff = info["total"] - info["matched"]
+            plural = "s" if diff != 1 else ""
+            mismatch_notes.append(f"{diff} guardado{plural} fuera de tus {info['label']}")
+    if mismatch_notes:
+        insights["match_reason"] = " / ".join(mismatch_notes)
+
     context = {
         "saved_cards": saved_cards,
         "saved_total": len(saved_cards),
         "saved_insights": insights,
     }
     return render(request, "lab/reco_saved.html", context)
+def _brand_focus_payload(user, brand_name: str, pref_ctx: Dict[str, object], limit: int = 4) -> Dict[str, object]:
+    payload = {"top_product": None, "less_viewed": []}
+    if not user.is_authenticated or not brand_name:
+        return payload
+    seen = (
+        ProductoVisto.objects.filter(usuario=user, producto__marca_producto__nombre_marca__iexact=brand_name)
+        .values("producto_id")
+        .annotate(views=Count("id"))
+        .order_by("-views")
+    )
+    product_counts = {entry["producto_id"]: entry["views"] for entry in seen}
+    if not product_counts:
+        return payload
+
+    product_qs = (
+        Producto.objects.filter(id__in=product_counts.keys())
+        .select_related("marca_producto", "categoria_producto", "tipo_producto")
+        .annotate(
+            avg_rating=Avg("reviews__rating"),
+            review_count=Count("reviews", distinct=True),
+            min_price=Min("referencias__precio"),
+            max_price=Coalesce(
+                Max("referencias__precio"),
+                Value(Decimal("0")),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            ),
+            stock_total=Coalesce(
+                Sum("referencias__stock"),
+                Value(0),
+                output_field=IntegerField(),
+            ),
+            view_count=Count("productovisto", distinct=True),
+        )
+    )
+    products_map = {prod.id: prod for prod in product_qs}
+    sorted_ids = sorted(product_counts.items(), key=lambda pair: (-pair[1], -pair[0]))
+    top_entry = sorted_ids[0]
+    top_product = products_map.get(top_entry[0])
+    if top_product:
+        top_payload = _product_payload(top_product)
+        _apply_preference_match(top_payload, pref_ctx)
+        top_payload.pop("_spec_map", None)
+        top_payload["view_count_user"] = top_entry[1]
+        summary_text = top_payload.get("match_summary") or ""
+        top_payload["match_summary_list"] = [item.strip() for item in summary_text.split(";") if item.strip()]
+        payload["top_product"] = {
+            "product": top_payload,
+            "views": top_entry[1],
+        }
+
+    less_seen = sorted(sorted_ids[1:], key=lambda pair: (pair[1], pair[0]))
+    for prod_id, view_count in less_seen[:limit]:
+        product = products_map.get(prod_id)
+        if not product:
+            continue
+        product_payload = _product_payload(product)
+        _apply_preference_match(product_payload, pref_ctx)
+        product_payload.pop("_spec_map", None)
+        product_payload["view_count_user"] = view_count
+        summary_text = product_payload.get("match_summary") or ""
+        product_payload["match_summary_list"] = [item.strip() for item in summary_text.split(";") if item.strip()]
+        payload["less_viewed"].append(product_payload)
+    payload["less_viewed_total"] = len(less_seen)
+
+    return payload
+    mismatch_notes: List[str] = []
+    for key, info in affinity_counters.items():
+        if info["total"] and info["matched"] < info["total"]:
+            diff = info["total"] - info["matched"]
+            plural = "s" if diff != 1 else ""
+            mismatch_notes.append(f"{diff} guardado{plural} fuera de tus {info['label']}")
+    if mismatch_notes:
+        insights["match_reason"] = " / ".join(mismatch_notes)

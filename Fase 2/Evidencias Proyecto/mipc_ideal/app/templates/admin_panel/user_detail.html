@@ -1,6 +1,6 @@
 {% extends "admin_panel/admin_base.html" %}
 
-{% block title %}Detalle de Usuario - {{ user_detail.username }}{% endblock %}
+{% block title %}Detalle de Usuario - {{ usuario.username }}{% endblock %}
 
 {% block admin_content %}
 <div class="card">
@@ -8,19 +8,19 @@
     <!-- Header con acciones -->
     <div class="d-flex justify-content-between align-items-start mb-4">
       <div>
-        <h3 class="card-title mb-1">{{ user_detail.username }}</h3>
+        <h3 class="card-title mb-1">{{ usuario.username }}</h3>
         <div class="text-muted">
-          {{ user_detail.email }}
+          {{ usuario.email }}
         </div>
       </div>
       <div class="btn-group">
-        <a href="{% url 'admin_user_toggle' user_detail.id %}" 
+        <a href="{% url 'admin_user_toggle' usuario.id %}" 
            class="btn btn-warning"
-           onclick="return confirm('¿{% if user_detail.is_active %}Desactivar{% else %}Activar{% endif %} este usuario?');">
+           onclick="return confirm('¿{% if usuario.is_active %}Desactivar{% else %}Activar{% endif %} este usuario?');">
           <i class="bi bi-power me-1"></i>
-          {{ user_detail.is_active|yesno:"Desactivar,Activar" }}
+          {{ usuario.is_active|yesno:"Desactivar,Activar" }}
         </a>
-        <a href="{% url 'admin_user_delete' user_detail.id %}" 
+        <a href="{% url 'admin_user_delete' usuario.id %}" 
            class="btn btn-danger"
            onclick="return confirm('¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.');">
           <i class="bi bi-trash me-1"></i>
@@ -40,14 +40,14 @@
           <div class="card-body">
             <dl class="row mb-0">
               <dt class="col-sm-4">Usuario</dt>
-              <dd class="col-sm-8">{{ user_detail.username }}</dd>
+              <dd class="col-sm-8">{{ usuario.username }}</dd>
               
               <dt class="col-sm-4">Email</dt>
-              <dd class="col-sm-8">{{ user_detail.email }}</dd>
+              <dd class="col-sm-8">{{ usuario.email }}</dd>
               
               <dt class="col-sm-4">Estado</dt>
               <dd class="col-sm-8">
-                {% if user_detail.is_active %}
+                {% if usuario.is_active %}
                   <span class="badge bg-success">Activo</span>
                 {% else %}
                   <span class="badge bg-secondary">Inactivo</span>
@@ -55,10 +55,10 @@
               </dd>
 
               <dt class="col-sm-4">Fecha registro</dt>
-              <dd class="col-sm-8">{{ user_detail.date_joined|date:"d/m/Y H:i" }}</dd>
+              <dd class="col-sm-8">{{ usuario.date_joined|date:"d/m/Y H:i" }}</dd>
 
               <dt class="col-sm-4">Último acceso</dt>
-              <dd class="col-sm-8">{{ user_detail.last_login|date:"d/m/Y H:i"|default:"—" }}</dd>
+              <dd class="col-sm-8">{{ usuario.last_login|date:"d/m/Y H:i"|default:"-" }}</dd>
             </dl>
           </div>
         </div>
@@ -79,8 +79,8 @@
                     {% if pref.categoria %}
                       {{ pref.categoria.nombre_categoria }}
                     {% endif %}
-                    {% if pref.tipo %}
-                      {{ pref.tipo.nombre_tipo_producto }}
+                    {% if pref.tipo_producto %}
+                      {{ pref.tipo_producto.nombre_tipo }}
                     {% endif %}
                   </span>
                 {% endfor %}
@@ -97,25 +97,23 @@
             <h5 class="card-title mb-0">Productos favoritos</h5>
           </div>
           <div class="card-body">
-            {% with favoritos=user_detail.productosfavoritos_set.all %}
-              {% if favoritos %}
-                <div class="list-group">
-                  {% for fav in favoritos %}
-                    <div class="list-group-item">
+            {% if favoritos %}
+              <div class="list-group">
+                {% for fav in favoritos %}
+                  <div class="list-group-item">
                       <div class="d-flex w-100 justify-content-between align-items-center">
                         <h6 class="mb-1">{{ fav.producto.nombre_producto }}</h6>
-                        <small class="text-muted">{{ fav.fecha_agregado|date:"d/m/Y" }}</small>
+                        <small class="text-muted">{{ fav.producto.fecha_creacion|date:"d/m/Y" }}</small>
                       </div>
-                      <small class="text-muted">
-                        {{ fav.producto.marca_producto }} · {{ fav.producto.categoria_producto }}
-                      </small>
-                    </div>
-                  {% endfor %}
-                </div>
-              {% else %}
-                <p class="text-muted mb-0">No hay productos favoritos.</p>
-              {% endif %}
-            {% endwith %}
+                    <small class="text-muted">
+                      {{ fav.producto.marca_producto }} · {{ fav.producto.categoria_producto }}
+                    </small>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="text-muted mb-0">No hay productos favoritos.</p>
+            {% endif %}
           </div>
         </div>
       </div>

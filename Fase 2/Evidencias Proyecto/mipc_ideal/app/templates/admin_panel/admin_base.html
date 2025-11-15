@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
+
+{% block body_class %}admin-shell{% endblock %}
+
 {% block css %}
 <link rel="stylesheet" href="{% static 'admin_panel/admin.css' %}">
 {% endblock %}
@@ -21,10 +24,7 @@
 </div>
 {% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'admin_panel/admin.css' %}">
-{% endblock %}
-
-{% block extra_js %}
+{% block scripts %}
+{{ block.super }}
 <script src="{% static 'admin_panel/admin.js' %}"></script>
 {% endblock %}

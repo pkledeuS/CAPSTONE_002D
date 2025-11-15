@@ -4,7 +4,7 @@
 {% block body_class %}reco-app{% endblock %}
 
 {% block css %}
-<link rel="stylesheet" href="{% static 'recommender/recommender.css' %}">
+<link rel="stylesheet" href="{% static 'css/recommender.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -14,7 +14,7 @@
     <nav class="reco-breadcrumb" aria-label="Ruta de guardados">
       <a href="{% url 'reco_home' %}">Inicio recomendaciones</a>
       <span aria-hidden="true">&gt;</span>
-      <span>Mis guardadas</span>
+      <span>Mis productos favoritos</span>
     </nav>
     <p class="text-secondary small mb-0">
       Tus productos guardados se recalculan con el mismo criterio editorial: match, razones y trade-offs se actualizan segun tus preferencias.
@@ -33,38 +33,52 @@
     <div class="card-body">
       <div class="row g-3 align-items-center">
         <div class="col-12 col-md-4">
-          <p class="text-secondary small mb-1">Promedio de match</p>
-          <h3 class="h4 mb-0">
-            {% if saved_insights.avg_match %}
-              {{ saved_insights.avg_match }}%
-            {% else %}
-              -
-            {% endif %}
-          </h3>
-          <p class="reco-alt-hint small mb-0">Basado en {{ saved_total }} guardado{% if saved_total != 1 %}s{% endif %}.</p>
+          <p class="text-secondary small mb-1">Afinidad personal</p>
+          <div class="d-flex align-items-baseline gap-2">
+            <h3 class="display-6 mb-0">
+              {% if saved_insights.avg_match %}
+                {{ saved_insights.avg_match }}%
+              {% else %}
+                -
+              {% endif %}
+            </h3>
+            <span class="text-secondary small">promedio</span>
+          </div>
+          <p class="reco-alt-hint small mb-0">
+            Se recalcula con tus preferencias cada vez que visitas esta lista.
+          </p>
         </div>
         {% if saved_insights.top_type %}
         <div class="col-12 col-md-4">
-          <p class="text-secondary small mb-1">Perfil dominante</p>
+          <p class="text-secondary small mb-1">Linea que mas repetiste</p>
           <h6 class="mb-0">{{ saved_insights.top_type.label }}</h6>
-          <p class="reco-alt-hint small mb-0">{{ saved_insights.top_type.count }} producto{% if saved_insights.top_type.count != 1 %}s{% endif %} en esta linea editorial.</p>
+          <p class="reco-alt-hint small mb-0">
+            {{ saved_insights.top_type.count }} guardado{% if saved_insights.top_type.count != 1 %}s{% endif %} con este formato.
+          </p>
         </div>
         {% endif %}
         {% if saved_insights.price_range %}
         <div class="col-12 col-md-4">
-          <p class="text-secondary small mb-1">Rango de precios de referencia</p>
+          <p class="text-secondary small mb-1">Referencias de inversion</p>
           <h6 class="mb-0">{{ saved_insights.price_range }}</h6>
-          <p class="reco-alt-hint small mb-0">Se recalcula con fuentes neutrales cada vez que visitas tus guardados.</p>
+          <p class="reco-alt-hint small mb-0">
+            Valores informativos para contrastar con tiendas.
+          </p>
         </div>
         {% endif %}
       </div>
+      {% if saved_insights.match_reason %}
+      <div class="alert alert-warning mt-3 mb-0">
+        Detectamos: {{ saved_insights.match_reason }}. Ajusta tus preferencias si deseas acotar mejor tus guardados.
+      </div>
+      {% endif %}
       {% if saved_insights.spotlights %}
       <div class="mt-3">
-        <p class="text-secondary small mb-1">Destacados del laboratorio</p>
+        <p class="text-secondary small mb-1">Sugerencias rapidas</p>
         <div class="d-flex flex-wrap gap-2">
           {% for spot in saved_insights.spotlights %}
           <a href="{{ spot.product.detail_url }}" class="reco-badge reco-badge--accent">
-            {{ spot.title }} · {{ spot.product.name }}
+            {{ spot.title }} &middot; {{ spot.product.name }}
           </a>
           {% endfor %}
         </div>
@@ -81,16 +95,23 @@
         <div class="card-body">
           <div class="d-flex flex-column flex-md-row gap-3 align-items-start">
             {% with image=product.image|default:'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=400&auto=format&fit=crop' %}
-            <img class="rounded-3 object-fit-cover" style="width:96px;height:96px"
-                 src="{{ image }}" alt="Imagen de {{ product.name }}">
+            <img class="rounded-3 reco-top-card__img"
+                 src="{{ image }}" alt="Imagen de {{ product.name }}"
+                 width="96" height="96" style="width:96px;height:96px;object-fit:contain;">
             {% endwith %}
-            <div class="flex-grow-1">
-              <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
-                <div>
-                  <h2 class="h6 mb-0">{{ product.name }}</h2>
-                  <div class="text-secondary small">{{ product.type }}</div>
+            <div class="flex-grow-1 w-100">
+              <div class="reco-card-headline">
+                <div class="reco-card-title">
+                  <p class="text-secondary small mb-1">{{ product.type }}</p>
+                  <h2 class="h6 mb-0 reco-product-name">{{ product.name }}</h2>
+                  <div class="text-secondary small">
+                    {% if product.brand %}{{ product.brand }}{% endif %}
+                    {% if product.min_price_display %}
+                      {% if product.brand %} &middot; {% endif %}Desde {{ product.min_price_display }}
+                    {% endif %}
+                  </div>
                   {% if product.categories_meta %}
-                  <div class="d-flex flex-wrap gap-1 mt-1">
+                  <div class="d-flex flex-wrap gap-1 mt-2">
                     {% for cat in product.categories_meta %}
                     {% if cat.id %}
                     <a href="{% url 'reco_explore' %}?categoria={{ cat.id }}"
@@ -104,8 +125,10 @@
                   </div>
                   {% endif %}
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                  <span class="badge reco-badge-match">Match {{ product.match }}</span>
+                <div class="d-flex flex-column align-items-end gap-2">
+                  {% if product.show_match %}
+                  <span class="badge reco-badge-match">Match {{ product.match }}%</span>
+                  {% endif %}
                   <form method="post" action="{% url 'reco_saved' %}">
                     {% csrf_token %}
                     <input type="hidden" name="favorite_id" value="{{ entry.favorite_id }}">
@@ -115,46 +138,67 @@
                   </form>
                 </div>
               </div>
-              <div class="text-secondary small mt-1">
-                {% if product.min_price_display %}
-                Referencias desde {{ product.min_price_display }}
-                {% else %}
-                Precio por confirmar con tiendas
+
+              {% if entry.mismatch_tags %}
+              <div class="reco-mismatch mt-2">
+                {% for tag in entry.mismatch_tags %}
+                <span class="reco-badge reco-badge--negative">{{ tag }}</span>
+                {% endfor %}
+              </div>
+              {% endif %}
+
+              <div class="reco-saved-meta small text-secondary mt-2 mb-2">
+                {% if product.rating_display %}
+                <span>Valorado {{ product.rating_display }}{% if product.review_count %} ({{ product.review_count }}){% endif %}</span>
+                {% endif %}
+                {% if product.reasons %}
+                <span>{{ product.reasons|first }}</span>
                 {% endif %}
               </div>
-              <div class="mt-2 d-flex flex-wrap gap-2">
-                {% for reason in product.reasons %}
-                <span class="reco-badge reco-badge--positive">+ {{ reason }}</span>
+
+              {% with reasons=product.reasons|slice:":1" tradeoffs=product.tradeoffs|slice:":1" %}
+              {% if reasons or tradeoffs %}
+              <ul class="reco-saved-highlights mb-3">
+                {% for reason in reasons %}
+                <li class="is-positive">+ {{ reason }}</li>
                 {% endfor %}
-                {% for tradeoff in product.tradeoffs %}
-                <span class="reco-badge reco-badge--negative">- {{ tradeoff }}</span>
+                {% for trade in tradeoffs %}
+                <li class="is-negative">- {{ trade }}</li>
                 {% endfor %}
+              </ul>
+              {% endif %}
+              {% endwith %}
+
+              {% if entry.note %}
+              <div class="alert alert-secondary py-2 px-3 small mb-3">
+                {{ entry.note }}
               </div>
-              <p class="reco-alt-hint mt-3 mb-2">{{ entry.note }}</p>
-              <div class="d-flex flex-wrap gap-2">
-                <a href="{{ product.detail_url }}" class="btn btn-sm btn-outline-primary"
-                   data-reco-track="refresh-match" aria-label="Actualizar match de {{ product.name }}">
-                  Actualizar match
+              {% endif %}
+
+              <div class="reco-saved-actions d-flex flex-wrap gap-2">
+                <a href="{{ product.detail_url }}" class="btn btn-sm btn-primary"
+                   data-reco-track="saved-detail" aria-label="Ver detalle de {{ product.name }}">
+                  Ver ficha
                 </a>
                 {% if product.categories_meta %}
-                {% with primary=product.categories_meta|first %}
-                {% if primary.id %}
-                <a href="{% url 'reco_explore' %}?categoria={{ primary.id }}" class="btn btn-sm btn-outline-secondary"
-                   data-reco-track="explore-alt" aria-label="Ver alternativas de {{ product.name }}">
-                  Ver alternativas
-                </a>
-                {% elif product.category_id %}
-                <a href="{% url 'reco_explore' %}?categoria={{ product.category_id }}" class="btn btn-sm btn-outline-secondary"
-                   data-reco-track="explore-alt" aria-label="Ver alternativas de {{ product.name }}">
-                  Ver alternativas
-                </a>
-                {% else %}
-                <a href="{% url 'reco_explore' %}" class="btn btn-sm btn-outline-secondary"
-                   data-reco-track="explore-alt" aria-label="Ver alternativas de {{ product.name }}">
-                  Ver alternativas
-                </a>
-                {% endif %}
-                {% endwith %}
+                  {% with primary=product.categories_meta|first %}
+                    {% if primary.id %}
+                    <a href="{% url 'reco_explore' %}?categoria={{ primary.id }}" class="btn btn-sm btn-outline-secondary"
+                       data-reco-track="explore-alt" aria-label="Ver alternativas de {{ product.name }}">
+                      Ver alternativas
+                    </a>
+                    {% elif product.category_id %}
+                    <a href="{% url 'reco_explore' %}?categoria={{ product.category_id }}" class="btn btn-sm btn-outline-secondary"
+                       data-reco-track="explore-alt" aria-label="Ver alternativas de {{ product.name }}">
+                      Ver alternativas
+                    </a>
+                    {% else %}
+                    <a href="{% url 'reco_explore' %}" class="btn btn-sm btn-outline-secondary"
+                       data-reco-track="explore-alt" aria-label="Ver alternativas de {{ product.name }}">
+                      Ver alternativas
+                    </a>
+                    {% endif %}
+                  {% endwith %}
                 {% elif product.category_id %}
                 <a href="{% url 'reco_explore' %}?categoria={{ product.category_id }}" class="btn btn-sm btn-outline-secondary"
                    data-reco-track="explore-alt" aria-label="Ver alternativas de {{ product.name }}">
@@ -201,5 +245,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'recommender/recommender.js' %}"></script>
+<script src="{% static 'js/recommender.js' %}"></script>
 {% endblock %}

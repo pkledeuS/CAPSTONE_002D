@@ -2,116 +2,157 @@
 {% load static %}
 
 {% block title %}Detalle del Producto - {{ producto.nombre_producto }}{% endblock %}
+
 {% block admin_content %}
-<div class="card">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start mb-4">
-            <div>
-                <h3 class="card-title mb-1">{{ producto.nombre_producto }}</h3>
-                <div class="text-muted">
-                {{ producto.marca_producto }} · {{ producto.modelo_producto }}
-                </div>
-            </div>
-            <div class="btn-group">
-                <a href="{% url 'admin_product_toggle' producto.id %}" 
-                class="btn btn-warning"
-                onclick="return confirm('¿{% if producto.is_active %}Desactivar{% else %}Activar{% endif %} este producto?');">
-                    <i class="bi bi-power me-1"></i>
-                    {{ producto.is_active|yesno:"Desactivar,Activar" }}
-                </a>
-                <a href="{% url 'admin_product_delete' producto.id %}" 
-                    class="btn btn-danger"
-                    onclick="return confirm('¿Eliminar este producto? Esta acción no se puede deshacer.');">
-                    <i class="bi bi-trash me-1"></i>Eliminar
-                </a>
-            </div>
+<div class="card shadow-sm border-0">
+  <div class="card-body">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 mb-4">
+      <div>
+        <p class="text-uppercase text-muted small mb-1">Producto</p>
+        <h2 class="h4 mb-2">{{ producto.nombre_producto }}</h2>
+        <div class="d-flex flex-wrap align-items-center gap-2 text-muted">
+          <span>{{ producto.marca_producto }}</span>
+          <span class="text-muted">-</span>
+          <span>{{ producto.modelo_producto }}</span>
         </div>
-
-        <div class="row">
-            <!-- Información básica -->
-            <div class="col-md-6">
-                <div class="text-center mb-4">
-                    {% if producto.imagen_producto %}
-                        <img src="{{ producto.imagen_producto.url }}" alt="{{ producto.nombre_producto }}" 
-                            style="max-height: 200px; width: auto; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    {% else %}
-                        <img src="{% static 'img/default.jpg' %}" alt="Imagen por defecto"
-                            style="max-height: 200px; width: auto; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    {% endif %}
-                </div>
-                <h5 class="mb-3">Información básica</h5>
-                <dl class="row">
-                <dt class="col-sm-4">Categoría</dt>
-                <dd class="col-sm-8">{{ producto.categoria_producto }}</dd>
-                
-                <dt class="col-sm-4">Tipo</dt>
-                <dd class="col-sm-8">{{ producto.tipo_producto }}</dd>
-                
-                <dt class="col-sm-4">Estado</dt>
-                <dd class="col-sm-8">
-                    {% if producto.is_active %}
-                    <span class="badge bg-success">Activo</span>
-                    {% else %}
-                    <span class="badge bg-danger">Desactivado</span>
-                    {% endif %}
-                </dd>
-                </dl>
-            </div>
-
-            <!-- Especificaciones -->
-            <div class="col-md-6">
-                <h5 class="mb-3">Especificaciones</h5>
-                {% with specs=producto.especificacionproducto_set.all %}
-                {% if specs %}
-                    <dl class="row">
-                    {% for spec in specs %}
-                        <dt class="col-sm-4">{{ spec.nombre_especificacion }}</dt>
-                        <dd class="col-sm-8">{{ spec.valor_especificacion }}</dd>
-                    {% endfor %}
-                    </dl>
-                {% else %}
-                    <p class="text-muted">Sin especificaciones</p>
-                {% endif %}
-                {% endwith %}
-            </div>
-
-            <!-- Ofertas -->
-            <div class="col-12 mt-4">
-                <h5 class="mb-3">Ofertas activas</h5>
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                        <tr>
-                            <th>Tienda</th>
-                            <th>Precio</th>
-                            <th>Stock</th>
-                            <th>URL</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for oferta in producto.tiendaproducto_set.all %}
-                            <tr>
-                            <td>{{ oferta.tienda.nombre_tienda }}</td>
-                            <td>${{ oferta.precio|floatformat:0 }}</td>
-                            <td>{{ oferta.stock }}</td>
-                            <td>
-                                {% if oferta.url_externa %}
-                                <a href="{{ oferta.url_externa }}" target="_blank">Ver en tienda</a>
-                                {% else %}
-                                —
-                                {% endif %}
-                            </td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                            <td colspan="4" class="text-center text-muted">Sin ofertas activas</td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="mt-2 d-flex flex-wrap gap-2">
+          <span class="badge rounded-pill bg-light text-dark">
+            <i class="bi bi-tag"></i> {{ producto.categoria_producto }}
+          </span>
+          <span class="badge rounded-pill bg-light text-dark">
+            <i class="bi bi-cpu"></i> {{ producto.tipo_producto }}
+          </span>
+          <span class="badge rounded-pill {% if producto.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+            {{ producto.is_active|yesno:"Activo,Desactivado" }}
+          </span>
         </div>
+      </div>
+      <div class="btn-group">
+        <a href="{% url 'admin_product_edit' producto.id %}" class="btn btn-primary">
+          <i class="bi bi-pencil me-1"></i> Editar
+        </a>
+        <a href="{% url 'admin_product_toggle' producto.id %}"
+           class="btn btn-warning"
+           onclick="return confirm('{% if producto.is_active %}Desactivar{% else %}Activar{% endif %} este producto?');">
+          <i class="bi bi-power me-1"></i> {{ producto.is_active|yesno:"Desactivar,Activar" }}
+        </a>
+        <a href="{% url 'admin_product_delete' producto.id %}"
+           class="btn btn-danger"
+           onclick="return confirm('Eliminar este producto? Esta accion no se puede deshacer.');">
+          <i class="bi bi-trash me-1"></i> Eliminar
+        </a>
+      </div>
     </div>
+
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="border rounded-3 p-3 h-100 d-flex flex-column">
+          <div class="text-center mb-3">
+            {% if producto.imagen_producto %}
+              <img src="{{ producto.imagen_producto.url }}" alt="{{ producto.nombre_producto }}" class="img-fluid rounded shadow-sm" style="max-height: 220px;">
+            {% else %}
+              <img src="{% static 'img/default.jpg' %}" alt="Sin imagen" class="img-fluid rounded shadow-sm" style="max-height: 220px;">
+            {% endif %}
+          </div>
+          <div class="small text-muted mt-auto">
+            <div class="d-flex justify-content-between">
+              <span>Creado</span>
+              <strong>{{ producto.fecha_creacion|date:"d M Y H:i" }}</strong>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span>Vistas totales</span>
+              <strong>{{ producto.vistas|default:0 }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-8">
+        <div class="border rounded-3 p-3 h-100">
+          <h5 class="mb-3">Descripcion</h5>
+          <p class="mb-0">{{ producto.descripcion_producto }}</p>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="border rounded-3 p-3">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <h5 class="mb-0">Especificaciones tecnicas</h5>
+            <a href="{% url 'admin_product_edit' producto.id %}#specs" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-sliders"></i> Ajustar campos
+            </a>
+          </div>
+          {% with specs=producto.especificacionproducto_set.all %}
+            {% if specs %}
+              <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                {% for spec in specs %}
+                  <div class="col">
+                    <div class="border rounded-3 p-3 h-100">
+                      <p class="text-muted text-uppercase small mb-1">{{ spec.nombre_especificacion }}</p>
+                      <p class="mb-0 fw-semibold">{{ spec.valor_especificacion }}</p>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="text-muted mb-0">Sin especificaciones registradas.</p>
+            {% endif %}
+          {% endwith %}
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="border rounded-3 p-3">
+          <div class="d-flex justify-content-between flex-wrap gap-2 mb-3">
+            <div>
+              <h5 class="mb-0">Referencias publicadas</h5>
+              <small class="text-muted">Tienda, precio y stock que se muestran al usuario</small>
+            </div>
+            <a href="{% url 'admin_product_edit' producto.id %}#referencias" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-plus-circle"></i> Anadir referencia
+            </a>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Fuente</th>
+                  <th>Precio</th>
+                  <th>Stock</th>
+                  <th>Nota</th>
+                  <th>Actualizado</th>
+                  <th>Enlace</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for ref in referencias %}
+                  <tr>
+                    <td class="fw-semibold">{{ ref.nombre_fuente }}</td>
+                    <td>${{ ref.precio|floatformat:0 }}</td>
+                    <td>{{ ref.stock|default:"-" }}</td>
+                    <td class="text-muted">{{ ref.nota|default:"-" }}</td>
+                    <td>{{ ref.actualizado|date:"d M Y H:i" }}</td>
+                    <td>
+                      {% if ref.url_fuente %}
+                        <a href="{{ ref.url_fuente }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+                          <i class="bi bi-box-arrow-up-right"></i>
+                        </a>
+                      {% else %}
+                        <span class="text-muted">-</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="6" class="text-center text-muted py-4">Aun no hay referencias asociadas a este producto.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

@@ -4,7 +4,7 @@
 {% block body_class %}reco-app{% endblock %}
 
 {% block css %}
-<link rel="stylesheet" href="{% static 'recommender/recommender.css' %}">
+<link rel="stylesheet" href="{% static 'css/recommender.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -83,6 +83,16 @@
               </option>
               {% endfor %}
             </select>
+            {% for value in selected_filters.categorias|slice:"1:" %}
+            <input type="hidden" name="categoria" value="{{ value }}">
+            {% endfor %}
+            {% if selected_filters.categoria_labels %}
+            <div class="d-flex flex-wrap gap-1 mt-2">
+              {% for label in selected_filters.categoria_labels %}
+              <span class="reco-badge">{{ label }}</span>
+              {% endfor %}
+            </div>
+            {% endif %}
             <p class="form-text">Navega por universos similares para mantener comparaciones justas.</p>
           </div>
 
@@ -96,6 +106,16 @@
               </option>
               {% endfor %}
             </select>
+            {% for value in selected_filters.tipos|slice:"1:" %}
+            <input type="hidden" name="tipo" value="{{ value }}">
+            {% endfor %}
+            {% if selected_filters.tipo_labels %}
+            <div class="d-flex flex-wrap gap-1 mt-2">
+              {% for label in selected_filters.tipo_labels %}
+              <span class="reco-badge">{{ label }}</span>
+              {% endfor %}
+            </div>
+            {% endif %}
             <p class="form-text">Limita la busqueda a un formato especifico (ej. Notebook, Procesador).</p>
           </div>
 
@@ -137,10 +157,10 @@
                      width="96" height="96" style="width:96px;height:96px;object-fit:contain;">
                 {% endwith %}
                 <div class="flex-grow-1">
-                  <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
-                    <div>
+                  <div class="reco-card-headline">
+                    <div class="reco-card-title">
                       <p class="text-secondary small mb-1">{{ product.type_profile.label }}</p>
-                      <h3 class="h6 mb-1">{{ product.name }}</h3>
+                      <h3 class="h6 mb-1 reco-product-name">{{ product.name }}</h3>
                       <div class="text-secondary small">
                         {% if product.brand %}{{ product.brand }}{% endif %}
                       </div>
@@ -152,7 +172,7 @@
                         {% for cat in product.categories_meta %}
                         {% if cat.id %}
                         <a href="{% url 'reco_explore' %}?categoria={{ cat.id }}"
-                           class="reco-badge reco-badge--link">
+                          class="reco-badge reco-badge--link">
                           {{ cat.name }}
                         </a>
                         {% else %}
@@ -162,9 +182,9 @@
                       </div>
                       {% endif %}
                     </div>
-                    <div class="text-end">
-                      <span class="badge reco-badge-match mb-1">Match {{ product.match_score }}%</span>
-                    </div>
+                    {% if product.show_match %}
+                    <span class="badge reco-badge-match ms-auto">Match {{ product.match|default:product.match_score }}%</span>
+                    {% endif %}
                   </div>
 
                   <div class="mt-3">
@@ -258,5 +278,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'recommender/recommender.js' %}"></script>
+<script src="{% static 'js/recommender.js' %}"></script>
 {% endblock %}

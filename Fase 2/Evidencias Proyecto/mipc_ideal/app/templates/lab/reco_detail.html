@@ -4,7 +4,7 @@
 {% block body_class %}reco-app{% endblock %}
 
 {% block css %}
-<link rel="stylesheet" href="{% static 'recommender/recommender.css' %}">
+<link rel="stylesheet" href="{% static 'css/recommender.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -71,6 +71,15 @@
             </div>
           </div>
 
+          {% if product.show_match and product.match %}
+          <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+            <span class="badge reco-badge-match">Match {{ product.match }}%</span>
+            {% if product.match_summary %}
+            <span class="reco-insight-badge">{{ product.match_summary }}</span>
+            {% endif %}
+          </div>
+          {% endif %}
+
           <div class="d-flex flex-wrap gap-2 mt-3 align-items-center">
             {% if request.user.is_authenticated %}
             <form method="post" action="{% url 'reco_toggle_favorite' %}" class="reco-save-form">
@@ -101,7 +110,7 @@
               Ver guardados
             </a>
           </div>
-
+          
           <div class="row g-3 mt-2">
             <div class="col-md-6">
               <ul class="list-unstyled small mb-0">
@@ -178,6 +187,17 @@
             </div>
             {% endfor %}
           </div>
+          <div class="text-end mt-4">
+            {% if request.user.is_authenticated %}
+            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#reportProductModal">
+              Reportar producto
+            </button>
+            {% else %}
+            <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-outline-danger">
+              Inicia sesion para reportar
+            </a>
+            {% endif %}
+          </div>
         </div>
       </article>
 
@@ -197,23 +217,21 @@
           </p>
           <div class="row g-3">
             {% for alt in alternatives_compatible|slice:":3" %}
-            {% if forloop.counter > 3 %}
-            <div class="col-12 col-md-4 d-none" data-reco-more="compatible">
-            {% else %}
             <div class="col-12 col-md-4">
-            {% endif %}
-              <article class="card h-100 card-hover">
+              <article class="card h-100 card-hover reco-altcard">
                 <div class="card-body">
-                  <div class="fw-semibold small mb-1">{{ alt.type }} - {{ alt.name }}</div>
-                  <div class="small text-secondary mb-2">Match {{ alt.match }}</div>
-                  <ul class="list-unstyled small mb-2">
-                    {% for h in alt.type_highlights %}
-                    <li>&bull; {{ h }}</li>
-                    {% empty %}
-                    <li>&bull; Revisa especificaciones clave antes de anadir.</li>
+                  <span class="reco-altcard__pill">Base compatible</span>
+                  <h3 class="h6 mb-2 mt-2">{{ alt.type }} - {{ alt.name }}</h3>
+                  {% if alt.type_highlights %}
+                  <ul class="reco-altcard__list">
+                    {% for h in alt.type_highlights|slice:":3" %}
+                    <li>{{ h }}</li>
                     {% endfor %}
                   </ul>
-                  <p class="reco-alt-hint mt-2 mb-3">{{ alt.summary }}</p>
+                  {% else %}
+                  <p class="text-secondary small mb-3">Verifica conectores y sockets antes de integrar.</p>
+                  {% endif %}
+                  <p class="reco-alt-hint small mb-3">{{ alt.summary }}</p>
                   <a href="{{ alt.detail_url }}" class="btn btn-sm btn-outline-primary w-100"
                      data-reco-track="view-compatible" aria-label="Ver detalle de {{ alt.name }}">
                     Ver detalle
@@ -239,25 +257,25 @@
             </div>
           </div>
           <p class="reco-alt-hint mb-3">
-            Compara match y trade-offs para validar si la alternativa resuelve tus tareas prioritarias.
+            Revisa razones editoriales y trade-offs para validar si la alternativa resuelve tus tareas prioritarias.
           </p>
           <div class="row g-3">
             {% for alt in alternatives_similar|slice:":3" %}
-            {% if forloop.counter > 3 %}
-            <div class="col-12 col-md-4 d-none" data-reco-more="similar">
-            {% else %}
             <div class="col-12 col-md-4">
-            {% endif %}
-              <article class="card h-100 card-hover">
+              <article class="card h-100 card-hover reco-altcard">
                 <div class="card-body">
-                  <div class="fw-semibold small mb-1">{{ alt.name }}</div>
-                  <div class="small text-secondary mb-2">Match {{ alt.match }}</div>
-                  <ul class="list-unstyled small mb-2">
-                    {% for h in alt.type_highlights %}
-                    <li>&bull; {{ h }}</li>
+                  <span class="reco-altcard__pill">Alternativa</span>
+                  <h3 class="h6 mb-2 mt-2">{{ alt.name }}</h3>
+                  {% if alt.type_highlights %}
+                  <ul class="reco-altcard__list">
+                    {% for h in alt.type_highlights|slice:":3" %}
+                    <li>{{ h }}</li>
                     {% endfor %}
                   </ul>
-                  <p class="reco-alt-hint mt-2 mb-3">{{ alt.summary }}</p>
+                  {% endif %}
+                  {% if alt.summary %}
+                  <p class="reco-alt-hint small mb-3">{{ alt.summary }}</p>
+                  {% endif %}
                   <a href="{{ alt.detail_url }}" class="btn btn-sm btn-outline-primary w-100"
                      data-reco-track="view-alternative" aria-label="Ver detalle de {{ alt.name }}">
                     Ver detalle
@@ -276,6 +294,39 @@
     <aside class="col-lg-4">
       <div class="card mb-3">
         <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <h2 class="h6 mb-0">Tu checklist</h2>
+            {% if request.user.is_authenticated %}
+            <span class="badge text-bg-light text-secondary-emphasis small">Editable</span>
+            {% endif %}
+          </div>
+          {% if request.user.is_authenticated %}
+          <form method="post" action="{% url 'reco_update_checklist' %}" class="reco-checklist-form">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <textarea class="form-control mb-2" rows="3" name="notes"
+                      placeholder="Anota recordatorios rapidos para revisarlos en cada producto.">{{ preference_notes }}</textarea>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+              <button type="submit" class="btn btn-sm btn-primary">Guardar</button>
+              <a href="{% url 'reco_preferences' %}" class="btn btn-sm btn-outline-secondary">Abrir preferencias</a>
+            </div>
+            <p class="small text-secondary mt-2 mb-0">
+              Tus notas personales se sincronizan con preferencias y apareceran en cada ficha.
+            </p>
+          </form>
+          {% else %}
+          {% if preference_notes %}
+          <p class="small mb-2">{{ preference_notes }}</p>
+          {% else %}
+          <p class="small text-secondary mb-2">Inicia sesion para guardar un checklist personalizado y verlo en cada producto.</p>
+          {% endif %}
+          <a class="btn btn-sm btn-outline-primary"
+             href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}">Iniciar sesion</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card mb-3">
+        <div class="card-body">
           <h2 class="h6">Fuentes de referencia</h2>
           <p class="reco-alt-hint mb-3">No patrocinado: solo para validar stock y garant&iacute;a directamente.</p>
           <div class="table-responsive">
@@ -291,7 +342,7 @@
                   <td class="text-end">{{ store.price|default:"Por confirmar" }}</td>
                   <td class="text-end">
                     {% if store.url %}
-                    <a class="btn btn-sm btn-outline-secondary" href="{{ store.url }}" target="_blank"
+                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'reference_redirect' store.reference_id %}" target="_blank"
                        rel="noopener" data-reco-track="visit-store" aria-label="Abrir sitio de {{ store.name }}">
                       Ver sitio
                     </a>
@@ -408,7 +459,44 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'recommender/recommender.js' %}"></script>
+<script src="{% static 'js/recommender.js' %}"></script>
+{% if request.user.is_authenticated %}
+<div class="modal fade" id="reportProductModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reportar producto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <form method="post" action="{% url 'reportar_producto' product.id %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <div class="mb-3">
+            <label class="form-label small text-muted">Motivo</label>
+            <select name="motivo" class="form-select" required>
+              <option value="">Selecciona un motivo...</option>
+              <option value="info_incorrecta">Informacion incorrecta</option>
+              <option value="spam">Spam o contenido enganoso</option>
+              <option value="duplicado">Producto duplicado</option>
+              <option value="otro">Otro motivo</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small text-muted">Detalle</label>
+            <textarea name="detalle" class="form-control" rows="3" placeholder="Describe el problema" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">Enviar reporte</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const toggleBtn = document.getElementById('toggle-review');

@@ -4,7 +4,7 @@
 {% block body_class %}reco-app{% endblock %}
 
 {% block css %}
-<link rel="stylesheet" href="{% static 'recommender/recommender.css' %}">
+<link rel="stylesheet" href="{% static 'css/recommender.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -32,6 +32,75 @@
     </div>
   </section>
 
+  <!-- Radar de usuario -->
+  <section class="mb-4">
+    <div class="card reco-radar-card h-100">
+      <div class="card-body">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+          <div>
+            <p class="text-secondary small mb-1">Tus estadísticas de búsqueda</p>
+            <h2 class="h6 mb-0">Lo que vienes revisando</h2>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'reco_preferences' %}" class="btn btn-sm btn-outline-secondary">Editar preferencias</a>
+            <a href="{% url 'reco_radar' %}" class="btn btn-sm btn-outline-primary">Ver estadísticas</a>
+            <a href="{% url 'reco_explore' %}" class="btn btn-sm btn-outline-secondary">Explorar ahora</a>
+          </div>
+        </div>
+
+        {% if preference_context.has_prefs %}
+        <div class="row g-3">
+          <div class="col-12 col-md-3">
+            <p class="reco-radar__label">Marcas frecuentes</p>
+            <div class="reco-radar__chips">
+              {% for brand in preference_context.preferred_brands %}
+              <span class="reco-insight-badge">{{ brand }}</span>
+              {% empty %}
+              <span class="text-secondary small">Todavia sin marcas destacadas.</span>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="col-12 col-md-3">
+            <p class="reco-radar__label">Categorias / tipos</p>
+            <div class="reco-radar__chips">
+              {% for cat in preference_context.categories|slice:":2" %}
+              <span class="reco-insight-badge">{{ cat.nombre_categoria }}</span>
+              {% empty %}
+              <span class="text-secondary small">Explora para ver categorias.</span>
+              {% endfor %}
+              {% for tipo in preference_context.types|slice:":2" %}
+              <span class="reco-insight-badge">{{ tipo.nombre_tipo }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="col-12 col-md-3">
+            <p class="reco-radar__label">Inversion estimada</p>
+            {% if preference_context.budget_label %}
+            <span class="reco-insight-badge">
+              {{ preference_context.budget_label }}
+            </span>
+            {% else %}
+            <span class="text-secondary small">Aun no definimos tu rango.</span>
+            {% endif %}
+          </div>
+          <div class="col-12 col-md-3">
+            <p class="reco-radar__label">Notas</p>
+            {% if preference_context.notes %}
+            <p class="small mb-0 text-secondary">{{ preference_context.notes }}</p>
+            {% else %}
+            <p class="small mb-0 text-secondary">Usa preferencias para dejar recordatorios.</p>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <div class="text-secondary small">
+          No tenemos suficientes señales todavia. Revisa algunos productos o completa tus preferencias para personalizar el historial.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
   <!-- Perfiles -->
   <section class="mb-5">
     <h2 class="h4 mb-3">Explora por perfiles</h2>
@@ -54,10 +123,10 @@
     </div>
   </section>
 
-  <!-- Top recomendaciones del mes -->
+  <!-- Recomendaciones afinadas -->
   <section class="mb-5">
     <div class="d-flex align-items-center justify-content-between mb-2">
-      <h2 class="h4 mb-0">Top recomendaciones del mes</h2>
+      <h2 class="h4 mb-0">Recomendaciones afinadas</h2>
       <a href="{% url 'reco_explore' %}" class="link-primary small">Ver todas</a>
     </div>
     <p class="text-secondary small mb-3">
@@ -76,37 +145,73 @@
                    width="96" height="96" style="width:96px;height:96px;object-fit:contain;">
               {% endwith %}
               <div class="flex-grow-1">
-                <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
-                  <div>
+                <div class="reco-card-headline">
+
+                  <div class="reco-card-title">
+
                     <p class="text-secondary small mb-1">{{ item.type_profile.label }}</p>
-                    <h3 class="h6 mb-1">{{ item.name }}</h3>
+
+                    <h3 class="h6 mb-1 reco-product-name">{{ item.name }}</h3>
+
                     <div class="text-secondary small">
+
                       {% if item.brand %}{{ item.brand }}{% endif %}
+
                       {% if item.rating_display %}
-                        {% if item.brand %} · {% endif %}{{ item.rating_display }}
+
+                        {% if item.brand %} ? {% endif %}{{ item.rating_display }}
+
                         {% if item.review_count %} ({{ item.review_count }}){% endif %}
+
                       {% endif %}
+
                     </div>
+
                     {% if item.min_price_display %}
+
                     <div class="fw-semibold small text-success mt-1">Desde {{ item.min_price_display }}</div>
+
                     {% endif %}
+
                     {% if item.categories_meta %}
+
                     <div class="d-flex flex-wrap gap-1 mt-2">
+
                       {% for cat in item.categories_meta %}
+
                       {% if cat.id %}
+
                       <a href="{% url 'reco_explore' %}?categoria={{ cat.id }}"
+
                          class="reco-badge reco-badge--link" data-reco-track="category-chip">
+
                         {{ cat.name }}
+
                       </a>
+
                       {% else %}
+
                       <span class="reco-badge">{{ cat.name }}</span>
+
                       {% endif %}
+
                       {% endfor %}
+
                     </div>
+
                     {% endif %}
+
                   </div>
-                  <span class="badge reco-badge-match">Match {{ item.match }}</span>
+
+                  {% if item.show_match %}
+
+                  <span class="badge reco-badge-match ms-auto">Match {{ item.match }}%</span>
+
+                  {% endif %}
+
                 </div>
+
+
 
                 {% if item.type_profile.highlights %}
                 <ul class="list-unstyled small mb-3 mt-3 reco-top-highlights">
@@ -242,7 +347,9 @@
                 <h3 class="h6 mb-0">{{ pair.base.name }}</h3>
                 <p class="text-secondary small mb-0">{{ pair.base.type }}</p>
               </div>
-              <span class="badge reco-badge-match">Match {{ pair.base.match }}</span>
+              {% if pair.base.show_match %}
+              <span class="badge reco-badge-match">Match {{ pair.base.match }}%</span>
+              {% endif %}
             </div>
             {% if pair.base.highlights %}
             <div class="d-flex flex-wrap gap-1 mb-3">
@@ -313,5 +420,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'recommender/recommender.js' %}"></script>
+<script src="{% static 'js/recommender.js' %}"></script>
 {% endblock %}
