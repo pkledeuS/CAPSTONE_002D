@@ -190,11 +190,11 @@
           <div class="text-end mt-4">
             {% if request.user.is_authenticated %}
             <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#reportProductModal">
-              Reportar producto
+              Denunciar producto
             </button>
             {% else %}
             <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-outline-danger">
-              Inicia sesion para reportar
+              Inicia sesion para denunciar
             </a>
             {% endif %}
           </div>
@@ -465,7 +465,7 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Reportar producto</h5>
+        <h5 class="modal-title">Denunciar producto</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <form method="post" action="{% url 'reportar_producto' product.id %}">
