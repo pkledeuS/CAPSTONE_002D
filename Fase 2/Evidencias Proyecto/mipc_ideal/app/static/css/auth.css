@@ -1,18 +1,44 @@
+/* ============================================
+   FUENTES
+   ============================================ */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
+/* ============================================
+   VARIABLES CSS
+   ============================================ */
 :root {
+  /* Bordes */
   --auth-border-dark: rgba(255, 255, 255, 0.08);
   --auth-border-light: rgba(15, 23, 42, 0.08);
+  
+  /* Paneles */
   --auth-panel-dark: rgba(14, 18, 32, 0.9);
   --auth-panel-light: rgba(255, 255, 255, 0.96);
+  
+  /* Colores de texto muted */
   --auth-muted-dark: rgba(244, 248, 255, 0.75);
   --auth-muted-light: rgba(15, 23, 42, 0.65);
+  
+  /* Inputs */
+  --auth-input-bg-dark: rgba(6, 10, 22, 0.65);
+  --auth-input-bg-light: rgba(244, 246, 255, 0.9);
+  --auth-input-border-dark: rgba(255, 255, 255, 0.16);
+  --auth-input-border-light: rgba(15, 23, 42, 0.12);
+  
+  /* Gradientes */
   --auth-gradient: linear-gradient(120deg, #ff8863, #ffc18f);
   --auth-gradient-alt: linear-gradient(120deg, #6ed3ff, #8ef5ff);
+  
+  /* Sombras */
+  --auth-shadow-dark: 0 30px 70px rgba(4, 6, 18, 0.45);
+  --auth-shadow-light: 0 30px 40px rgba(15, 23, 42, 0.12);
 }
 
+/* ============================================
+   LAYOUT BASE - DARK MODE
+   ============================================ */
 .auth-screen .main-content {
-  background: #f8fbff;
+  background: rgba(12, 18, 32, 0.85);
   box-shadow: none;
 }
 
@@ -21,6 +47,9 @@
   padding-bottom: 3rem;
 }
 
+/* ============================================
+   CONTENEDOR DE FORMULARIO - DARK MODE
+   ============================================ */
 .auth-screen .form-container {
   width: min(480px, 100% - 2rem);
   margin: 0 auto;
@@ -28,15 +57,8 @@
   border-radius: 1.25rem;
   border: 1px solid var(--auth-border-dark);
   background: var(--auth-panel-dark);
-  box-shadow: 0 30px 70px rgba(4, 6, 18, 0.45);
+  box-shadow: var(--auth-shadow-dark);
   color: #f8fbff;
-}
-
-.app-theme.theme-light.auth-screen .form-container {
-  background: var(--auth-panel-light);
-  border-color: var(--auth-border-light);
-  color: #0f172a;
-  box-shadow: 0 30px 40px rgba(15, 23, 42, 0.12);
 }
 
 .form-title {
@@ -51,10 +73,9 @@
   margin-bottom: 1rem;
 }
 
-.app-theme.theme-light.auth-screen .form-subtitle {
-  color: var(--auth-muted-light);
-}
-
+/* ============================================
+   GRUPOS DE FORMULARIO
+   ============================================ */
 .form-group {
   margin-bottom: 0.85rem;
 }
@@ -66,11 +87,14 @@
   color: inherit;
 }
 
+/* ============================================
+   INPUTS - DARK MODE
+   ============================================ */
 .form-container .form-control,
 .form-container .form-select,
 .form-container textarea {
-  background: rgba(6, 10, 22, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: var(--auth-input-bg-dark);
+  border: 1px solid var(--auth-input-border-dark);
   color: #f8fbff;
   border-radius: 0.85rem;
   padding: 0.75rem 0.9rem;
@@ -84,30 +108,31 @@
   background: rgba(9, 14, 30, 0.9);
 }
 
-.app-theme.theme-light.auth-screen .form-container .form-control,
-.app-theme.theme-light.auth-screen .form-container .form-select,
-.app-theme.theme-light.auth-screen .form-container textarea {
-  background: rgba(244, 246, 255, 0.9);
-  border-color: rgba(15, 23, 42, 0.12);
-  color: #0f172a;
+/* Placeholders - Dark Mode */
+.form-container .form-control::placeholder,
+.form-container .form-select::placeholder,
+.form-container textarea::placeholder {
+  color: rgba(244, 248, 255, 0.4);
+  opacity: 1;
 }
 
+/* ============================================
+   INPUT GROUPS - DARK MODE
+   ============================================ */
 .input-group-text {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--auth-input-border-dark);
   border-right: 0;
   color: rgba(244, 248, 255, 0.85);
-}
-
-.app-theme.theme-light.auth-screen .input-group-text {
-  border-color: rgba(15, 23, 42, 0.12);
-  color: rgba(15, 23, 42, 0.65);
 }
 
 .form-container .form-control:not(:last-child) {
   border-left: 0;
 }
 
+/* ============================================
+   CHECKBOXES - DARK MODE
+   ============================================ */
 .form-check-input[type="checkbox"] {
   width: 1rem;
   height: 1rem;
@@ -116,10 +141,9 @@
   cursor: pointer;
 }
 
-.app-theme.theme-light.auth-screen .form-check-input[type="checkbox"] {
-  border-color: rgba(15, 23, 42, 0.35);
-}
-
+/* ============================================
+   BOTONES
+   ============================================ */
 .btn-register,
 .btn-login {
   width: 100%;
@@ -138,6 +162,13 @@
   box-shadow: 0 18px 30px rgba(255, 136, 99, 0.35);
 }
 
+.btn-submit-container {
+  margin-top: 1.25rem;
+}
+
+/* ============================================
+   ENLACES
+   ============================================ */
 .auth-secondary-link,
 .register-container a,
 .passforg {
@@ -150,10 +181,9 @@
   color: var(--accent-primary);
 }
 
-.btn-submit-container {
-  margin-top: 1.25rem;
-}
-
+/* ============================================
+   FEEDBACK Y MENSAJES
+   ============================================ */
 .feedback {
   font-size: 0.8rem;
   display: block;
@@ -168,18 +198,15 @@
   color: #6ed3ff;
 }
 
+/* ============================================
+   NOTAS Y TEXTOS ADICIONALES - DARK MODE
+   ============================================ */
 .auth-note,
 .register-container,
 .passforg {
   text-align: center;
   margin-top: 1.5rem;
   color: var(--auth-muted-dark);
-}
-
-.app-theme.theme-light.auth-screen .auth-note,
-.app-theme.theme-light.auth-screen .register-container,
-.app-theme.theme-light.auth-screen .passforg {
-  color: var(--auth-muted-light);
 }
 
 .auth-note a {
@@ -190,6 +217,9 @@
   color: var(--accent-primary);
 }
 
+/* ============================================
+   ALERTAS - DARK MODE
+   ============================================ */
 .alert-info {
   background: rgba(110, 211, 255, 0.12);
   border: 1px solid rgba(110, 211, 255, 0.3);
@@ -197,6 +227,72 @@
   border-radius: 0.85rem;
 }
 
+/* ============================================
+   LIGHT MODE OVERRIDES
+   ============================================ */
+
+/* Layout - Light Mode */
+.app-theme.theme-light.auth-screen .main-content {
+  background: #f8fbff;
+  box-shadow: none;
+}
+
+/* Contenedor - Light Mode */
+.app-theme.theme-light.auth-screen .form-container {
+  background: var(--auth-panel-light);
+  border-color: var(--auth-border-light);
+  color: #0f172a;
+  box-shadow: var(--auth-shadow-light);
+}
+
+.app-theme.theme-light.auth-screen .form-subtitle {
+  color: var(--auth-muted-light);
+}
+
+/* Inputs - Light Mode */
+.app-theme.theme-light.auth-screen .form-container .form-control,
+.app-theme.theme-light.auth-screen .form-container .form-select,
+.app-theme.theme-light.auth-screen .form-container textarea {
+  background: var(--auth-input-bg-light);
+  border-color: var(--auth-input-border-light);
+  color: #0f172a;
+}
+
+.app-theme.theme-light.auth-screen .form-container .form-control:focus,
+.app-theme.theme-light.auth-screen .form-container .form-select:focus,
+.app-theme.theme-light.auth-screen .form-container textarea:focus {
+  border-color: rgba(255, 136, 99, 0.65);
+  box-shadow: 0 0 0 3px rgba(255, 136, 99, 0.15);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* Placeholders - Light Mode */
+.app-theme.theme-light.auth-screen .form-container .form-control::placeholder,
+.app-theme.theme-light.auth-screen .form-container .form-select::placeholder,
+.app-theme.theme-light.auth-screen .form-container textarea::placeholder {
+  color: rgba(15, 23, 42, 0.45);
+  opacity: 1;
+}
+
+/* Input Groups - Light Mode */
+.app-theme.theme-light.auth-screen .input-group-text {
+  border-color: var(--auth-input-border-light);
+  color: rgba(15, 23, 42, 0.65);
+}
+
+/* Checkboxes - Light Mode */
+.app-theme.theme-light.auth-screen .form-check-input[type="checkbox"] {
+  border-color: rgba(15, 23, 42, 0.35);
+}
+
+/* Notas y textos - Light Mode */
+.app-theme.theme-light.auth-screen .auth-note,
+.app-theme.theme-light.auth-screen .register-container,
+.app-theme.theme-light.auth-screen .passforg {
+  color: var(--auth-muted-light);
+}
+
+/* Alertas - Light Mode */
 .app-theme.theme-light.auth-screen .alert-info {
   background: rgba(110, 211, 255, 0.2);
   border-color: rgba(30, 136, 255, 0.25);

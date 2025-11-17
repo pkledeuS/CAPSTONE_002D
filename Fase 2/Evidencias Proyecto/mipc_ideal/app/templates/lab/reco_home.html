@@ -251,7 +251,7 @@
                 <p class="reco-alt-hint mb-3">{{ item.educational_hint }}</p>
 
                 <div class="d-flex flex-wrap gap-2 align-items-center">
-                  <a href="{{ item.detail_url }}" class="btn btn-sm btn-outline-primary"
+                  <a href="{{ item.detail_url }}" class="btn btn-sm btn-outline-primary bt-show-detail"
                      data-reco-track="view-detail" aria-label="Ver detalle de {{ item.name }}">
                     Ver detalle
                   </a>
@@ -259,7 +259,7 @@
                   {% with primary=item.categories_meta|first %}
                   {% if primary.id %}
                   <a href="{% url 'reco_explore' %}?categoria={{ primary.id }}"
-                     class="btn btn-sm btn-outline-secondary" data-reco-track="view-alternatives"
+                     class="btn btn-sm btn-outline-secondary btn-2-3" data-reco-track="view-alternatives"
                      aria-label="Explorar alternativas para {{ item.name }}">
                     Explorar mas
                   </a>
@@ -300,7 +300,7 @@
                       Guardado
                     </button>
                     {% else %}
-                    <button type="submit" class="btn btn-sm btn-outline-primary reco-save-btn"
+                    <button type="submit" class="btn btn-sm btn-outline-primary reco-save-btn btn-2-3"
                             aria-pressed="false" data-reco-track="favorite-add">
                       Guardar
                     </button>
@@ -355,7 +355,7 @@
             <div class="d-flex flex-wrap gap-1 mb-3">
               {% for highlight in pair.base.highlights %}
               {% if highlight %}
-              <span class="reco-badge">{{ highlight }}</span>
+              <span class="reco-badge reco-compat">{{ highlight }}</span>
               {% endif %}
               {% endfor %}
             </div>

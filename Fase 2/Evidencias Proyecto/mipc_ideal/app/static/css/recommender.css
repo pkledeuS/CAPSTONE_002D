@@ -1,3 +1,6 @@
+/* ============================================
+   VARIABLES CSS - DARK MODE (Por defecto)
+   ============================================ */
 :root {
   --reco-primary: #6ed3ff;
   --reco-primary-dark: #0f172a;
@@ -25,6 +28,9 @@
   --reco-chip-text: #e6eeff;
 }
 
+/* ============================================
+   VARIABLES CSS - LIGHT MODE
+   ============================================ */
 .theme-light {
   --reco-primary: #3252d8;
   --reco-primary-dark: #0e1b4f;
@@ -52,11 +58,15 @@
   --reco-chip-text: #0f172a;
 }
 
+/* ============================================
+   LAYOUT BASE
+   ============================================ */
 .reco-container {
   max-width: 1200px;
 }
 
-body.app-theme {
+body.app-theme,
+body.reco-app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -67,21 +77,15 @@ body.app-theme {
   color: var(--reco-primary-contrast);
 }
 
-
-
-body.reco-app {
-  background: radial-gradient(circle at 15% 20%, rgba(110, 211, 255, 0.16), transparent 50%), var(--reco-panel-gradient);
-  min-height: 100vh;
-  font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  color: var(--reco-primary-contrast);
-}
-
 body.reco-app.theme-light {
   background: radial-gradient(circle at 20% 10%, rgba(30, 136, 255, 0.12), transparent 55%),
               radial-gradient(circle at 80% 0%, rgba(255, 111, 97, 0.12), transparent 45%),
               var(--reco-panel-gradient);
 }
 
+/* ============================================
+   FORMULARIOS - DARK MODE
+   ============================================ */
 .reco-app .form-control,
 .reco-app .form-select,
 .reco-app textarea {
@@ -111,71 +115,9 @@ body.reco-app.theme-light {
   color: rgba(248, 251, 255, 0.65);
 }
 
-.reco-app .table {
-  --bs-table-color: rgba(244, 248, 255, 0.92);
-  --bs-table-bg: transparent;
-  --bs-table-border-color: rgba(255, 255, 255, 0.08);
-  --bs-table-hover-bg: rgba(255, 255, 255, 0.05);
-  --bs-table-hover-color: rgba(244, 248, 255, 0.95);
-  color: var(--bs-table-color);
-  background: transparent;
-}
-
-.reco-app .table th,
-.reco-app .table td {
-  background: transparent;
-  border-color: var(--bs-table-border-color);
-}
-
-.reco-app .table thead th {
-  color: rgba(255, 255, 255, 0.75);
-  border-bottom-color: rgba(255, 255, 255, 0.18);
-}
-
-.reco-app .table tbody tr:hover {
-  background: var(--bs-table-hover-bg);
-  color: var(--bs-table-hover-color);
-}
-
-.theme-light .reco-hero {
-  background: var(--reco-hero-gradient);
-  color: var(--reco-primary-contrast);
-  border: 1px solid var(--reco-border);
-  box-shadow: 0 25px 40px rgba(15, 23, 42, 0.15);
-}
-
-.theme-light .reco-surface {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-}
-
-.theme-light .reco-section,
-.theme-light .card.reco-card,
-.theme-light .reco-panel,
-.theme-light .reco-panel--soft {
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  color: #0f172a;
-  box-shadow: 0 25px 35px rgba(15, 23, 42, 0.12);
-}
-
-.theme-light .reco-section__description,
-.theme-light .reco-alt-hint,
-.theme-light .text-secondary {
-  color: rgba(16, 24, 40, 0.65) !important;
-}
-
-.theme-light .reco-badge {
-  background: var(--reco-chip-bg);
-  border-color: var(--reco-chip-border);
-  color: var(--reco-chip-text);
-}
-
-.theme-light .reco-badge--link {
-  border-color: rgba(30, 136, 255, 0.35);
-  color: #1e88ff;
-}
-
+/* ============================================
+   FORMULARIOS - LIGHT MODE
+   ============================================ */
 .theme-light .form-control,
 .theme-light .form-select,
 .theme-light textarea {
@@ -203,12 +145,47 @@ body.reco-app.theme-light {
   color: rgba(16, 24, 40, 0.65) !important;
 }
 
+/* ============================================
+   TABLAS - DARK MODE
+   ============================================ */
+.reco-app .table {
+  --bs-table-color: rgba(244, 248, 255, 0.92);
+  --bs-table-bg: transparent;
+  --bs-table-border-color: rgba(255, 255, 255, 0.08);
+  --bs-table-hover-bg: rgba(255, 255, 255, 0.05);
+  --bs-table-hover-color: rgba(244, 248, 255, 0.95);
+  color: var(--bs-table-color);
+  background: transparent;
+}
+
+.reco-app .table td {
+  background: transparent;
+  border-color: var(--bs-table-border-color);
+}
+
+.reco-app .table thead th {
+  color: rgba(255, 255, 255, 0.75);
+  border-bottom-color: rgba(255, 255, 255, 0.18);
+}
+
+.reco-app .table tbody tr:hover {
+  background: var(--bs-table-hover-bg);
+  color: var(--bs-table-hover-color);
+}
+
+/* ============================================
+   TABLAS - LIGHT MODE
+   ============================================ */
+.theme-light.reco-app .table,
 .theme-light .table {
   color: #0f172a;
 }
 
+.theme-light.reco-app .table th,
+.theme-light.reco-app .table td,
 .theme-light .table th,
 .theme-light .table td {
+  color: #0f172a;
   border-color: rgba(15, 23, 42, 0.08);
 }
 
@@ -217,58 +194,39 @@ body.reco-app.theme-light {
   border-bottom-color: rgba(15, 23, 42, 0.12);
 }
 
-.card.reco-card {
-  background: rgba(16, 23, 42, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: var(--reco-card-shadow-soft);
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
+/* ============================================
+   BOTONES - DARK MODE
+   ============================================ */
+
+/* btn-outline-primary - Estilo estándar azul */
+.btn-outline-primary {
+  color: var(--reco-primary);
+  border-color: var(--reco-primary);
+  background: rgba(110, 211, 255, 0.08);
 }
 
-.card.reco-card:hover {
-  box-shadow: var(--reco-card-shadow);
-  transform: translateY(-3px);
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+  color: var(--reco-primary-contrast);
+  background: var(--reco-primary);
+  border-color: var(--reco-primary);
+  box-shadow: 0 12px 24px rgba(110, 211, 255, 0.35);
 }
 
-.theme-light .card.reco-card {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(242, 247, 255, 0.95));
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 25px 38px rgba(15, 23, 42, 0.16);
+.btn-outline-primary.disabled,
+.btn-outline-primary:disabled {
+  color: rgba(244, 248, 255, 0.6);
+  border-color: rgba(244, 248, 255, 0.35);
+  background: rgba(255, 255, 255, 0.04);
+  opacity: 1;
+  box-shadow: none;
 }
 
-.theme-light .card.reco-card .card-body {
-  color: #0f172a;
-}
-
-.theme-light .card.reco-card .reco-product-name {
-  color: #0f172a;
-}
-
-.theme-light .card.reco-card .text-secondary {
-  color: rgba(16, 24, 40, 0.65) !important;
-}
-
-.theme-light .card.reco-card .reco-badge {
-  background: rgba(30, 45, 79, 0.06);
-  border-color: rgba(30, 45, 79, 0.12);
-  color: #1d2d4f;
-}
-
-.theme-light .card.reco-card .text-secondary {
-  color: rgba(16, 24, 40, 0.6) !important;
-}
-
-.reco-app .text-secondary {
-  color: rgba(244, 248, 255, 0.65) !important;
-}
-
-.reco-app.theme-light .text-secondary {
-  color: rgba(16, 24, 40, 0.65) !important;
-}
-
+/* btn-outline-secondary */
 .reco-app .btn-outline-secondary {
-  color: rgba(244, 248, 255, 0.9);
-  border-color: rgba(244, 248, 255, 0.4);
-  background: transparent;
+  color: var(--reco-primary);
+  border-color: var(--reco-primary);
+  background: rgba(110, 211, 255, 0.04);
 }
 
 .reco-app .btn-outline-secondary:hover,
@@ -278,10 +236,77 @@ body.reco-app.theme-light {
   border-color: var(--reco-primary);
 }
 
+/* bt-show-detail - Botón especial con degradado naranja */
+.bt-show-detail {
+  background: linear-gradient(120deg, var(--reco-accent), #ff8b64) !important;
+  border-color: transparent !important;
+  color: var(--reco-accent-contrast) !important;
+  box-shadow: 0 14px 26px rgba(255, 107, 74, 0.3) !important;
+}
+
+.bt-show-detail:hover,
+.bt-show-detail:focus {
+  background: linear-gradient(120deg, #ff8b64, #ff6b4a) !important;
+  border-color: transparent !important;
+  color: var(--reco-accent-contrast) !important;
+  box-shadow: 0 16px 32px rgba(255, 107, 74, 0.45) !important;
+  transform: translateY(-2px);
+}
+
+.bt-show-detail:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 16px rgba(255, 107, 74, 0.3) !important;
+}
+
+/* btn-primary - Degradado naranja */
+.btn-primary {
+  background: linear-gradient(120deg, var(--reco-accent), #ff8b64);
+  border-color: transparent;
+  color: var(--reco-accent-contrast);
+  box-shadow: 0 14px 26px rgba(255, 107, 74, 0.3);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background: linear-gradient(120deg, #ff8b64, var(--reco-primary));
+  border-color: transparent;
+  color: var(--reco-primary-contrast);
+  box-shadow: 0 16px 32px rgba(41, 28, 86, 0.4);
+}
+
+/* ============================================
+   BOTONES - LIGHT MODE
+   ============================================ */
+
+/* btn-outline-primary en Light Mode */
+.theme-light .btn-outline-primary {
+  color: #1e88ff;
+  border-color: rgba(30, 136, 255, 0.45);
+  background: transparent;
+}
+
+.theme-light .btn-outline-primary:hover,
+.theme-light .btn-outline-primary:focus {
+  color: #fff;
+  background: #1e88ff;
+  border-color: #1e88ff;
+  box-shadow: 0 12px 24px rgba(30, 136, 255, 0.35);
+}
+
+.theme-light .btn-outline-primary.disabled,
+.theme-light .btn-outline-primary:disabled {
+  color: rgba(15, 23, 42, 0.4);
+  border-color: rgba(15, 23, 42, 0.2);
+  background: rgba(15, 23, 42, 0.05);
+  opacity: 1;
+  box-shadow: none;
+}
+
+/* btn-outline-secondary en Light Mode */
 .theme-light .btn-outline-secondary {
-  color: #1d2d4f;
-  border-color: rgba(30, 45, 79, 0.35);
-  background: rgba(30, 45, 79, 0.04);
+  color: #1e88ff;
+  border-color: rgba(30, 136, 255, 0.45);
+  background: transparent;
 }
 
 .theme-light .btn-outline-secondary:hover,
@@ -300,6 +325,245 @@ body.reco-app.theme-light {
   opacity: 1;
 }
 
+/* bt-show-detail en Light Mode - mantiene degradado naranja */
+.theme-light .bt-show-detail {
+  background: linear-gradient(120deg, var(--reco-accent), #ff8b64) !important;
+  border-color: transparent !important;
+  color: var(--reco-accent-contrast) !important;
+  box-shadow: 0 14px 26px rgba(255, 107, 74, 0.3) !important;
+}
+
+.theme-light .bt-show-detail:hover,
+.theme-light .bt-show-detail:focus {
+  background: linear-gradient(120deg, #ff8b64, #ff6b4a) !important;
+  border-color: transparent !important;
+  color: var(--reco-accent-contrast) !important;
+  box-shadow: 0 16px 32px rgba(255, 107, 74, 0.45) !important;
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   CARDS Y SUPERFICIES - DARK MODE
+   ============================================ */
+.card.reco-card {
+  background: rgba(16, 23, 42, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--reco-card-shadow-soft);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.card.reco-card:hover {
+  box-shadow: var(--reco-card-shadow);
+  transform: translateY(-3px);
+}
+
+.card-hover {
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  border-color: transparent;
+}
+
+.card-hover:hover,
+.card-hover:focus-within {
+  transform: translateY(-2px);
+  box-shadow: var(--reco-card-shadow);
+  border-color: var(--reco-primary);
+}
+
+.reco-hero {
+  background: var(--reco-hero-gradient);
+  border: 1px solid var(--reco-border);
+  box-shadow: var(--reco-card-shadow-soft);
+}
+
+.reco-radar-card {
+  background: var(--reco-surface-strong);
+  border: 1px solid var(--reco-border);
+  box-shadow: var(--reco-card-shadow-soft);
+}
+
+.reco-surface {
+  background: var(--reco-panel-gradient);
+  border: 1px solid var(--reco-border);
+  box-shadow: var(--reco-card-shadow-soft);
+}
+
+.reco-section {
+  background: linear-gradient(115deg, rgba(75, 51, 240, 0.08), rgba(34, 203, 211, 0.08));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  box-shadow: var(--reco-card-shadow-soft);
+}
+
+.reco-section--flush {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.reco-panel {
+  background: rgba(16, 23, 42, 0.85);
+  border-radius: 1rem;
+  border: 1px solid var(--reco-border);
+  padding: 1.25rem;
+}
+
+.reco-panel--soft {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ============================================
+   CARDS Y SUPERFICIES - LIGHT MODE
+   ============================================ */
+.theme-light .reco-hero {
+  background: var(--reco-hero-gradient);
+  color: var(--reco-primary-contrast);
+  border: 1px solid var(--reco-border);
+  box-shadow: 0 25px 40px rgba(15, 23, 42, 0.15);
+}
+
+.theme-light .reco-surface {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.theme-light .reco-section,
+.theme-light .card.reco-card,
+.theme-light .reco-panel {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+  box-shadow: 0 25px 35px rgba(15, 23, 42, 0.12);
+}
+
+.theme-light .reco-panel--soft {
+  background: rgba(247, 245, 255, 0.85);
+}
+
+.theme-light .card.reco-card {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(242, 247, 255, 0.95));
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 25px 38px rgba(15, 23, 42, 0.16);
+}
+
+.theme-light .card.reco-card .card-body {
+  color: #0f172a;
+}
+
+/* ============================================
+   TEXTOS Y TIPOGRAFÍA - DARK MODE
+   ============================================ */
+.reco-app .text-secondary {
+  color: rgba(244, 248, 255, 0.65) !important;
+}
+
+.reco-section__description,
+.reco-alt-hint {
+  color: var(--reco-muted);
+}
+
+/* ============================================
+   TEXTOS Y TIPOGRAFÍA - LIGHT MODE
+   ============================================ */
+.reco-app.theme-light .text-secondary,
+.theme-light .reco-section__description,
+.theme-light .reco-alt-hint,
+.theme-light .text-secondary {
+  color: rgba(16, 24, 40, 0.65) !important;
+}
+
+.theme-light .card.reco-card .reco-product-name {
+  color: #0f172a;
+}
+
+.theme-light .card.reco-card .text-secondary {
+  color: rgba(16, 24, 40, 0.65) !important;
+}
+
+/* ============================================
+   BADGES - DARK MODE
+   ============================================ */
+.reco-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  border-radius: 999px;
+  padding: .2rem .6rem;
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+  background: var(--reco-chip-bg);
+  color: var(--reco-chip-text);
+  border: 1px solid var(--reco-chip-border);
+}
+
+a.reco-badge {
+  text-decoration: none;
+}
+
+.reco-badge--link {
+  border-color: rgba(110, 211, 255, 0.35);
+}
+
+.reco-badge--link:hover,
+.reco-badge--link:focus {
+  background: rgba(110, 211, 255, 0.15);
+  color: var(--reco-primary);
+}
+
+.reco-badge--positive {
+  background: var(--reco-positive-soft);
+  color: var(--reco-positive);
+}
+
+.reco-badge--negative {
+  background: var(--reco-negative-soft);
+  color: var(--reco-negative);
+}
+
+.reco-badge--accent {
+  background: var(--reco-accent-soft);
+  color: var(--reco-negative);
+}
+
+.reco-badge-match {
+  --bs-badge-padding-x: .75rem;
+  --bs-badge-padding-y: .4rem;
+  background: var(--reco-primary-dark);
+  color: #fff;
+  border: none;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+}
+
+.reco-insight-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  padding: .2rem .65rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--reco-chip-text);
+  font-size: .75rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* ============================================
+   BADGES - LIGHT MODE
+   ============================================ */
+.theme-light .reco-compat {
+  background: rgba(90, 90, 92, 0.1);
+  color: var(--reco-chip-text);
+  border: 1px solid var(--reco-chip-border);
+}
+
+.theme-light .reco-badge--link {
+  border-color: rgba(30, 136, 255, 0.35);
+  color: #1e88ff;
+}
+
 .theme-light .reco-badge--positive {
   background: rgba(13, 157, 123, 0.12);
   color: #0d9d7b;
@@ -310,59 +574,24 @@ body.reco-app.theme-light {
   color: #c75e1b;
 }
 
-.theme-light .reco-top-metrics {
-  background: rgba(15, 23, 42, 0.04);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-}
-
-.theme-light .reco-compat-target__item {
-  background: rgba(247, 249, 255, 0.95);
-  border: 1px dashed rgba(30, 136, 255, 0.25);
-  box-shadow: none;
-}
-
-.theme-light .reco-compat-card {
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.96);
-}
-
-.theme-light .reco-top-card__img {
-  background: rgba(15, 23, 42, 0.05);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-}
-
-.theme-light .btn-outline-primary {
-  color: #1e88ff;
-  border-color: rgba(30, 136, 255, 0.45);
-  background: transparent;
-}
-
-.theme-light .btn-outline-primary:hover,
-.theme-light .btn-outline-primary:focus {
+.theme-light .reco-badge-match {
   color: #fff;
-  background: #1e88ff;
-  border-color: #1e88ff;
-  box-shadow: 0 12px 24px rgba(30, 136, 255, 0.35);
 }
 
-.reco-shell {
-  width: min(1280px, 100% - 2.5rem);
-  margin: 0 auto;
+.theme-light .card.reco-card .reco-badge {
+  background: rgba(30, 45, 79, 0.06);
+  border-color: rgba(30, 45, 79, 0.12);
 }
 
-.reco-page {
-  width: min(1100px, 100%);
-  margin: 0 auto;
-  padding: 1rem 0 3rem;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+.theme-light .reco-insight-badge {
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--reco-primary-dark);
+  border-color: rgba(15, 23, 42, 0.12);
 }
 
-.reco-page section + section {
-  margin-top: 1.5rem;
-}
-
+/* ============================================
+   HEADER Y NAVEGACIÓN
+   ============================================ */
 .reco-app__header {
   background: rgba(10, 6, 25, 0.85);
   backdrop-filter: blur(16px);
@@ -459,10 +688,9 @@ body.reco-app.theme-light {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
-.reco-app__main {
-  min-height: calc(100vh - 260px);
-}
-
+/* ============================================
+   FOOTER
+   ============================================ */
 .reco-app__footer {
   background: #070515;
   padding: 2rem 0;
@@ -475,6 +703,34 @@ body.reco-app.theme-light {
   flex-wrap: wrap;
 }
 
+/* ============================================
+   LAYOUT Y CONTENEDORES
+   ============================================ */
+.reco-shell {
+  width: min(1280px, 100% - 2.5rem);
+  margin: 0 auto;
+}
+
+.reco-page {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  padding: 1rem 0 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.reco-page section + section {
+  margin-top: 1.5rem;
+}
+
+.reco-app__main {
+  min-height: calc(100vh - 260px);
+}
+
+/* ============================================
+   HERO SECTIONS
+   ============================================ */
 .reco-page-hero {
   background: linear-gradient(120deg, rgba(255, 255, 255, 0.08), rgba(34, 203, 211, 0.1)), var(--reco-hero-gradient);
   border: 1px solid var(--reco-border);
@@ -503,83 +759,6 @@ body.reco-app.theme-light {
   border-radius: 1.25rem;
   padding: 1.25rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.reco-section {
-  background: linear-gradient(115deg, rgba(75, 51, 240, 0.08), rgba(34, 203, 211, 0.08));
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-  box-shadow: var(--reco-card-shadow-soft);
-}
-
-.reco-section--flush {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-}
-
-.reco-section__header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-}
-
-.reco-section__eyebrow {
-  text-transform: uppercase;
-  font-size: .75rem;
-  letter-spacing: .25em;
-  color: var(--reco-muted);
-  margin-bottom: .35rem;
-}
-
-.reco-section__title {
-  margin-bottom: .25rem;
-  font-weight: 700;
-}
-
-.reco-section__description {
-  color: var(--reco-muted);
-  margin-bottom: 0;
-}
-
-.reco-chipline {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .5rem;
-}
-
-.reco-grid {
-  display: grid;
-  gap: 1rem;
-}
-
-.reco-grid--profiles {
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-}
-
-.reco-grid--two {
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-}
-
-.reco-panel {
-  background: #fff;
-  border-radius: 1rem;
-  border: 1px solid var(--reco-border);
-  padding: 1.25rem;
-}
-
-.reco-panel--soft {
-  background: rgba(247, 245, 255, 0.85);
-}
-
-.reco-panel__title {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: .35rem;
 }
 
 .reco-page-intro {
@@ -611,6 +790,69 @@ body.reco-app.theme-light {
   margin-bottom: 1rem;
 }
 
+/* ============================================
+   SECCIONES
+   ============================================ */
+.reco-section__header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.reco-section__eyebrow {
+  text-transform: uppercase;
+  font-size: .75rem;
+  letter-spacing: .25em;
+  color: var(--reco-muted);
+  margin-bottom: .35rem;
+}
+
+.reco-section__title {
+  margin-bottom: .25rem;
+  font-weight: 700;
+}
+
+.reco-section__description {
+  color: var(--reco-muted);
+  margin-bottom: 0;
+}
+
+.reco-panel__title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: .35rem;
+}
+
+/* ============================================
+   GRIDS Y LAYOUTS
+   ============================================ */
+.reco-chipline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.reco-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.reco-grid--profiles {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.reco-grid--two {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.reco-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
 .reco-inline-links {
   display: flex;
   flex-wrap: wrap;
@@ -622,12 +864,9 @@ body.reco-app.theme-light {
   color: var(--reco-primary);
 }
 
-.reco-guide-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.25rem;
-}
-
+/* ============================================
+   CARDS DE GUÍA
+   ============================================ */
 .reco-guide-card {
   background: rgba(251, 249, 255, 0.95);
   border-radius: 1.25rem;
@@ -698,63 +937,9 @@ body.reco-app.theme-light {
   flex-wrap: wrap;
 }
 
-@media (max-width: 768px) {
-  .reco-shell {
-    width: 100%;
-    padding: 0 1.25rem;
-  }
-
-  .reco-app__header {
-    position: static;
-  }
-
-  .reco-nav {
-    width: 100%;
-  }
-
-  .reco-page {
-    width: 100%;
-  }
-
-  .reco-guide-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.reco-surface {
-  background: var(--reco-panel-gradient);
-  border: 1px solid var(--reco-border);
-  box-shadow: var(--reco-card-shadow-soft);
-}
-
-.card-hover {
-  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-  border-color: transparent;
-}
-
-.card-hover:hover,
-.card-hover:focus-within {
-  transform: translateY(-2px);
-  box-shadow: var(--reco-card-shadow);
-  border-color: var(--reco-primary);
-}
-
-.reco-hero {
-  background: var(--reco-hero-gradient);
-  border: 1px solid var(--reco-border);
-  box-shadow: var(--reco-card-shadow-soft);
-}
-
-.reco-hero img {
-  object-fit: cover;
-}
-
-.reco-radar-card {
-  background: var(--reco-surface-strong);
-  border: 1px solid var(--reco-border);
-  box-shadow: var(--reco-card-shadow-soft);
-}
-
+/* ============================================
+   RADAR Y FOCUS
+   ============================================ */
 .reco-radar__label {
   text-transform: uppercase;
   font-size: .7rem;
@@ -820,61 +1005,29 @@ body.reco-app.theme-light {
   color: var(--reco-primary);
 }
 
-.reco-badge-match {
-  --bs-badge-padding-x: .75rem;
-  --bs-badge-padding-y: .4rem;
-  background: var(--reco-primary-dark);
-  color: #fff;
-  border: none;
-  font-variant-numeric: tabular-nums;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+/* ============================================
+   PRODUCTOS - CARDS
+   ============================================ */
+.reco-card-headline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.theme-light .reco-badge-match {
-  color: #fff;
+.reco-card-title {
+  flex: 1 1 240px;
+  min-width: 0;
 }
 
-.reco-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: .35rem;
-  border-radius: 999px;
-  padding: .2rem .6rem;
-  font-size: .75rem;
-  font-weight: 600;
-  letter-spacing: .01em;
-  background: var(--reco-chip-bg);
-  color: var(--reco-chip-text);
-  border: 1px solid var(--reco-chip-border);
+.reco-product-name {
+  word-break: break-word;
+  line-height: 1.25;
 }
 
-a.reco-badge {
-  text-decoration: none;
-}
-
-.reco-badge--link {
-  border-color: rgba(110, 211, 255, 0.35);
-}
-
-.reco-badge--link:hover,
-.reco-badge--link:focus {
-  background: rgba(110, 211, 255, 0.15);
-  color: var(--reco-primary);
-}
-
-.reco-badge--positive {
-  background: var(--reco-positive-soft);
-  color: var(--reco-positive);
-}
-
-.reco-badge--negative {
-  background: var(--reco-negative-soft);
-  color: var(--reco-negative);
-}
-
-.reco-badge--accent {
-  background: var(--reco-accent-soft);
-  color: var(--reco-accent-contrast);
+.reco-card-headline .reco-badge-match {
+  margin-left: auto;
 }
 
 .reco-match-list {
@@ -900,28 +1053,9 @@ a.reco-badge {
   gap: .4rem;
 }
 
-.reco-card-headline {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.reco-card-title {
-  flex: 1 1 240px;
-  min-width: 0;
-}
-
-.reco-product-name {
-  word-break: break-word;
-  line-height: 1.25;
-}
-
-.reco-card-headline .reco-badge-match {
-  margin-left: auto;
-}
-
+/* ============================================
+   GUARDADOS
+   ============================================ */
 .reco-saved-meta {
   display: flex;
   flex-wrap: wrap;
@@ -932,11 +1066,12 @@ a.reco-badge {
   background: rgba(255, 255, 255, 0.03);
   border-radius: 999px;
   padding: .25rem .65rem;
-  color: rgba(16, 24, 40, 0.65) !important;
+  color: rgba(244, 248, 255, 0.65) !important;
 }
 
 .theme-light .reco-saved-meta span {
   background: rgba(15, 23, 42, 0.05);
+  color: rgba(16, 24, 40, 0.6) !important;
 }
 
 .reco-saved-actions {
@@ -967,33 +1102,14 @@ a.reco-badge {
 
 .reco-saved-highlights li.is-positive {
   background: var(--reco-positive-soft);
-  color: #033627;
+  color: var(--reco-positive);
   border-color: transparent;
 }
 
 .reco-saved-highlights li.is-negative {
   background: var(--reco-negative-soft);
-  color: #512b16;
+  color: var(--reco-negative);
   border-color: transparent;
-}
-
-.reco-insight-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: .25rem;
-  padding: .2rem .65rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--reco-chip-text);
-  font-size: .75rem;
-  font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.theme-light .reco-insight-badge {
-  background: rgba(15, 23, 42, 0.06);
-  color: var(--reco-primary-dark);
-  border-color: rgba(15, 23, 42, 0.12);
 }
 
 .reco-save-form {
@@ -1022,6 +1138,9 @@ a.reco-badge {
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.15);
 }
 
+/* ============================================
+   CRITERIOS Y MÉTRICAS
+   ============================================ */
 .reco-criteria {
   display: inline-flex;
   flex-direction: column;
@@ -1044,128 +1163,16 @@ a.reco-badge {
   color: var(--reco-accent);
 }
 
-.reco-subheader {
-  background: linear-gradient(115deg, rgba(75, 51, 240, 0.08), rgba(34, 203, 211, 0.08));
-  border: 1px solid var(--reco-border);
-  border-radius: 12px;
-  padding: .75rem 1rem;
-}
-
-.reco-breadcrumb {
-  font-size: .8rem;
-  display: inline-flex;
-  gap: .4rem;
-  flex-wrap: wrap;
-  align-items: center;
-  color: var(--reco-muted);
-}
-
-.reco-breadcrumb a {
-  color: var(--reco-primary);
-  text-decoration: none;
-}
-
-.reco-breadcrumb a:hover,
-.reco-breadcrumb a:focus {
-  text-decoration: underline;
-}
-
-.reco-icon {
-  min-width: 60px;
-  min-height: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 0.75rem;
-  border-radius: 12px;
-  background: rgba(31, 58, 104, 0.06);
-  border: 1px solid rgba(31, 58, 104, 0.15);
-  color: var(--reco-primary);
-  font-weight: 600;
-  font-size: 0.85rem;
-  white-space: nowrap;
-  text-align: center;
-}
-
-.object-fit-cover {
-  object-fit: cover;
-}
-
-.btn-outline-primary {
-  color: var(--reco-primary);
-  border-color: var(--reco-primary);
-  background: rgba(75, 51, 240, 0.04);
-}
-
-.btn-outline-primary:hover,
-.btn-outline-primary:focus {
-  color: var(--reco-primary-contrast);
-  background: var(--reco-primary);
-  border-color: var(--reco-primary);
-  box-shadow: 0 10px 22px rgba(75, 51, 240, 0.35);
-}
-
-.btn-outline-primary.disabled,
-.btn-outline-primary:disabled,
-.btn-outline-primary.disabled:focus,
-.btn-outline-primary:disabled:focus {
-  color: rgba(15, 23, 42, 0.4);
-  border-color: rgba(15, 23, 42, 0.2);
-  background: rgba(15, 23, 42, 0.05);
-  opacity: 1;
-  box-shadow: none;
-}
-
-.reco-app .btn-outline-primary.disabled,
-.reco-app .btn-outline-primary:disabled {
-  color: rgba(244, 248, 255, 0.6);
-  border-color: rgba(244, 248, 255, 0.35);
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.btn-primary {
-  background: linear-gradient(120deg, var(--reco-accent), #ff8b64);
-  border-color: transparent;
-  color: var(--reco-accent-contrast);
-  box-shadow: 0 14px 26px rgba(255, 107, 74, 0.3);
-}
-
-.btn-primary:hover,
-.btn-primary:focus {
-  background: linear-gradient(120deg, #ff8b64, var(--reco-primary));
-  border-color: transparent;
-  color: var(--reco-primary-contrast);
-  box-shadow: 0 16px 32px rgba(41, 28, 86, 0.4);
-}
-
-.reco-alt-hint {
-  font-size: .78rem;
-  color: var(--reco-muted);
-}
-
-.reco-top-card__img {
-  width: 96px;
-  height: 96px;
-  max-width: 96px;
-  max-height: 96px;
-  display: block;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
-.reco-top-highlights {
-  margin-bottom: 0;
-}
-
-.reco-top-highlights li {
-  margin-bottom: .2rem;
-}
-
 .reco-top-metrics {
   background: linear-gradient(120deg, rgba(75, 51, 240, 0.08), rgba(34, 203, 211, 0.08));
   border-radius: .5rem;
   padding: .5rem .75rem;
   border: 1px solid var(--reco-border);
+}
+
+.theme-light .reco-top-metrics {
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
 }
 
 .reco-top-metrics summary {
@@ -1183,6 +1190,9 @@ a.reco-badge {
   padding: .2rem 0;
 }
 
+/* ============================================
+   DETALLES DE PRODUCTO
+   ============================================ */
 .reco-detail-hero {
   padding-bottom: 1.5rem;
 }
@@ -1218,6 +1228,7 @@ a.reco-badge {
 .reco-detail-hero__info h1 {
   word-break: break-word;
 }
+
 .reco-detail-pill {
   display: flex;
   flex-wrap: wrap;
@@ -1234,8 +1245,39 @@ a.reco-badge {
   gap: .75rem 1rem;
 }
 
+.reco-top-card__img {
+  width: 96px;
+  height: 96px;
+  max-width: 96px;
+  max-height: 96px;
+  display: block;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.theme-light .reco-top-card__img {
+  background: rgba(15, 23, 42, 0.05);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.reco-top-highlights {
+  margin-bottom: 0;
+}
+
+.reco-top-highlights li {
+  margin-bottom: .2rem;
+}
+
+/* ============================================
+   COMPATIBILIDAD
+   ============================================ */
 .reco-compat-card {
   border: 1px solid var(--reco-border);
+}
+
+.theme-light .reco-compat-card {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .reco-compat-focus li {
@@ -1257,6 +1299,30 @@ a.reco-badge {
   box-shadow: inset 0 0 0 1px rgba(255, 107, 74, 0.08);
 }
 
+.theme-light .reco-compat-target__item {
+  background: rgba(247, 249, 255, 0.95);
+  border: 1px dashed rgba(30, 136, 255, 0.25);
+  box-shadow: none;
+}
+
+.reco-compat-pill {
+  border: 1px solid var(--reco-border);
+  border-radius: .9rem;
+  padding: .85rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .75rem;
+  background: linear-gradient(120deg, rgba(34, 203, 211, 0.09), rgba(75, 51, 240, 0.07));
+}
+
+.reco-compat-pill .reco-badge {
+  margin: 2px;
+}
+
+/* ============================================
+   ALTERNATIVAS
+   ============================================ */
 .reco-altcard {
   border: 1px dashed var(--reco-border);
 }
@@ -1299,21 +1365,9 @@ a.reco-badge {
   color: var(--reco-primary);
 }
 
-.reco-compat-pill {
-  border: 1px solid var(--reco-border);
-  border-radius: .9rem;
-  padding: .85rem;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: .75rem;
-  background: linear-gradient(120deg, rgba(34, 203, 211, 0.09), rgba(75, 51, 240, 0.07));
-}
-
-.reco-compat-pill .reco-badge {
-  margin: 2px;
-}
-
+/* ============================================
+   RATINGS
+   ============================================ */
 .reco-rating-stars {
   display: inline-flex;
   gap: .2rem;
@@ -1336,6 +1390,10 @@ a.reco-badge {
 .reco-rating-static {
   font-size: 1rem;
 }
+
+/* ============================================
+   CHIPS
+   ============================================ */
 .reco-chip-stack {
   display: flex;
   flex-wrap: wrap;
@@ -1363,4 +1421,92 @@ a.reco-badge {
 .theme-light .reco-chip {
   background: rgba(15, 23, 42, 0.05);
   color: var(--reco-primary-dark);
+}
+
+/* ============================================
+   BREADCRUMBS Y NAVEGACIÓN
+   ============================================ */
+.reco-subheader {
+  background: linear-gradient(115deg, rgba(75, 51, 240, 0.08), rgba(34, 203, 211, 0.08));
+  border: 1px solid var(--reco-border);
+  border-radius: 12px;
+  padding: .75rem 1rem;
+}
+
+.reco-breadcrumb {
+  font-size: .8rem;
+  display: inline-flex;
+  gap: .4rem;
+  flex-wrap: wrap;
+  align-items: center;
+  color: var(--reco-muted);
+}
+
+.reco-breadcrumb a {
+  color: var(--reco-primary);
+  text-decoration: none;
+}
+
+.reco-breadcrumb a:hover,
+.reco-breadcrumb a:focus {
+  text-decoration: underline;
+}
+
+/* ============================================
+   ICONOS Y UTILIDADES
+   ============================================ */
+.reco-icon {
+  min-width: 60px;
+  min-height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(31, 58, 104, 0.06);
+  border: 1px solid rgba(31, 58, 104, 0.15);
+  color: var(--reco-primary);
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.reco-alt-hint {
+  font-size: .78rem;
+  color: var(--reco-muted);
+}
+
+.object-fit-cover {
+  object-fit: cover;
+}
+
+.reco-hero img {
+  object-fit: cover;
+}
+
+/* ============================================
+   RESPONSIVE - MOBILE
+   ============================================ */
+@media (max-width: 768px) {
+  .reco-shell {
+    width: 100%;
+    padding: 0 1.25rem;
+  }
+
+  .reco-app__header {
+    position: static;
+  }
+
+  .reco-nav {
+    width: 100%;
+  }
+
+  .reco-page {
+    width: 100%;
+  }
+
+  .reco-guide-grid {
+    grid-template-columns: 1fr;
+  }
 }

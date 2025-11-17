@@ -1,6 +1,13 @@
+/* ============================================
+   FUENTES
+   ============================================ */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+/* ============================================
+   VARIABLES CSS - DARK MODE
+   ============================================ */
 :root {
+    /* Tonos oscuros */
     --tone-deep: #0c1220;
     --tone-panel: #131b2f;
     --tone-card: rgba(19, 27, 47, 0.85);
@@ -8,15 +15,25 @@
     --tone-muted: #94a3b8;
     --tone-surface: #0f172a;
     --tone-highlight: rgba(255, 255, 255, 0.06);
+    
+    /* Acentos */
     --accent-primary: #ff8863;
     --accent-secondary: #6ed3ff;
     --accent-tertiary: #b0f2a7;
+    
+    /* Textos */
     --text-strong: #f7f7fb;
     --text-muted: rgba(255, 255, 255, 0.75);
+    
+    /* Sombras */
     --glass-shadow: 0 20px 60px rgba(3, 6, 20, 0.55);
 }
 
+/* ============================================
+   VARIABLES CSS - LIGHT MODE
+   ============================================ */
 .theme-light {
+    /* Tonos claros */
     --tone-deep: #f7f9ff;
     --tone-panel: #ffffff;
     --tone-card: rgba(255, 255, 255, 0.95);
@@ -24,14 +41,23 @@
     --tone-muted: #4a4f63;
     --tone-surface: #edf1ff;
     --tone-highlight: rgba(15, 23, 42, 0.04);
+    
+    /* Acentos */
     --accent-primary: #ff6f61;
     --accent-secondary: #1e88ff;
     --accent-tertiary: #28c9a5;
+    
+    /* Textos */
     --text-strong: #101828;
     --text-muted: rgba(16, 24, 40, 0.75);
+    
+    /* Sombras */
     --glass-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
 }
 
+/* ============================================
+   RESET Y BASE
+   ============================================ */
 *,
 *::before,
 *::after {
@@ -44,6 +70,9 @@ html {
     scroll-behavior: smooth;
 }
 
+/* ============================================
+   BODY - DARK MODE
+   ============================================ */
 body.app-theme {
     min-height: 100vh;
     display: flex;
@@ -55,6 +84,9 @@ body.app-theme {
     color: var(--text-strong);
 }
 
+/* ============================================
+   BODY - LIGHT MODE
+   ============================================ */
 body.app-theme.theme-light {
     background-color: #cfdafc;
     background-image:
@@ -68,6 +100,9 @@ body.app-theme.theme-light {
     background-size: 140% 140%;
 }
 
+/* ============================================
+   ENLACES
+   ============================================ */
 a {
     color: var(--accent-secondary);
     text-decoration: none;
@@ -78,11 +113,26 @@ a:focus {
     color: var(--accent-primary);
 }
 
+.link-primary {
+    color: var(--accent-secondary);
+    font-weight: 600;
+}
+
+.link-primary:hover {
+    color: var(--accent-primary);
+}
+
+/* ============================================
+   CONTENEDOR GENERAL
+   ============================================ */
 .site-shell {
     width: min(1200px, 100% - 2.5rem);
     margin: 0 auto;
 }
 
+/* ============================================
+   HEADER - DARK MODE
+   ============================================ */
 .site-header {
     position: sticky;
     top: 0;
@@ -93,20 +143,6 @@ a:focus {
     box-shadow: 0 20px 40px rgba(2, 4, 12, 0.6);
 }
 
-.theme-light .site-header {
-    background: rgba(255, 255, 255, 0.9);
-    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-    box-shadow: 0 15px 30px rgba(15, 23, 42, 0.1);
-}
-
-.theme-light .site-branding__logo {
-    color: #0e1220;
-}
-
-.theme-light .site-branding__meta {
-    color: rgba(16, 24, 40, 0.65);
-}
-
 .site-header__primary {
     display: flex;
     align-items: center;
@@ -115,6 +151,18 @@ a:focus {
     flex-wrap: wrap;
 }
 
+/* ============================================
+   HEADER - LIGHT MODE
+   ============================================ */
+.theme-light .site-header {
+    background: rgba(255, 255, 255, 0.9);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 15px 30px rgba(15, 23, 42, 0.1);
+}
+
+/* ============================================
+   BRANDING
+   ============================================ */
 .site-branding {
     min-width: 220px;
 }
@@ -133,6 +181,17 @@ a:focus {
     margin: 0;
 }
 
+.theme-light .site-branding__logo {
+    color: #0e1220;
+}
+
+.theme-light .site-branding__meta {
+    color: rgba(16, 24, 40, 0.65);
+}
+
+/* ============================================
+   BÚSQUEDA - DARK MODE
+   ============================================ */
 .site-search {
     flex: 1;
     min-width: 260px;
@@ -176,6 +235,9 @@ a:focus {
     cursor: pointer;
 }
 
+/* ============================================
+   BÚSQUEDA - LIGHT MODE
+   ============================================ */
 .theme-light .site-search__form {
     background: #ffffff;
     border: 1px solid rgba(15, 23, 42, 0.08);
@@ -195,6 +257,9 @@ a:focus {
     color: #1b0f18;
 }
 
+/* ============================================
+   ACCIONES DEL HEADER - DARK MODE
+   ============================================ */
 .site-header__actions {
     display: flex;
     flex-wrap: wrap;
@@ -217,11 +282,6 @@ a:focus {
     font-weight: 600;
 }
 
-.theme-light .site-control {
-    background: rgba(255, 255, 255, 0.85);
-    border: 1px solid rgba(15, 23, 42, 0.08);
-}
-
 .btn-custom:hover,
 .btn-custom:focus,
 .btn-custom.show {
@@ -229,21 +289,32 @@ a:focus {
     color: var(--accent-secondary) !important;
 }
 
+/* ============================================
+   ICONOS DEL HEADER
+   ============================================ */
 .button-header-icons {
     width: 18px;
     height: 18px;
     filter: brightness(1.2);
 }
 
-/* Iconos oscuros por defecto para el modo claro */
+/* Iconos oscuros para modo claro */
 .theme-light .button-header-icons {
     filter: brightness(0) saturate(100%);
 }
 
-/* Invertimos a blanco cuando el body está en modo oscuro */
+/* Iconos blancos para modo oscuro */
 .theme-dark .button-header-icons,
 body.app-theme:not(.theme-light) .button-header-icons {
     filter: brightness(0) invert(1);
+}
+
+/* ============================================
+   ACCIONES DEL HEADER - LIGHT MODE
+   ============================================ */
+.theme-light .site-control {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(15, 23, 42, 0.08);
 }
 
 .theme-light .btn-custom {
@@ -257,6 +328,9 @@ body.app-theme:not(.theme-light) .button-header-icons {
     color: #0f172a !important;
 }
 
+/* ============================================
+   DROPDOWN - DARK MODE
+   ============================================ */
 .site-dropdown {
     background: rgba(12, 18, 32, 0.98);
     border: 1px solid var(--tone-border);
@@ -278,18 +352,9 @@ body.app-theme:not(.theme-light) .button-header-icons {
     color: var(--text-strong);
 }
 
-.site-nav-shell {
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.site-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    padding: 0.75rem 0;
-    justify-content: flex-start;
-}
-
+/* ============================================
+   DROPDOWN - LIGHT MODE
+   ============================================ */
 .theme-light .site-dropdown {
     background: rgba(255, 255, 255, 0.98);
     border: 1px solid rgba(15, 23, 42, 0.08);
@@ -304,6 +369,21 @@ body.app-theme:not(.theme-light) .button-header-icons {
 .theme-light .site-dropdown .dropdown-item:focus {
     background: rgba(15, 23, 42, 0.05);
     color: #0f172a;
+}
+
+/* ============================================
+   NAVEGACIÓN - DARK MODE
+   ============================================ */
+.site-nav-shell {
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    justify-content: flex-start;
 }
 
 .site-nav__link {
@@ -325,6 +405,27 @@ body.app-theme:not(.theme-light) .button-header-icons {
     color: #0d111c;
 }
 
+/* ============================================
+   NAVEGACIÓN - LIGHT MODE
+   ============================================ */
+.theme-light .site-nav__link {
+    color: rgba(16, 24, 40, 0.65);
+}
+
+.theme-light .site-nav__link:hover,
+.theme-light .site-nav__link:focus {
+    color: #0f172a;
+    background: rgba(15, 23, 42, 0.08);
+}
+
+.theme-light .site-nav__link.is-active {
+    color: #fff;
+    background: linear-gradient(120deg, #1e88ff, #ff7a5a);
+}
+
+/* ============================================
+   BANNER
+   ============================================ */
 .img-banner {
     margin-top: 1rem;
     border-radius: 1.2rem;
@@ -333,6 +434,9 @@ body.app-theme:not(.theme-light) .button-header-icons {
     box-shadow: var(--glass-shadow);
 }
 
+/* ============================================
+   CONTENIDO PRINCIPAL - DARK MODE
+   ============================================ */
 .site-main {
     flex: 1;
     min-height: calc(100vh - 240px);
@@ -354,33 +458,21 @@ body.app-theme:not(.theme-light) .button-header-icons {
     background: transparent;
 }
 
-.theme-light .site-main::after {
-    background:
-        radial-gradient(circle at 50% 120%, rgba(153, 178, 255, 0.45), transparent 70%),
-        linear-gradient(180deg, rgba(201, 215, 255, 0), rgba(140, 163, 255, 0.7));
-}
-
-.theme-light .site-nav__link {
-    color: rgba(16, 24, 40, 0.65);
-}
-
-.theme-light .site-nav__link:hover,
-.theme-light .site-nav__link:focus {
-    color: #0f172a;
-    background: rgba(15, 23, 42, 0.08);
-}
-
-.theme-light .site-nav__link.is-active {
-    color: #fff;
-    background: linear-gradient(120deg, #1e88ff, #ff7a5a);
-}
-
 .main-content {
     background: rgba(12, 18, 32, 0.85);
     border-radius: 1.5rem;
     padding: 2rem;
     border: 1px solid var(--tone-border);
     box-shadow: var(--glass-shadow);
+}
+
+/* ============================================
+   CONTENIDO PRINCIPAL - LIGHT MODE
+   ============================================ */
+.theme-light .site-main::after {
+    background:
+        radial-gradient(circle at 50% 120%, rgba(153, 178, 255, 0.45), transparent 70%),
+        linear-gradient(180deg, rgba(201, 215, 255, 0), rgba(140, 163, 255, 0.7));
 }
 
 .theme-light .main-content {
@@ -390,6 +482,9 @@ body.app-theme:not(.theme-light) .button-header-icons {
     box-shadow: 0 25px 45px rgba(15, 23, 42, 0.12);
 }
 
+/* ============================================
+   CARDS - DARK MODE
+   ============================================ */
 .card {
     background: var(--tone-card);
     border: 1px solid var(--tone-border);
@@ -409,22 +504,8 @@ body.app-theme:not(.theme-light) .button-header-icons {
     box-shadow: 0 25px 45px rgba(3, 6, 20, 0.45);
 }
 
-.theme-light .card {
-    background: #ffffff;
-    color: #0f172a;
-    border: 1px solid rgba(15, 23, 42, 0.1);
-}
-
-.theme-light .card .text-secondary {
-    color: rgba(16, 24, 40, 0.65) !important;
-}
-
 .reco-card {
     background: rgba(16, 23, 42, 0.9);
-}
-
-.theme-light .reco-card {
-    background: #fdfdff;
 }
 
 .reco-icon {
@@ -439,24 +520,35 @@ body.app-theme:not(.theme-light) .button-header-icons {
     color: var(--accent-secondary);
 }
 
-.link-primary {
-    color: var(--accent-secondary);
-    font-weight: 600;
+/* ============================================
+   CARDS - LIGHT MODE
+   ============================================ */
+.theme-light .card {
+    background: #ffffff;
+    color: #0f172a;
+    border: 1px solid rgba(15, 23, 42, 0.1);
 }
 
-.link-primary:hover {
-    color: var(--accent-primary);
+.theme-light .card .text-secondary {
+    color: rgba(16, 24, 40, 0.65) !important;
 }
 
-.cards-popular {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1rem;
+.theme-light .reco-card {
+    background: #fdfdff;
 }
 
 .theme-light .reco-icon {
     background: rgba(30, 136, 255, 0.12);
     color: #1e88ff;
+}
+
+/* ============================================
+   CARDS POPULARES - DARK MODE
+   ============================================ */
+.cards-popular {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
 }
 
 .popular-card {
@@ -478,15 +570,7 @@ body.app-theme:not(.theme-light) .button-header-icons {
     font-size: 0.9rem;
 }
 
-.theme-light .popular-card {
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(15, 23, 42, 0.08);
-}
-
-.theme-light .popular-card p {
-    color: rgba(16, 24, 40, 0.65);
-}
-
+/* Card horizontal */
 .cards-popular .popular-card-horizontal {
     display: flex;
     gap: 1rem;
@@ -496,12 +580,6 @@ body.app-theme:not(.theme-light) .button-header-icons {
     border-radius: 1.2rem;
     padding: 1rem;
     box-shadow: 0 18px 30px rgba(3, 6, 20, 0.5);
-}
-
-.theme-light .cards-popular .popular-card-horizontal {
-    background: #ffffff;
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    box-shadow: 0 22px 35px rgba(15, 23, 42, 0.12);
 }
 
 .card-img-container {
@@ -518,10 +596,6 @@ body.app-theme:not(.theme-light) .button-header-icons {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
-}
-
-.theme-light .card-img-container {
-    background: rgba(15, 23, 42, 0.05);
 }
 
 .card-body-horizontal {
@@ -546,14 +620,6 @@ body.app-theme:not(.theme-light) .button-header-icons {
     overflow: hidden;
 }
 
-.theme-light .card-body-horizontal {
-    color: #0f172a;
-}
-
-.theme-light .card-body-horizontal .card-text {
-    color: rgba(16, 24, 40, 0.65);
-}
-
 .card-body-horizontal .btn-primary {
     align-self: flex-start;
     background: var(--accent-secondary);
@@ -569,11 +635,44 @@ body.app-theme:not(.theme-light) .button-header-icons {
     background: var(--accent-primary);
 }
 
+/* ============================================
+   CARDS POPULARES - LIGHT MODE
+   ============================================ */
+.theme-light .popular-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.theme-light .popular-card p {
+    color: rgba(16, 24, 40, 0.65);
+}
+
+.theme-light .cards-popular .popular-card-horizontal {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 22px 35px rgba(15, 23, 42, 0.12);
+}
+
+.theme-light .card-img-container {
+    background: rgba(15, 23, 42, 0.05);
+}
+
+.theme-light .card-body-horizontal {
+    color: #0f172a;
+}
+
+.theme-light .card-body-horizontal .card-text {
+    color: rgba(16, 24, 40, 0.65);
+}
+
 .theme-light .card-body-horizontal .btn-primary {
     background: #1e88ff;
     color: #fff;
 }
 
+/* ============================================
+   FOOTER - DARK MODE
+   ============================================ */
 footer.site-footer {
     background: #090f1c;
     border-top: 1px solid var(--tone-border);
@@ -581,24 +680,6 @@ footer.site-footer {
     padding: 2rem 0 1.5rem;
     position: relative;
     z-index: 1;
-}
-
-.theme-light .site-footer {
-    background: #f1f4ff;
-    border-top: 1px solid rgba(15, 23, 42, 0.08);
-    color: #0f172a;
-}
-
-.theme-light .site-footer__link {
-    color: rgba(16, 24, 40, 0.65);
-}
-
-.theme-light .site-footer__link:hover {
-    color: #1e88ff;
-}
-
-.theme-light .site-footer__copy {
-    color: rgba(10, 12, 28, 0.6);
 }
 
 .site-footer__grid {
@@ -631,6 +712,30 @@ footer.site-footer {
     margin: 0;
 }
 
+/* ============================================
+   FOOTER - LIGHT MODE
+   ============================================ */
+.theme-light .site-footer {
+    background: #f1f4ff;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    color: #0f172a;
+}
+
+.theme-light .site-footer__link {
+    color: rgba(16, 24, 40, 0.65);
+}
+
+.theme-light .site-footer__link:hover {
+    color: #1e88ff;
+}
+
+.theme-light .site-footer__copy {
+    color: rgba(10, 12, 28, 0.6);
+}
+
+/* ============================================
+   MENSAJES Y ALERTAS
+   ============================================ */
 .messages-container {
     position: fixed;
     top: 1.25rem;
@@ -657,6 +762,9 @@ footer.site-footer {
     background: linear-gradient(120deg, #ff8b8b, #ff5c7a);
 }
 
+/* ============================================
+   FILTROS
+   ============================================ */
 .filters-bar .form-label.small {
     font-size: 0.78rem;
     color: var(--text-muted);
@@ -675,31 +783,42 @@ footer.site-footer {
     color: #0f172a;
 }
 
+/* ============================================
+   RESPONSIVE - TABLET
+   ============================================ */
 @media (max-width: 992px) {
     .site-header__primary {
         flex-direction: column;
         align-items: stretch;
     }
+    
     .site-search {
         width: 100%;
     }
+    
     .site-header__actions {
         justify-content: flex-start;
     }
 }
 
+/* ============================================
+   RESPONSIVE - MOBILE
+   ============================================ */
 @media (max-width: 768px) {
     .cards-popular {
         grid-template-columns: 1fr;
     }
+    
     .popular-card-horizontal {
         flex-direction: column;
         height: auto;
     }
+    
     .card-img-container,
     .card-body-horizontal {
         width: 100%;
     }
+    
     .main-content {
         padding: 1.25rem;
     }

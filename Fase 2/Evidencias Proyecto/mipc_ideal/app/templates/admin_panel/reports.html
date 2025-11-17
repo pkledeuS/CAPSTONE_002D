@@ -1,17 +1,19 @@
 {% extends "admin_panel/admin_base.html" %}
 
-{% block admin_title %}
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-  <h1 class="h3 mb-0">Denuncias</h1>
-  <div class="d-flex flex-wrap gap-2">
-    <span class="badge-soft badge-soft-muted">Nuevos: {{ status_summary.abierto }}</span>
-    <span class="badge-soft badge-soft-warning">En revision: {{ status_summary.pendiente }}</span>
-    <span class="badge-soft badge-soft-success">Resueltos: {{ status_summary.resuelto }}</span>
+  {% block admin_title %}
+  <div class="card tittle-card">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <h1 class="h3 mb-0">Denuncias</h1>
+      <div class="d-flex flex-wrap gap-2">
+        <span class="badge-soft badge-soft-muted">Nuevos: {{ status_summary.abierto }}</span>
+        <span class="badge-soft badge-soft-warning">En revision: {{ status_summary.pendiente }}</span>
+        <span class="badge-soft badge-soft-success">Resueltos: {{ status_summary.resuelto }}</span>
+      </div>
+    </div>
   </div>
-</div>
-{% endblock %}
+  {% endblock %}
 
-{% block admin_content %}
+  {% block admin_content %}
 <div class="card">
   <div class="card-body">
     <form class="row g-3 mb-4" method="get">
