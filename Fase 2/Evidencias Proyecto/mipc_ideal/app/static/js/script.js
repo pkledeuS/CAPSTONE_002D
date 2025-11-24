@@ -32,29 +32,65 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const usernameFeedback = document.getElementById("usernameFeedback");
     const emailFeedback = document.getElementById("emailFeedback");
+    const passwordStrengthFeedback = document.getElementById("passwordStrengthFeedback");
     const passwordFeedback = document.getElementById("passwordFeedback");
+
+    let passwordStrengthValid = false;
+    let passwordsMatch = false;
+
+    // Validar fortaleza de contraseña (mínimo 6 caracteres)
+    const validatePasswordStrength = () => {
+      const pass = passwordInput.value.trim();
+      
+      if (!pass) {
+        passwordStrengthFeedback.textContent = "";
+        passwordStrengthValid = false;
+        return false;
+      }
+
+      if (pass.length < 6) {
+        passwordStrengthFeedback.textContent = "La contraseña debe tener al menos 6 caracteres.";
+        passwordStrengthFeedback.className = "feedback error";
+        passwordStrengthValid = false;
+        return false;
+      } else {
+        passwordStrengthFeedback.textContent = "Contraseña válida.";
+        passwordStrengthFeedback.className = "feedback success";
+        passwordStrengthValid = true;
+        return true;
+      }
+    };
 
     // Validar contraseñas iguales
     const validatePasswords = () => {
       const pass = passwordInput.value.trim();
       const confirm = confirmPasswordInput.value.trim();
+      
       if (!confirm) {
         passwordFeedback.textContent = "";
+        passwordsMatch = false;
         return false;
       }
+      
       if (pass !== confirm) {
         passwordFeedback.textContent = "Las contraseñas no coinciden.";
         passwordFeedback.className = "feedback error";
+        passwordsMatch = false;
         return false;
       } else {
         passwordFeedback.textContent = "Las contraseñas coinciden.";
         passwordFeedback.className = "feedback success";
+        passwordsMatch = true;
         return true;
       }
     };
 
+    passwordInput.addEventListener("input", () => {
+      validatePasswordStrength();
+      validatePasswords(); // Revalidar coincidencia cuando cambia la principal
+    });
+
     confirmPasswordInput.addEventListener("input", validatePasswords);
-    passwordInput.addEventListener("input", validatePasswords);
 
     // Validar usuario
     usernameInput.addEventListener("input", () => {
@@ -102,9 +138,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Validación final
     registerForm.addEventListener("submit", (e) => {
-      if (!validatePasswords()) {
+      if (!passwordStrengthValid) {
+        e.preventDefault();
+        alert("La contraseña debe tener al menos 6 caracteres.");
+        return;
+      }
+      
+      if (!passwordsMatch) {
         e.preventDefault();
         alert("Las contraseñas no coinciden.");
+        return;
       }
     });
   }

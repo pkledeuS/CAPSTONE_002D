@@ -282,3 +282,57 @@ def reference_redirect(request, reference_id):
     if not target:
         target = f"{reverse('reco_detail')}?id={referencia.producto_id}"
     return redirect(target)
+
+def password_reset_request(request):
+    """Formulario inicial: solicita usuario y correo"""
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        email = request.POST.get("email", "").strip()
+        
+        try:
+            user = User.objects.get(username=username, email=email)
+            # Guardamos el user_id en sesión para el siguiente paso
+            request.session['reset_user_id'] = user.id
+            messages.success(request, "Datos verificados correctamente. Ahora establece tu nueva contraseña.")
+            return redirect("password_reset_confirm")
+        except User.DoesNotExist:
+            messages.error(request, "El nombre de usuario y correo no coinciden con ninguna cuenta.")
+    
+    return render(request, "registration/password_reset.html")
+
+
+def password_reset_confirm(request):
+    """Formulario para establecer nueva contraseña"""
+    # Verificar que exista user_id en sesión
+    user_id = request.session.get('reset_user_id')
+    if not user_id:
+        messages.error(request, "Sesión inválida. Por favor inicia el proceso nuevamente.")
+        return redirect("password_reset_request")
+    
+    if request.method == "POST":
+        new_password = request.POST.get("new_password", "").strip()
+        confirm_password = request.POST.get("confirm_password", "").strip()
+        
+        if new_password != confirm_password:
+            messages.error(request, "Las contraseñas no coinciden.")
+            return render(request, "registration/password_reset_confirm.html")
+        
+        if len(new_password) < 6:
+            messages.error(request, "La contraseña debe tener al menos 6 caracteres.")
+            return render(request, "registration/password_reset_confirm.html")
+        
+        try:
+            user = User.objects.get(id=user_id)
+            user.set_password(new_password)
+            user.save()
+            
+            # Limpiar sesión
+            del request.session['reset_user_id']
+            
+            messages.success(request, "Contraseña restablecida correctamente. Ahora puedes iniciar sesión.")
+            return redirect("login")
+        except User.DoesNotExist:
+            messages.error(request, "Error al restablecer la contraseña.")
+            return redirect("password_reset_request")
+    
+    return render(request, "registration/password_reset_confirm.html")
