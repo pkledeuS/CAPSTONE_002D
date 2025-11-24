@@ -26,7 +26,12 @@ urlpatterns = [
     path('logout/', views.logout, name='logout'),
     path('edit_profile/', views.edit_profile, name='edit_profile'),
     path('info/', views.info, name='info'),
-
+    # =======================
+    # Reset password
+    # =======================
+    path("password-reset/", views.password_reset_request, name="password_reset_request"),
+    path("password-reset/confirm/", views.password_reset_confirm, name="password_reset_confirm"),
+    
     # =======================
     # Utilidades API
     # =======================
