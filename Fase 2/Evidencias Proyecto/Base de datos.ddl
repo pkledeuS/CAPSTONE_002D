@@ -844,3 +844,4 @@ ALTER TABLE ProductoVisto
 -- 
 -- ERRORS                                   0
 -- WARNINGS                                 0
+
